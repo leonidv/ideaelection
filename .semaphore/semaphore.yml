@@ -3,9 +3,11 @@ name: Java
 agent:
   machine:
     type: e1-standard-2
+
   containers:
     - name: main
       image: semaphoreci/openjdk:11.0.1
+
 blocks:
   - name: Gradle
     task:
@@ -16,9 +18,3 @@ blocks:
             - checkout
             - cd backend
             - ./gradlew -v
-            - ./gradlew build
-  - name: 'Block #2'
-    task:
-      jobs:
-        - name: 'Job #1'
-          commands: []
