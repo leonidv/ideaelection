@@ -13,6 +13,7 @@ blocks:
             - sem-version java 1.8
             - checkout
             - cd backend
+            - ./gradlew -v
             - ./gradlew build
   - name: 'Block #2'
     task:
