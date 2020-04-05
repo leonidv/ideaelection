@@ -12,6 +12,7 @@ blocks:
           commands:
             - sem-version java 1.8
             - checkout
+            - cd backend
             - ./gradlew build
   - name: 'Block #2'
     task:
