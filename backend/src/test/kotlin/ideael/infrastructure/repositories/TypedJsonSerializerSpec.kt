@@ -56,8 +56,8 @@ class TypedJsonSerializerSpec : Spek({
             }
         }
 
-        describe("json") {
-            val s = """{"person":"$jsonStr"}"""
+        describe("json is wrapped") {
+            val s = """{"person":$jsonStr}"""
             val p = serializer.deserialize(Person::class.java, s.toByteArray())
 
         }
