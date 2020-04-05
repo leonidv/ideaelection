@@ -1,0 +1,167 @@
+[
+	{
+		"name": "TEXT",
+		"value": "Preparing request to http://localhost:8080/ideas/6adb6bc8-5e53-432a-b4c5-eaa6f2c55583",
+		"timestamp": 1582862973200
+	},
+	{
+		"name": "TEXT",
+		"value": "Using libcurl/7.67.0 OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.29.0",
+		"timestamp": 1582862973200
+	},
+	{
+		"name": "TEXT",
+		"value": "Current time is 2020-02-28T04:09:33.200Z",
+		"timestamp": 1582862973200
+	},
+	{
+		"name": "TEXT",
+		"value": "Disable timeout",
+		"timestamp": 1582862973200
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable automatic URL encoding",
+		"timestamp": 1582862973200
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable SSL validation",
+		"timestamp": 1582862973200
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable cookie sending with jar of 1 cookie",
+		"timestamp": 1582862973208
+	},
+	{
+		"name": "TEXT",
+		"value": "Found bundle for host localhost: 0x2fb3f9d9fcf0 [serially]\n",
+		"timestamp": 1582862973215
+	},
+	{
+		"name": "TEXT",
+		"value": "Can not multiplex, even if we wanted to!\n",
+		"timestamp": 1582862973215
+	},
+	{
+		"name": "TEXT",
+		"value": "Re-using existing connection! (#5) with host localhost\n",
+		"timestamp": 1582862973215
+	},
+	{
+		"name": "TEXT",
+		"value": "Connected to localhost (::1) port 8080 (#5)\n",
+		"timestamp": 1582862973215
+	},
+	{
+		"name": "TEXT",
+		"value": "Server auth using Basic with user 'userA'\n",
+		"timestamp": 1582862973215
+	},
+	{
+		"name": "HEADER_OUT",
+		"value": "GET /ideas/6adb6bc8-5e53-432a-b4c5-eaa6f2c55583 HTTP/1.1\r\nHost: localhost:8080\r\nAuthorization: Basic dXNlckE6dXNlckE=\r\nUser-Agent: insomnia/7.1.0\r\nCookie: JSESSIONID=096451B2150BDBD4561A94E58A03D5B4\r\nContent-Type: application/json\r\nAccept: */*\r\nContent-Length: 62\r\n\r\n",
+		"timestamp": 1582862973216
+	},
+	{
+		"name": "DATA_OUT",
+		"value": "{\n  \"title\": \"new title\",\n  \"description\": \"new description\"\n}",
+		"timestamp": 1582862973216
+	},
+	{
+		"name": "TEXT",
+		"value": "upload completely sent off: 62 out of 62 bytes\n",
+		"timestamp": 1582862973216
+	},
+	{
+		"name": "TEXT",
+		"value": "Mark bundle as not supporting multiuse\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "HTTP/1.1 200 \r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "TEXT",
+		"value": "Replaced cookie JSESSIONID=\"E0A6B7653C8EAC151D3912FF1386286D\" for domain localhost, path /, expire 0\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Set-Cookie: JSESSIONID=E0A6B7653C8EAC151D3912FF1386286D; Path=/; HttpOnly\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Content-Type-Options: nosniff\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-XSS-Protection: 1; mode=block\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Cache-Control: no-cache, no-store, max-age=0, must-revalidate\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Pragma: no-cache\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Expires: 0\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Frame-Options: DENY\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Content-Type: application/json\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Transfer-Encoding: chunked\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Date: Fri, 28 Feb 2020 04:12:40 GMT\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "\r\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "TEXT",
+		"value": "Received 218 B chunk",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "TEXT",
+		"value": "Received 5 B chunk",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection #5 to host localhost left intact\n",
+		"timestamp": 1582863160595
+	},
+	{
+		"name": "TEXT",
+		"value": "Saved 1 cookie",
+		"timestamp": 1582863160598
+	}
+]

@@ -1,0 +1,1 @@
+{"timestamp":"2020-02-28T04:42:50.188+0000","status":500,"error":"Internal Server Error","message":"byte[] input is not supported for the JsonTranscoder!. If you want to read already encoded JSON, use the RawJsonTranscoder, otherwise read it with the RawBinaryTranscoder!","path":"/ideas/d344be09-95b9-4a9c-8718-d936cca3d499"}

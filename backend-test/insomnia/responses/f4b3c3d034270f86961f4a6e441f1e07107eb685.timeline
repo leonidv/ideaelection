@@ -1,0 +1,152 @@
+[
+	{
+		"name": "TEXT",
+		"value": "Preparing request to http://localhost:8080/ideas/7492418337c648e7b6ad5e313c357f6a",
+		"timestamp": 1585899165928
+	},
+	{
+		"name": "TEXT",
+		"value": "Using libcurl/7.67.0 OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.29.0",
+		"timestamp": 1585899165928
+	},
+	{
+		"name": "TEXT",
+		"value": "Current time is 2020-04-03T07:32:45.928Z",
+		"timestamp": 1585899165928
+	},
+	{
+		"name": "TEXT",
+		"value": "Disable timeout",
+		"timestamp": 1585899165928
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable automatic URL encoding",
+		"timestamp": 1585899165928
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable SSL validation",
+		"timestamp": 1585899165928
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable cookie sending with jar of 1 cookie",
+		"timestamp": 1585899165930
+	},
+	{
+		"name": "TEXT",
+		"value": "Too old connection (466 seconds), disconnect it\n",
+		"timestamp": 1585899165932
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection 0 seems to be dead!\n",
+		"timestamp": 1585899165932
+	},
+	{
+		"name": "TEXT",
+		"value": "Closing connection 0\n",
+		"timestamp": 1585899165932
+	},
+	{
+		"name": "TEXT",
+		"value": "  Trying ::1:8080...\n",
+		"timestamp": 1585899165933
+	},
+	{
+		"name": "TEXT",
+		"value": "TCP_NODELAY set\n",
+		"timestamp": 1585899165933
+	},
+	{
+		"name": "TEXT",
+		"value": "Connected to localhost (::1) port 8080 (#1)\n",
+		"timestamp": 1585899165933
+	},
+	{
+		"name": "TEXT",
+		"value": "Server auth using Basic with user 'userA'\n",
+		"timestamp": 1585899165933
+	},
+	{
+		"name": "HEADER_OUT",
+		"value": "GET /ideas/7492418337c648e7b6ad5e313c357f6a HTTP/1.1\r\nHost: localhost:8080\r\nAuthorization: Basic dXNlckE6dXNlckE=\r\nUser-Agent: insomnia/7.1.0\r\nCookie: JSESSIONID=21FCD7550132E06E2071C1EA9034AFFA\r\nAccept: */*\r\n\r\n",
+		"timestamp": 1585899165933
+	},
+	{
+		"name": "TEXT",
+		"value": "Mark bundle as not supporting multiuse\n",
+		"timestamp": 1585899165976
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "HTTP/1.1 200 \r\n",
+		"timestamp": 1585899165976
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Content-Type-Options: nosniff\r\n",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-XSS-Protection: 1; mode=block\r\n",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Cache-Control: no-cache, no-store, max-age=0, must-revalidate\r\n",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Pragma: no-cache\r\n",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Expires: 0\r\n",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Frame-Options: DENY\r\n",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Content-Type: application/json\r\n",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Transfer-Encoding: chunked\r\n",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Date: Fri, 03 Apr 2020 07:32:45 GMT\r\n",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "\r\n",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "TEXT",
+		"value": "Received 242 B chunk",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "TEXT",
+		"value": "Received 5 B chunk",
+		"timestamp": 1585899165977
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection #1 to host localhost left intact\n",
+		"timestamp": 1585899165977
+	}
+]

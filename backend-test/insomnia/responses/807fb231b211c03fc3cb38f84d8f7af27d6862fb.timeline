@@ -1,0 +1,162 @@
+[
+	{
+		"name": "TEXT",
+		"value": "Preparing request to http://localhost:8080/ideas/f5902cf168ba4bf994a27d491d4a849b",
+		"timestamp": 1584266368990
+	},
+	{
+		"name": "TEXT",
+		"value": "Using libcurl/7.67.0 OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.29.0",
+		"timestamp": 1584266368990
+	},
+	{
+		"name": "TEXT",
+		"value": "Current time is 2020-03-15T09:59:28.990Z",
+		"timestamp": 1584266368990
+	},
+	{
+		"name": "TEXT",
+		"value": "Disable timeout",
+		"timestamp": 1584266368990
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable automatic URL encoding",
+		"timestamp": 1584266368990
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable SSL validation",
+		"timestamp": 1584266368990
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable cookie sending with jar of 1 cookie",
+		"timestamp": 1584266368992
+	},
+	{
+		"name": "TEXT",
+		"value": "Found bundle for host localhost: 0x1cdd804acbd0 [serially]\n",
+		"timestamp": 1584266369019
+	},
+	{
+		"name": "TEXT",
+		"value": "Can not multiplex, even if we wanted to!\n",
+		"timestamp": 1584266369019
+	},
+	{
+		"name": "TEXT",
+		"value": "Re-using existing connection! (#37) with host localhost\n",
+		"timestamp": 1584266369019
+	},
+	{
+		"name": "TEXT",
+		"value": "Connected to localhost (::1) port 8080 (#37)\n",
+		"timestamp": 1584266369019
+	},
+	{
+		"name": "TEXT",
+		"value": "Server auth using Basic with user 'userA'\n",
+		"timestamp": 1584266369019
+	},
+	{
+		"name": "HEADER_OUT",
+		"value": "PUT /ideas/f5902cf168ba4bf994a27d491d4a849b HTTP/1.1\r\nHost: localhost:8080\r\nAuthorization: Basic dXNlckE6dXNlckE=\r\nUser-Agent: insomnia/7.1.0\r\nCookie: JSESSIONID=12E3268092AF305A335B2FC853C28EF2\r\nContent-Type: application/json\r\nAccept: */*\r\nContent-Length: 89\r\n\r\n",
+		"timestamp": 1584266369019
+	},
+	{
+		"name": "DATA_OUT",
+		"value": "{\n  \"title\": \"new title 2\",\n  \"description\": \"new description 2\",\n\t\"link\": \"new link 2\"\n}",
+		"timestamp": 1584266369019
+	},
+	{
+		"name": "TEXT",
+		"value": "upload completely sent off: 89 out of 89 bytes\n",
+		"timestamp": 1584266369019
+	},
+	{
+		"name": "TEXT",
+		"value": "Mark bundle as not supporting multiuse\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "HTTP/1.1 200 \r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "TEXT",
+		"value": "Replaced cookie JSESSIONID=\"AFFD271131D73850B379132FCD98CB86\" for domain localhost, path /, expire 0\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Set-Cookie: JSESSIONID=AFFD271131D73850B379132FCD98CB86; Path=/; HttpOnly\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Content-Type-Options: nosniff\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-XSS-Protection: 1; mode=block\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Cache-Control: no-cache, no-store, max-age=0, must-revalidate\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Pragma: no-cache\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Expires: 0\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Frame-Options: DENY\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Content-Type: application/json\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Transfer-Encoding: chunked\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Date: Sun, 15 Mar 2020 09:59:28 GMT\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "\r\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "TEXT",
+		"value": "Received 253 B chunk",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection #37 to host localhost left intact\n",
+		"timestamp": 1584266369180
+	},
+	{
+		"name": "TEXT",
+		"value": "Saved 1 cookie",
+		"timestamp": 1584266369276
+	}
+]

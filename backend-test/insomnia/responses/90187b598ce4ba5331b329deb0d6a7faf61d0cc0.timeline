@@ -1,0 +1,147 @@
+[
+	{
+		"name": "TEXT",
+		"value": "Preparing request to http://localhost:8092/ideaelection/_design/votes/_view/votes?limit=100&stale=false&connection_timeout=60000&inclusive_end=true&skip=0&group=true",
+		"timestamp": 1584804353629
+	},
+	{
+		"name": "TEXT",
+		"value": "Using libcurl/7.67.0 OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.29.0",
+		"timestamp": 1584804353629
+	},
+	{
+		"name": "TEXT",
+		"value": "Current time is 2020-03-21T15:25:53.629Z",
+		"timestamp": 1584804353629
+	},
+	{
+		"name": "TEXT",
+		"value": "Disable timeout",
+		"timestamp": 1584804353629
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable automatic URL encoding",
+		"timestamp": 1584804353629
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable SSL validation",
+		"timestamp": 1584804353629
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable cookie sending with jar of 1 cookie",
+		"timestamp": 1584804353631
+	},
+	{
+		"name": "TEXT",
+		"value": "Too old connection (2276 seconds), disconnect it\n",
+		"timestamp": 1584804353633
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection 12 seems to be dead!\n",
+		"timestamp": 1584804353633
+	},
+	{
+		"name": "TEXT",
+		"value": "Closing connection 12\n",
+		"timestamp": 1584804353633
+	},
+	{
+		"name": "TEXT",
+		"value": "  Trying ::1:8092...\n",
+		"timestamp": 1584804353635
+	},
+	{
+		"name": "TEXT",
+		"value": "TCP_NODELAY set\n",
+		"timestamp": 1584804353635
+	},
+	{
+		"name": "TEXT",
+		"value": "Connected to localhost (::1) port 8092 (#13)\n",
+		"timestamp": 1584804353635
+	},
+	{
+		"name": "TEXT",
+		"value": "Server auth using Basic with user 'Administrator'\n",
+		"timestamp": 1584804353635
+	},
+	{
+		"name": "HEADER_OUT",
+		"value": "GET /ideaelection/_design/votes/_view/votes?limit=100&stale=false&connection_timeout=60000&inclusive_end=true&skip=0&group=true HTTP/1.1\r\nHost: localhost:8092\r\nAuthorization: Basic QWRtaW5pc3RyYXRvcjpwYXNzd29yZA==\r\nUser-Agent: insomnia/7.1.0\r\nCookie: JSESSIONID=B91DD094CB00596D4CC14AFC379FB5B4\r\nAccept: */*\r\n\r\n",
+		"timestamp": 1584804353635
+	},
+	{
+		"name": "TEXT",
+		"value": "Mark bundle as not supporting multiuse\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "HTTP/1.1 200 OK\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-XSS-Protection: 1; mode=block\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Permitted-Cross-Domain-Policies: none\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Frame-Options: DENY\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Content-Type-Options: nosniff\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Transfer-Encoding: chunked\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Server: MochiWeb/1.0 (Any of you quaids got a smint?)\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Date: Sat, 21 Mar 2020 15:25:53 GMT\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Content-Type: text/plain;charset=utf-8\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Cache-Control: must-revalidate\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "\r\n",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "TEXT",
+		"value": "Received 259 B chunk",
+		"timestamp": 1584804353646
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection #13 to host localhost left intact\n",
+		"timestamp": 1584804353646
+	}
+]

@@ -1,0 +1,98 @@
+
+
+{
+  "name": "idea_fts",
+  "type": "fulltext-index",
+  "params": {
+    "mapping": {
+      "types": {
+        "idea": {
+          "enabled": true,
+          "dynamic": false,
+          "properties": {
+            "description": {
+              "enabled": true,
+              "dynamic": false,
+              "fields": [
+                {
+                  "name": "description",
+                  "type": "text",
+                  "store": false,
+                  "index": true,
+                  "include_term_vectors": true,
+                  "include_in_all": true,
+                  "docvalues": true
+                }
+              ]
+            },
+            "title": {
+              "enabled": true,
+              "dynamic": false,
+              "fields": [
+                {
+                  "name": "title",
+                  "type": "text",
+                  "store": false,
+                  "index": true,
+                  "include_term_vectors": true,
+                  "include_in_all": true,
+                  "docvalues": true
+                }
+              ]
+            }
+          }
+        }
+      },
+      "default_mapping": {
+        "enabled": false,
+        "dynamic": true
+      },
+      "default_type": "_default",
+      "default_analyzer": "RU",
+      "default_datetime_parser": "dateTimeOptional",
+      "default_field": "_all",
+      "analysis": {
+        "analyzers": {
+          "RU": {
+            "type": "custom",
+            "tokenizer": "unicode",
+            "token_filters": [
+              "stemmer_ru_snowball",
+              "to_lower",
+              "unicode nfc"
+            ]
+          }
+        },
+        "token_filters": {
+          "unicode nfc": {
+            "form": "nfc",
+            "type": "normalize_unicode"
+          }
+        }
+      },
+      "store_dynamic": false,
+      "index_dynamic": true
+    },
+    "store": {
+      "indexType": "scorch",
+      "kvStoreName": ""
+    },
+    "doc_config": {
+      "mode": "type_field",
+      "type_field": "_type",
+      "docid_prefix_delim": "",
+      "docid_regexp": ""
+    }
+  },
+  "sourceType": "couchbase",
+  "sourceName": "ideaelection",
+  "sourceUUID": "092d864ad0e54ade10877f0c152c48ef",
+  "sourceParams": {},
+  "planParams": {
+    "maxPartitionsPerPIndex": 171,
+    "numReplicas": 0,
+    "indexPartitions": 6
+  },
+  "uuid": ""
+}
+

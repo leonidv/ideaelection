@@ -1,0 +1,18 @@
+POST http://localhost:8080/ideas
+Content-Type: application/json
+
+{
+  "title": "new title",
+  "description": "new description"
+}
+
+###
+GET http://localhost:8080/ideas/b6bda897-f805-4cf6-95b3-1b6193f6c4de
+Content-Type: application/json
+
+{
+  "title": "new title",
+  "description": "new description"
+}
+
+###

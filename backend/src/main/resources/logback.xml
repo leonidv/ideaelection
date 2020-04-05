@@ -1,0 +1,22 @@
+<configuration debug="true">
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+<!--            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M %F:%L - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+<!--    <logger name="org.springframework.security" level="INFO"/>-->
+<!--    <logger name="org.springframework.web" level="TRACE"/>-->
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="com.couchbase.config" level="WARN"/>
+    <logger name="com.couchbase.tracing" level="ALL"/>
+
+    <logger name="ideael" level="DEBUG"/>
+    <logger name="ideael.infrastructure.repositories.IdeaCouchbaseRepository" level="TRACE"/>
+</configuration>

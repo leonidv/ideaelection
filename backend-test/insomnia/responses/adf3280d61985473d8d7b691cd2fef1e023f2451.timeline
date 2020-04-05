@@ -1,0 +1,92 @@
+[
+	{
+		"name": "TEXT",
+		"value": "Preparing request to http://localhost:8080/ideas?first=10&last=5",
+		"timestamp": 1583644318285
+	},
+	{
+		"name": "TEXT",
+		"value": "Using libcurl/7.67.0 OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.29.0",
+		"timestamp": 1583644318285
+	},
+	{
+		"name": "TEXT",
+		"value": "Current time is 2020-03-08T05:11:58.285Z",
+		"timestamp": 1583644318285
+	},
+	{
+		"name": "TEXT",
+		"value": "Disable timeout",
+		"timestamp": 1583644318285
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable automatic URL encoding",
+		"timestamp": 1583644318285
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable SSL validation",
+		"timestamp": 1583644318285
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable cookie sending with jar of 1 cookie",
+		"timestamp": 1583644318289
+	},
+	{
+		"name": "TEXT",
+		"value": "Too old connection (41391 seconds), disconnect it\n",
+		"timestamp": 1583644318293
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection 31 seems to be dead!\n",
+		"timestamp": 1583644318293
+	},
+	{
+		"name": "TEXT",
+		"value": "Closing connection 31\n",
+		"timestamp": 1583644318293
+	},
+	{
+		"name": "TEXT",
+		"value": "  Trying ::1:8080...\n",
+		"timestamp": 1583644318294
+	},
+	{
+		"name": "TEXT",
+		"value": "TCP_NODELAY set\n",
+		"timestamp": 1583644318294
+	},
+	{
+		"name": "TEXT",
+		"value": "connect to ::1 port 8080 failed: Connection refused\n",
+		"timestamp": 1583644318294
+	},
+	{
+		"name": "TEXT",
+		"value": "  Trying 127.0.0.1:8080...\n",
+		"timestamp": 1583644318294
+	},
+	{
+		"name": "TEXT",
+		"value": "TCP_NODELAY set\n",
+		"timestamp": 1583644318294
+	},
+	{
+		"name": "TEXT",
+		"value": "connect to 127.0.0.1 port 8080 failed: Connection refused\n",
+		"timestamp": 1583644318294
+	},
+	{
+		"name": "TEXT",
+		"value": "Failed to connect to localhost port 8080: Connection refused\n",
+		"timestamp": 1583644318294
+	},
+	{
+		"name": "TEXT",
+		"value": "Closing connection 32\n",
+		"timestamp": 1583644318294
+	}
+]

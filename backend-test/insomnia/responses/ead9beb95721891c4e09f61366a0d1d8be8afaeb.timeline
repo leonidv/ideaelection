@@ -1,0 +1,142 @@
+[
+	{
+		"name": "TEXT",
+		"value": "Preparing request to http://localhost:8080/ideas/68d4a1e89229494f86c5c759bb34d921",
+		"timestamp": 1586019379865
+	},
+	{
+		"name": "TEXT",
+		"value": "Using libcurl/7.67.0 OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.29.0",
+		"timestamp": 1586019379865
+	},
+	{
+		"name": "TEXT",
+		"value": "Current time is 2020-04-04T16:56:19.865Z",
+		"timestamp": 1586019379865
+	},
+	{
+		"name": "TEXT",
+		"value": "Disable timeout",
+		"timestamp": 1586019379865
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable automatic URL encoding",
+		"timestamp": 1586019379866
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable SSL validation",
+		"timestamp": 1586019379866
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable cookie sending with jar of 1 cookie",
+		"timestamp": 1586019379868
+	},
+	{
+		"name": "TEXT",
+		"value": "Hostname in DNS cache was stale, zapped\n",
+		"timestamp": 1586019379871
+	},
+	{
+		"name": "TEXT",
+		"value": "  Trying ::1:8080...\n",
+		"timestamp": 1586019379871
+	},
+	{
+		"name": "TEXT",
+		"value": "TCP_NODELAY set\n",
+		"timestamp": 1586019379871
+	},
+	{
+		"name": "TEXT",
+		"value": "Connected to localhost (::1) port 8080 (#3)\n",
+		"timestamp": 1586019379871
+	},
+	{
+		"name": "TEXT",
+		"value": "Server auth using Basic with user 'userA'\n",
+		"timestamp": 1586019379871
+	},
+	{
+		"name": "HEADER_OUT",
+		"value": "GET /ideas/68d4a1e89229494f86c5c759bb34d921 HTTP/1.1\r\nHost: localhost:8080\r\nAuthorization: Basic dXNlckE6dXNlckE=\r\nUser-Agent: insomnia/7.1.0\r\nCookie: JSESSIONID=B4299F2F26FC764AA439C1DA2B8930B6\r\nAccept: */*\r\n\r\n",
+		"timestamp": 1586019379871
+	},
+	{
+		"name": "TEXT",
+		"value": "Mark bundle as not supporting multiuse\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "HTTP/1.1 200 \r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Content-Type-Options: nosniff\r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-XSS-Protection: 1; mode=block\r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Cache-Control: no-cache, no-store, max-age=0, must-revalidate\r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Pragma: no-cache\r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Expires: 0\r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Frame-Options: DENY\r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Content-Type: application/json\r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Transfer-Encoding: chunked\r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Date: Sat, 04 Apr 2020 16:56:20 GMT\r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "\r\n",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "TEXT",
+		"value": "Received 298 B chunk",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "TEXT",
+		"value": "Received 5 B chunk",
+		"timestamp": 1586019380003
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection #3 to host localhost left intact\n",
+		"timestamp": 1586019380003
+	}
+]

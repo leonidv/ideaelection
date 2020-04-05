@@ -1,0 +1,102 @@
+[
+	{
+		"name": "TEXT",
+		"value": "Preparing request to http://localhost:8093/query/service?statement=select%20id%20from%20%60ideaelection%60%20where%20_type%20%3D%20%22idea%22",
+		"timestamp": 1581999210941
+	},
+	{
+		"name": "TEXT",
+		"value": "Using libcurl/7.67.0 OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.29.0",
+		"timestamp": 1581999210941
+	},
+	{
+		"name": "TEXT",
+		"value": "Current time is 2020-02-18T04:13:30.941Z",
+		"timestamp": 1581999210941
+	},
+	{
+		"name": "TEXT",
+		"value": "Disable timeout",
+		"timestamp": 1581999210941
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable automatic URL encoding",
+		"timestamp": 1581999210941
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable SSL validation",
+		"timestamp": 1581999210941
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable cookie sending with jar of 0 cookies",
+		"timestamp": 1581999210944
+	},
+	{
+		"name": "TEXT",
+		"value": "  Trying ::1:8093...\n",
+		"timestamp": 1581999210949
+	},
+	{
+		"name": "TEXT",
+		"value": "TCP_NODELAY set\n",
+		"timestamp": 1581999210949
+	},
+	{
+		"name": "TEXT",
+		"value": "Connected to localhost (::1) port 8093 (#0)\n",
+		"timestamp": 1581999210949
+	},
+	{
+		"name": "TEXT",
+		"value": "Server auth using Basic with user 'Administrator'\n",
+		"timestamp": 1581999210949
+	},
+	{
+		"name": "HEADER_OUT",
+		"value": "POST /query/service?statement=select%20id%20from%20%60ideaelection%60%20where%20_type%20%3D%20%22idea%22 HTTP/1.1\r\nHost: localhost:8093\r\nAuthorization: Basic QWRtaW5pc3RyYXRvcjpwYXNzd29yZA==\r\nUser-Agent: insomnia/7.1.0\r\nAccept: */*\r\nContent-Length: 0\r\n\r\n",
+		"timestamp": 1581999210949
+	},
+	{
+		"name": "TEXT",
+		"value": "Mark bundle as not supporting multiuse\n",
+		"timestamp": 1581999210952
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "HTTP/1.1 200 OK\r\n",
+		"timestamp": 1581999210952
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Content-Length: 556\r\n",
+		"timestamp": 1581999210952
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Content-Type: application/json; version=2.0.0-N1QL\r\n",
+		"timestamp": 1581999210952
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Date: Tue, 18 Feb 2020 04:13:30 GMT\r\n",
+		"timestamp": 1581999210952
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "\r\n",
+		"timestamp": 1581999210952
+	},
+	{
+		"name": "TEXT",
+		"value": "Received 556 B chunk",
+		"timestamp": 1581999210953
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection #0 to host localhost left intact\n",
+		"timestamp": 1581999210953
+	}
+]

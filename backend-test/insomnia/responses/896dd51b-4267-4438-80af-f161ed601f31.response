@@ -1,0 +1,1 @@
+{"timestamp":"2020-04-03T08:02:45.990+0000","status":400,"error":"Bad Request","message":"Required request body is missing: public org.springframework.http.ResponseEntity<ideael.api.ResponseOrError<ideael.domain.Idea>> ideael.api.IdeasController.create(ideael.api.IdeasController$IdeaInfo)","path":"/ideas"}
