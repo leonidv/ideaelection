@@ -13,7 +13,7 @@ blocks:
       jobs:
         - name: Build
           commands:
-            - java -v
+            - java -version
             - checkout
             - cd backend
             - ./gradlew -v
