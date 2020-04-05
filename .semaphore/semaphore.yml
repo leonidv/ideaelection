@@ -3,10 +3,9 @@ name: Java
 agent:
   machine:
     type: e1-standard-2
-
   containers:
     - name: main
-      image: semaphoreci/openjdk:11.0.1
+      image: semaphoreci/openjdk:11.0.1-jdk-slim-stretch
 
 blocks:
   - name: Gradle
@@ -18,3 +17,4 @@ blocks:
             - checkout
             - cd backend
             - ./gradlew -v
+            - ./gradlew build
