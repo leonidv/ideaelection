@@ -34,6 +34,6 @@ blocks:
   - name: Test backend API
     task:
       jobs:
-        -name: testing
-        -commands:
-          -ls -l
+        - name: testing
+          commands:
+            - ls -l
