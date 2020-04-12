@@ -1,50 +1,71 @@
 #!/usr/bin/env bash
 CB_HOST=localhost
+CURL_COMMON="--fail -u Administrator:password"
+
+checkCurlExec() {
+    echo $1 $2
+    curlCode=$1
+    msg=$2
+    if [[ ! curlCode -eq 0 ]]
+     then
+        echo -e "\033[31mFailed on [${msg}], exit code = ${curlCode}\e[0m"
+        exit 1
+     else
+        echo "Success ${msg}"
+    fi
+}
+
 ## Set controller name
-curl -u Administrator:password http://${CB_HOST}:8091/node/controller/rename \
-        --data hostname=127.0.0.1 \
-&& echo 'Name is 127.0.0.1'
+curl ${CURL_COMMON} http://${CB_HOST}:8091/node/controller/rename \
+        --data hostname=127.0.0.1
 
-curl -u Administrator:password http://${CB_HOST}:8091/node/controller/setupServices \
-        --data 'services=kv,n1ql,index,fts' \
-&& echo 'Services: kv, n1ql, index, fts'
+checkCurlExec $? "Name is 127.0.0.1"
 
-curl -u Administrator:password http://${CB_HOST}:8091/pools/default  \
+curl ${CURL_COMMON} http://${CB_HOST}:8091/node/controller/setupServices \
+        --data 'services=kv,n1ql,index,fts'
+
+checkCurlExec $? 'Services: kv, n1ql, index, fts'
+
+curl ${CURL_COMMON} http://${CB_HOST}:8091/pools/default  \
         --data memoryQuota=256 \
         --data indexMemoryQuota=256 \
-        --data ftsMemoryQuota=256 \
-&& echo 'Quotas: 256mb to all'
+        --data ftsMemoryQuota=256
+
+checkCurlExec $? 'Quotas: 256mb to all'
 
 #Create administrator user with default name and password
-curl -u Administrator:password http://${CB_HOST}:8091/settings/web  \
+curl ${CURL_COMMON} http://${CB_HOST}:8091/settings/web  \
         --data username=Administrator \
         --data password=password \
-        --data port=8091 \
-&& echo 'Default admin user'
+        --data port=8091
+
+checkCurlExec $? 'Default admin user'
 
 
-curl -u Administrator:password http://${CB_HOST}:8091/settings/indexes   \
-        --data storageMode=forestdb \
-&& echo 'Index forestdb enabled'
+curl ${CURL_COMMON} http://${CB_HOST}:8091/settings/indexes   \
+        --data storageMode=forestdb
 
-curl -u Administrator:password http://${CB_HOST}:8091/pools/default/buckets  \
+checkCurlExec $? 'Index forestdb enabled'
+
+curl ${CURL_COMMON} http://${CB_HOST}:8091/pools/default/buckets  \
         --data replicaNumber=0 \
         --data name=ideaelection \
-        --data ramQuotaMB=128 \
-&& echo 'Default bucket ideaelection is created'
+        --data ramQuotaMB=128
+
+checkCurlExec $? 'Default bucket ideaelection is created'
 
 sleep 3
 
-curl -G -XPOST -u Administrator:password http://${CB_HOST}:8093/query/service \
-        --data-urlencode statement='CREATE INDEX `ideas` ON `ideaelection`(`_type`)' \
-&& echo 'Index on type created'
+curl -G -XPOST ${CURL_COMMON} http://${CB_HOST}:8093/query/service \
+        --data-urlencode statement='CREATE INDEX `ideas` ON `ideaelection`(`_type`)'
+checkCurlExec $? 'Index on type created'
 
-curl -G -XPOST -u Administrator:password http://${CB_HOST}:8093/query/service \
-        --data-urlencode statement='CREATE INDEX `ideas-by-ctime` ON `ideaelection`(`_type`,`ctime`)' \
-&& echo 'Index on type and ctime created'
+curl -G -XPOST ${CURL_COMMON} http://${CB_HOST}:8093/query/service \
+        --data-urlencode statement='CREATE INDEX `ideas-by-ctime` ON `ideaelection`(`_type`,`ctime`)'
+checkCurlExec $? 'Index on type and ctime created'
 
-curl -u Administrator:password -XPUT http://${CB_HOST}:8094/api/index/idea_fts \
+curl ${CURL_COMMON} -XPUT http://${CB_HOST}:8094/api/index/idea_fts \
         -H 'cache-control: no-cache' \
         -H 'content-type: application/json' \
-        -d @couchbase-test-fts-mapping.json \
-&& echo 'FTS is created'
+        -d @couchbase-test-fts-mapping.json
+checkCurlExec $? 'FTS is created'

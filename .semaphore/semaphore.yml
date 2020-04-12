@@ -12,7 +12,8 @@ blocks:
         commands:
           - docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase:community-6.5.0
           - checkout
-          - scripts/couchbase-init-test.sh
+          - cd scripts/
+          - couchbase-init-test.sh
           - cache restore gradle
           - sleep 5
           - sem-version java 11
@@ -24,6 +25,7 @@ blocks:
         - name: Build backend application
           commands:
             - java -version
+            - pwd
             - cd backend
             - ./gradlew -v
             - ./gradlew bootJar
