@@ -26,10 +26,8 @@ blocks:
             - cd backend
             - ./gradlew -v
             - ./gradlew bootJar
-
-  - name: Test backend API
-    task:
-      jobs:
-        - name: testing
-          commands:
-            - ls -l
+            - nohup java -Dtestmode=on -jar build/libs/backend-*.jar &
+            - sleep 5
+            - cat nohup.out
+            - cd ../backend-test
+            - ./gradlew test
