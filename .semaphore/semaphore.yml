@@ -13,7 +13,7 @@ blocks:
           - docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase:community-6.5.0
           - checkout
           - cd scripts/
-          - couchbase-init-test.sh
+          - ./couchbase-init-test.sh
           - cache restore gradle
           - sleep 5
           - sem-version java 11
