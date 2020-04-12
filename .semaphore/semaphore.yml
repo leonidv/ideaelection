@@ -15,6 +15,7 @@ blocks:
           - checkout
           - cd scripts/
           - ./couchbase-init-test.sh
+          - cd ..
           - cache restore gradle
           - sem-version java 11
       epilogue:
