@@ -86,7 +86,6 @@
   },
   "sourceType": "couchbase",
   "sourceName": "ideaelection",
-  "sourceUUID": "092d864ad0e54ade10877f0c152c48ef",
   "sourceParams": {},
   "planParams": {
     "maxPartitionsPerPIndex": 171,

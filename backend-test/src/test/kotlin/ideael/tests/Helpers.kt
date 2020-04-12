@@ -3,6 +3,7 @@ package ideael.tests
 import assertk.assertThat
 import assertk.assertions.*
 import com.typesafe.config.ConfigFactory
+import io.kotest.core.spec.style.DescribeSpecDsl
 import io.restassured.http.ContentType
 import io.restassured.module.kotlin.extensions.Given
 import io.restassured.module.kotlin.extensions.Then
@@ -11,7 +12,7 @@ import io.restassured.path.json.JsonPath
 import io.restassured.response.Response
 import io.restassured.specification.RequestSpecification
 import org.apache.http.HttpStatus
-import org.spekframework.spek2.style.specification.Suite
+
 
 val ideaelUrl: String = ConfigFactory.load().getString("ideael.url")
 
@@ -112,7 +113,7 @@ fun vote(user : String, ideaId : String) : Response {
     return r
 }
 
-fun checkResponse(suite: Suite, r: Response, httpStatus: Int) {
+suspend fun checkResponse(suite: DescribeSpecDsl.DescribeScope, r: Response, httpStatus: Int) {
     suite.it("http status is $httpStatus") {
         assertThat(r.statusCode()).isEqualTo(httpStatus)
     }
@@ -128,7 +129,7 @@ fun checkResponse(suite: Suite, r: Response, httpStatus: Int) {
 
 }
 
-fun checkError(suite: Suite, r: Response, errorCode: Int, httpStatus: Int = 400) {
+suspend fun checkError(suite: DescribeSpecDsl.DescribeScope, r: Response, errorCode: Int, httpStatus: Int = 400) {
     checkResponse(suite, r, httpStatus)
 
     val json = r.body.jsonPath()
@@ -146,7 +147,7 @@ fun checkError(suite: Suite, r: Response, errorCode: Int, httpStatus: Int = 400)
     }
 }
 
-fun checkEntityData(suite: Suite, r: Response, httpStatus: Int = 200): HashMap<String, Any> {
+suspend fun checkEntityData(suite: DescribeSpecDsl.DescribeScope, r: Response, httpStatus: Int = 200): HashMap<String, Any> {
     val json = checkData(suite, r, httpStatus)
 
     val data: Any = json["data"]
@@ -158,7 +159,7 @@ fun checkEntityData(suite: Suite, r: Response, httpStatus: Int = 200): HashMap<S
     return json["data"]
 }
 
-fun checkListData(suite: Suite, r: Response, httpStatus: Int = 200): List<HashMap<String, String>> {
+suspend fun checkListData(suite: DescribeSpecDsl.DescribeScope, r: Response, httpStatus: Int = 200): List<HashMap<String, String>> {
     val json = checkData(suite, r, httpStatus)
     val data: Any = json.getList<HashMap<String, String>>("data")
     suite.it("data is list of entities") {
@@ -167,7 +168,7 @@ fun checkListData(suite: Suite, r: Response, httpStatus: Int = 200): List<HashMa
     return json.getList("data")
 }
 
-private fun checkData(suite: Suite, r: Response, httpStatus: Int): JsonPath {
+private suspend fun checkData(suite: DescribeSpecDsl.DescribeScope, r: Response, httpStatus: Int): JsonPath {
     checkResponse(suite, r, httpStatus)
     val json = r.body.jsonPath()
     suite.it("error is null") {

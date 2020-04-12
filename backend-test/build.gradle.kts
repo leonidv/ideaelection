@@ -3,10 +3,13 @@ plugins {
 }
 
 group = "ideaelection"
-version = "1.0-SNAPSHOT"
+version = "1.0"
+
+val kotestVersion = "4.0.2"
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -21,21 +24,42 @@ dependencies {
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.21")
 
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.9")
-    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.9")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion") // for kotest framework
+    testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion") // for kotest core jvm assertions
 }
+
+
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "11"
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "11"
     }
 
+
     test {
-        useJUnitPlatform {
-            includeEngines("spek2")
-        }
+        useJUnitPlatform()
+
+        addTestListener(object : TestListener {
+            override fun beforeTest(testDescriptor: TestDescriptor?) {}
+
+            override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+                println("${suite.name} total test: ${result.testCount}, failed: ${result.failedTestCount}")
+            }
+
+            override fun beforeSuite(suite: TestDescriptor?) {}
+
+            override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {
+                val name = testDescriptor.name!!
+                if (name.startsWith("Describe:") ) {
+                    println("${testDescriptor.name}")
+                } else if (name.startsWith("It:") && result.failedTestCount > 0) {
+                    val testName = name.substring(3)
+                    println("FAILED: ${testDescriptor.parent!!.name}:${testName}")
+                }
+            }
+        })
     }
 }
