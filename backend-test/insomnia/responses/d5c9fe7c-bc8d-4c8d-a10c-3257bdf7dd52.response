@@ -1,0 +1,1 @@
+{"errors":{"ramQuotaMB":"The RAM Quota must be specified and must be a positive integer."},"summaries":{"ramSummary":{"total":268435456,"otherBuckets":0,"nodesCount":1,"perNodeMegs":0,"thisAlloc":0,"thisUsed":0,"free":268435456},"hddSummary":{"total":43848368128,"otherData":40340498677,"otherBuckets":0,"thisUsed":0,"free":3507869451}}}

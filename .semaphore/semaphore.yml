@@ -1,0 +1,37 @@
+version: v1.0
+name: Idea Elections
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: Backend building
+    task:
+      prologue:
+        commands:
+          - docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase:community-6.5.0
+          - sleep 5
+          - checkout
+          - cd scripts/
+          - ./couchbase-init-test.sh
+          - cd ..
+          - cache restore gradle
+          - sem-version java 11
+      epilogue:
+        commands:
+          - cache store gradle $USER_HOME/.gradle
+
+      jobs:
+        - name: Build backend application
+          commands:
+            - java -version
+            - pwd
+            - cd backend
+            - ./gradlew -v
+            - ./gradlew bootJar
+            - nohup java -Dtestmode=on -jar build/libs/backend-*.jar &
+            - sleep 5
+            - cat nohup.out
+            - cd ../backend-test
+            - ./gradlew test

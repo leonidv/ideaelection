@@ -43,23 +43,10 @@ tasks {
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "11"
         kotlinOptions.freeCompilerArgs = listOf("-Xjsr305=strict")
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "11"
     }
 }
-
-//sourceSets {
-//    main {
-//        java {
-//            srcDir("src/main/kotlin")
-//        }
-//    }
-//    test {
-//        java {
-//            srcDir("src/test/kotlin")
-//        }
-//    }
-//}

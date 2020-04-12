@@ -1,0 +1,1 @@
+{"errors":{"memoryQuota":"The data service quota (8MB) cannot be less than 256MB (current total buckets quota, or at least 256MB)."}}

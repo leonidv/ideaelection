@@ -1,0 +1,42 @@
+[
+	{
+		"name": "TEXT",
+		"value": "Preparing request to ",
+		"timestamp": 1586410093614
+	},
+	{
+		"name": "TEXT",
+		"value": "Using libcurl/7.67.0 OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.29.0",
+		"timestamp": 1586410093614
+	},
+	{
+		"name": "TEXT",
+		"value": "Current time is 2020-04-09T05:28:13.614Z",
+		"timestamp": 1586410093614
+	},
+	{
+		"name": "TEXT",
+		"value": "Disable timeout",
+		"timestamp": 1586410093614
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable automatic URL encoding",
+		"timestamp": 1586410093614
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable SSL validation",
+		"timestamp": 1586410093614
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable cookie sending with jar of 1 cookie",
+		"timestamp": 1586410093617
+	},
+	{
+		"name": "TEXT",
+		"value": "Closing connection -1\n",
+		"timestamp": 1586410093620
+	}
+]

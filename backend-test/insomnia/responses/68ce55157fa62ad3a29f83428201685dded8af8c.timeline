@@ -1,0 +1,152 @@
+[
+	{
+		"name": "TEXT",
+		"value": "Preparing request to http://localhost:8091/nodes/self/controller/settings",
+		"timestamp": 1586410112651
+	},
+	{
+		"name": "TEXT",
+		"value": "Using libcurl/7.67.0 OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.29.0",
+		"timestamp": 1586410112651
+	},
+	{
+		"name": "TEXT",
+		"value": "Current time is 2020-04-09T05:28:32.651Z",
+		"timestamp": 1586410112651
+	},
+	{
+		"name": "TEXT",
+		"value": "Disable timeout",
+		"timestamp": 1586410112651
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable automatic URL encoding",
+		"timestamp": 1586410112651
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable SSL validation",
+		"timestamp": 1586410112651
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable cookie sending with jar of 1 cookie",
+		"timestamp": 1586410112652
+	},
+	{
+		"name": "TEXT",
+		"value": "  Trying ::1:8091...\n",
+		"timestamp": 1586410112655
+	},
+	{
+		"name": "TEXT",
+		"value": "TCP_NODELAY set\n",
+		"timestamp": 1586410112655
+	},
+	{
+		"name": "TEXT",
+		"value": "Connected to localhost (::1) port 8091 (#15)\n",
+		"timestamp": 1586410112655
+	},
+	{
+		"name": "TEXT",
+		"value": "Server auth using Basic with user 'Administrator'\n",
+		"timestamp": 1586410112655
+	},
+	{
+		"name": "HEADER_OUT",
+		"value": "POST /nodes/self/controller/settings HTTP/1.1\r\nHost: localhost:8091\r\nAuthorization: Basic QWRtaW5pc3RyYXRvcjpwYXNzd29yZA==\r\nUser-Agent: insomnia/7.1.0\r\nCookie: JSESSIONID=0D31544CEE7897B188019C8A9DD76C99\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: */*\r\nContent-Length: 239\r\n\r\n",
+		"timestamp": 1586410112655
+	},
+	{
+		"name": "DATA_OUT",
+		"value": "path=%2Fopt%2Fcouchbase%2Fvar%2Flib%2Fcouchbase%2Fdata&index_path=%2Fopt%2Fcouchbase%2Fvar%2Flib%2Fcouchbase%2Fdata&cbas_path=%2Fopt%2Fcouchbase%2Fvar%2Flib%2Fcouchbase%2Fdata&eventing_path=%2Fopt%2Fcouchbase%2Fvar%2Flib%2Fcouchbase%2Fdata",
+		"timestamp": 1586410112656
+	},
+	{
+		"name": "TEXT",
+		"value": "upload completely sent off: 239 out of 239 bytes\n",
+		"timestamp": 1586410112656
+	},
+	{
+		"name": "TEXT",
+		"value": "Mark bundle as not supporting multiuse\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "HTTP/1.1 400 Bad Request\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-XSS-Protection: 1; mode=block\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Permitted-Cross-Domain-Policies: none\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Frame-Options: DENY\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Content-Type-Options: nosniff\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Server: Couchbase Server\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Pragma: no-cache\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Expires: Thu, 01 Jan 1970 00:00:00 GMT\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Date: Thu, 09 Apr 2020 05:28:32 GMT\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Content-Type: application/json\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Content-Length: 81\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Cache-Control: no-cache,no-store,must-revalidate\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "\r\n",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "TEXT",
+		"value": "Received 81 B chunk",
+		"timestamp": 1586410112665
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection #15 to host localhost left intact\n",
+		"timestamp": 1586410112665
+	}
+]

@@ -1,0 +1,162 @@
+[
+	{
+		"name": "TEXT",
+		"value": "Preparing request to http://localhost:8091/pools/default/buckets",
+		"timestamp": 1586599672818
+	},
+	{
+		"name": "TEXT",
+		"value": "Using libcurl/7.67.0 OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.29.0",
+		"timestamp": 1586599672818
+	},
+	{
+		"name": "TEXT",
+		"value": "Current time is 2020-04-11T10:07:52.818Z",
+		"timestamp": 1586599672818
+	},
+	{
+		"name": "TEXT",
+		"value": "Disable timeout",
+		"timestamp": 1586599672818
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable automatic URL encoding",
+		"timestamp": 1586599672818
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable SSL validation",
+		"timestamp": 1586599672818
+	},
+	{
+		"name": "TEXT",
+		"value": "Enable cookie sending with jar of 1 cookie",
+		"timestamp": 1586599672820
+	},
+	{
+		"name": "TEXT",
+		"value": "Too old connection (6875 seconds), disconnect it\n",
+		"timestamp": 1586599672822
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection 24 seems to be dead!\n",
+		"timestamp": 1586599672822
+	},
+	{
+		"name": "TEXT",
+		"value": "Closing connection 24\n",
+		"timestamp": 1586599672822
+	},
+	{
+		"name": "TEXT",
+		"value": "  Trying ::1:8091...\n",
+		"timestamp": 1586599672823
+	},
+	{
+		"name": "TEXT",
+		"value": "TCP_NODELAY set\n",
+		"timestamp": 1586599672823
+	},
+	{
+		"name": "TEXT",
+		"value": "Connected to localhost (::1) port 8091 (#25)\n",
+		"timestamp": 1586599672823
+	},
+	{
+		"name": "TEXT",
+		"value": "Server auth using Basic with user 'Administrator'\n",
+		"timestamp": 1586599672823
+	},
+	{
+		"name": "HEADER_OUT",
+		"value": "POST /pools/default/buckets HTTP/1.1\r\nHost: localhost:8091\r\nAuthorization: Basic QWRtaW5pc3RyYXRvcjpwYXNzd29yZA==\r\nUser-Agent: insomnia/7.1.0\r\nCookie: JSESSIONID=AD5C3BC0347D249EC5CC664024A6FD7D\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: */*\r\nContent-Length: 48\r\n\r\n",
+		"timestamp": 1586599672823
+	},
+	{
+		"name": "DATA_OUT",
+		"value": "replicaNumber=0&name=ideaelection&ramQuotaMB=128",
+		"timestamp": 1586599672823
+	},
+	{
+		"name": "TEXT",
+		"value": "upload completely sent off: 48 out of 48 bytes\n",
+		"timestamp": 1586599672823
+	},
+	{
+		"name": "TEXT",
+		"value": "Mark bundle as not supporting multiuse\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "HTTP/1.1 202 Accepted\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-XSS-Protection: 1; mode=block\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Permitted-Cross-Domain-Policies: none\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Frame-Options: DENY\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "X-Content-Type-Options: nosniff\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Server: Couchbase Server\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Pragma: no-cache\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Location: /pools/default/buckets/ideaelection\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Expires: Thu, 01 Jan 1970 00:00:00 GMT\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Date: Sat, 11 Apr 2020 10:07:52 GMT\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Content-Length: 0\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "Cache-Control: no-cache,no-store,must-revalidate\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "HEADER_IN",
+		"value": "\r\n",
+		"timestamp": 1586599672831
+	},
+	{
+		"name": "TEXT",
+		"value": "Connection #25 to host localhost left intact\n",
+		"timestamp": 1586599672831
+	}
+]
