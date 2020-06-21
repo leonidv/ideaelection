@@ -18,5 +18,5 @@
     <logger name="com.couchbase.tracing" level="ALL"/>
 
     <logger name="ideael" level="DEBUG"/>
-    <logger name="ideael.infrastructure.repositories.IdeaCouchbaseRepository" level="TRACE"/>
+
 </configuration>

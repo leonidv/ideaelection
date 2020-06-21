@@ -1,8 +1,9 @@
 plugins {
-    id("org.springframework.boot") version "2.2.4.RELEASE"
+    id("org.springframework.boot") version "2.3.1.RELEASE"
     id("io.spring.dependency-management") version "1.0.9.RELEASE"
-    kotlin("jvm") version "1.3.61"
-    kotlin("plugin.spring") version "1.3.61"
+    kotlin("jvm") version "1.3.72"
+    kotlin("plugin.spring") version "1.3.72"
+    id("idea")
 }
 
 group = "ideaelection"
@@ -12,13 +13,28 @@ repositories {
     mavenCentral()
 }
 
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
+}
+
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-security")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
+
+    implementation("org.springframework.security:spring-security-web")
+    implementation("org.springframework.security:spring-security-config")
+
+    implementation("org.springframework.security:spring-security-oauth2-client")
+    implementation("org.springframework.security:spring-security-oauth2-jose")
+
+
     implementation("com.couchbase.client:java-client:3.0.1")
 
     implementation("com.typesafe:config:1.4.0")
+    implementation("io.github.microutils:kotlin-logging:1.7.9")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

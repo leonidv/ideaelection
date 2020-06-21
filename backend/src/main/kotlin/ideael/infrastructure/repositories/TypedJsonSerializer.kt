@@ -17,6 +17,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import ideael.domain.Idea
+import mu.KotlinLogging
 import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
@@ -41,8 +42,8 @@ class TypedJsonSerializer<T>(
     private val mapperForUnwrappedJson: ObjectMapper
     private val mapperForWrappedJson: ObjectMapper
 
-    val log =
-        LoggerFactory.getLogger(TypedJsonSerializer::class.java)
+    private val log = KotlinLogging.logger {}
+
 
     init {
         // один маппер который разворачивает тип (первоначальная конвертаци)
@@ -82,7 +83,7 @@ class TypedJsonSerializer<T>(
             return input as T
         }
 
-        log.trace("dezerialize: target=[$target], input=${String(input)}")
+        log.trace {"dezerialize: target=[$target], input=${String(input)}"}
 
         return try {
             if (typedClass.isAssignableFrom(target)) {
