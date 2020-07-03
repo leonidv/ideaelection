@@ -25,7 +25,8 @@ In the backend-test directory run gradle:
 ### What is the test mode
 This mode enables features which are useful for testing, but very dangerous in the production:
 * HTTP Basic Authentication (in addition to OAuth2). The application allows any credentials
-which have password equals to a username.  
+which have password equals to a username. If user name ends with `_group_admin` user gets `GROUP_ADMIN`
+authority (role). In another case authority is `USER`.
 * Passwords are exposed in Config Rest API (/configs). 
  
  

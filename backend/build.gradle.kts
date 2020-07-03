@@ -34,6 +34,7 @@ dependencies {
     implementation("com.couchbase.client:java-client:3.0.1")
 
     implementation("com.typesafe:config:1.4.0")
+    implementation("com.github.zeldigas:spring-hocon-property-source:0.2.2")
     implementation("io.github.microutils:kotlin-logging:1.7.9")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")

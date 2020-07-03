@@ -11,12 +11,12 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
-<!--    <logger name="org.springframework.security" level="INFO"/>-->
-<!--    <logger name="org.springframework.web" level="TRACE"/>-->
+    <logger name="org.springframework.security" level="DEBUG"/>
+    <logger name="org.springframework.web" level="DEBUG"/>
     <logger name="org.springframework" level="INFO"/>
     <logger name="com.couchbase.config" level="WARN"/>
     <logger name="com.couchbase.tracing" level="ALL"/>
 
-    <logger name="ideael" level="DEBUG"/>
+    <logger name="idel" level="DEBUG"/>
 
 </configuration>
