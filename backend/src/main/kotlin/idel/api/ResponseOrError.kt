@@ -1,7 +1,12 @@
 package idel.api
 
+import arrow.core.Either
+import idel.domain.generateId
+import mu.KLogger
+import org.slf4j.Logger
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import java.lang.Exception
 import java.time.LocalDateTime
 import java.util.*
 
@@ -58,6 +63,22 @@ class ResponseOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescrip
         }
 
         /**
+         * Make [ResponseEntity] [ok] if [operationResult] is [Either.Right]. Otherwise return [internal] and print
+         * exception to [log].
+         */
+        fun <T>from(operationResult : Either<Exception,T>, log : KLogger) : ResponseEntity<ResponseOrError<T>> {
+            return when(operationResult) {
+                is Either.Right -> ok(operationResult.b)
+                is Either.Left -> {
+                    val errorId = generateId();
+                    val ex = operationResult.a
+                    log.warn(ex) { "Can't process operation, errorId: ${errorId}"}
+                    internal("${ex.message}, errorId: ${errorId}")
+                }
+            }
+        }
+
+        /**
          * Make [ResponseEntity] with [ErrorDescription.notAllowed] and code [HttpStatus.FORBIDDEN]
          */
         fun <T> forbidden(reason: String): ResponseEntity<ResponseOrError<T>> {
@@ -78,6 +99,19 @@ class ResponseOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescrip
             return badRequest(ErrorDescription.ideaNotFound(id), HttpStatus.NOT_FOUND)
         }
 
+        /**
+         * Return [internal] error with message "not implemented". Use as [TODO] for MVC settings.
+         */
+        fun <T> notImplemented() : ResponseEntity<ResponseOrError<T>> {
+            return internal("not implemented yet")
+        }
+
+        /**
+         * Make [ResponseEntity] with [ErrorDescription.incorrectArgument] and code [HttpStatus.BAD_REQUEST]
+         */
+        fun <T> incorrectArgument(argument: String, reason: String) : ResponseEntity<ResponseOrError<T>> {
+            return badRequest(ErrorDescription.incorrectArgument(argument, reason), HttpStatus.BAD_REQUEST)
+        }
 
         fun <T>internal(msg : String) : ResponseEntity<ResponseOrError<T>> {
             return badRequest(ErrorDescription.internal(msg), HttpStatus.INTERNAL_SERVER_ERROR)
@@ -87,6 +121,12 @@ class ResponseOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescrip
             return ResponseEntity.status(code).body(response(body))
         }
 
+        /**
+         * Return data as entity with [HttpStatus.OK]
+         */
+        fun <T> ok(data : T) : ResponseEntity<ResponseOrError<T>> {
+            return data(data)
+        }
     }
 
     init {

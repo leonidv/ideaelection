@@ -10,9 +10,6 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer
-import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.password.NoOpPasswordEncoder
 
 @Configuration
@@ -56,7 +53,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(web: WebSecurity) {
-        web.debug(true)
+       // web.debug(true)
     }
 
     @Suppress("DEPRECATION")
@@ -69,49 +66,3 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
 
 }
 
-class TestUser(authorities: MutableCollection<out GrantedAuthority>,
-               attributes: MutableMap<String, Any>,
-               private val password: String,
-               private val username: String
-) :
-        IdelOAuth2User(authorities, attributes, "basic", "name", "email", "photo"), UserDetails {
-    override fun isEnabled() = true
-
-    override fun getUsername() = username
-
-    override fun isCredentialsNonExpired() = true
-
-    override fun getPassword() = password
-
-    override fun isAccountNonExpired() = true
-
-    override fun isAccountNonLocked() = true
-
-}
-
-/**
- * Allow any username. Create new user with password equals username, if username not found.
- */
-class TestUsersDetailsService : UserDetailsService {
-  override fun loadUserByUsername(username: String): TestUser {
-        val authority =
-                if (username.endsWith("_group_admin", ignoreCase = true)) {
-                    IdelAuthorities.GROUP_ADMIN_AUTHORITY
-                } else {
-                    IdelAuthorities.USER_AUTHORITY
-                }
-        val attributes = mutableMapOf<String,Any>(
-                "name" to "${username} ${username}",
-                "email" to "${username}@mail",
-                "photo" to ""
-        )
-
-
-        return TestUser(
-                authorities = mutableSetOf(authority),
-                attributes = attributes,
-                username = username,
-                password = username
-        )
-    }
-}

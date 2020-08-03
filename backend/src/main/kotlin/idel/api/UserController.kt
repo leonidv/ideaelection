@@ -1,30 +1,116 @@
 package idel.api
 
-import org.springframework.http.HttpStatus
+import arrow.core.None
+import arrow.core.Some
+import com.couchbase.client.core.error.DocumentExistsException
+import idel.domain.Roles
+import idel.domain.User
+import idel.domain.UserRepository
+import idel.infrastructure.repositories.PersistsUser
+import idel.infrastructure.security.IdelOAuth2User
+import mu.KLogger
+import mu.KotlinLogging
+import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import org.springframework.web.bind.annotation.*
+import java.lang.Exception
 
 @RestController
 @RequestMapping("/users")
-class UserController {
+class UserController(val userRepository: UserRepository) {
+    data class MeResult(val id: String, val displayName: String, val avatar: String, val authorities: List<String>)
 
 
-    data class MeResult(val name: String, val provider: String, val authorities: List<String>)
+    val log: KLogger = KotlinLogging.logger {}
 
     @GetMapping("/me")
-    @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    fun me(authentication: Authentication): MeResult {
-        return if (authentication is OAuth2AuthenticationToken) {
-            val principal = authentication.principal
-            MeResult(
-                    name = principal.name,
-                    provider = authentication.authorizedClientRegistrationId,
+    fun me(authentication: Authentication): ResponseEntity<ResponseOrError<MeResult>> {
+        val principal = authentication.principal
+
+        return if (principal is IdelOAuth2User) {
+            val result = MeResult(
+                    id = principal.id(),
+                    displayName = principal.displayName,
+                    avatar = principal.avatar,
                     authorities = authentication.authorities.map {it.authority}
             )
+            ResponseOrError.ok(result)
         } else {
-            return MeResult("", "", emptyList())
+            return ResponseOrError.internal("principal is not IdelOAuth2User");
+        }
+    }
+
+    /**
+     * Check [roles] and if it correct call [actionIfCorrect]
+     *
+     * @param roles - roles which should be checked
+     * @param actionIfCorrect - function which will be called if roles are correct
+     */
+    private fun <T> rolesAreNotMisspelled(roles: Set<String>, actionIfCorrect : () -> ResponseEntity<ResponseOrError<T>>) : ResponseEntity<ResponseOrError<T>> {
+        val incorrectRoles = Roles.findIncorrect(roles)
+        return if (incorrectRoles.isEmpty()) {
+            actionIfCorrect()
+        } else {
+            ResponseOrError.incorrectArgument("roles", "Bad roles: [$incorrectRoles]")
+        }
+    }
+
+    @PutMapping("/{userId}/roles")
+    @ResponseBody
+    fun putRoles(@PathVariable(name = "userId", required = true) userId : String,
+                 @RequestBody(required = true) roles : Set<String>) : ResponseEntity<out ResponseOrError<out User>> {
+        return rolesAreNotMisspelled(roles) {
+            when(val userOption = userRepository.load(userId)) {
+                is Some -> {
+                    val user = userOption.t
+                    if (user.roles == roles) {
+                        ResponseOrError.ok(user)
+                    } else {
+                        ResponseOrError.from(userRepository.update(user), log)
+                    }
+                }
+                is None -> {
+                    ResponseOrError.notFound(userId)
+                }
+            }
+        }
+    }
+
+    @PostMapping
+    fun register(@RequestBody userInfo: PersistsUser): ResponseEntity<out ResponseOrError<out User>> {
+        return rolesAreNotMisspelled<User>(userInfo.roles) {
+            try {
+                userRepository.add(userInfo)
+                ResponseOrError.ok(userInfo)
+            }   catch (ex : DocumentExistsException) {
+                ResponseOrError.incorrectArgument("id", "User with same id already registered")
+            }
+
+        }
+    }
+
+    @GetMapping
+    fun list(@RequestParam(required = false, defaultValue = "0") first: Int,
+             @RequestParam(required = false, defaultValue = "10") last: Int) : ResponseEntity<ResponseOrError<List<User>>> {
+        val size = last - first;
+
+        if (size <= 0) {
+            return ResponseOrError.incorrectArgument("last: $last, first: $first","first should be less then first")
+        }
+
+        if (size > 100) {
+            val error = ErrorDescription.tooManyItems(size, 100);
+            return ResponseOrError.badRequest(error)
+        }
+
+
+        return try {
+            ResponseOrError.ok(userRepository.load(first, last))
+
+        } catch (e : Exception) {
+            log.error(e) {"Can't load users list"}
+            ResponseOrError.internal("Can't load data.  Exception message: "+e.message)
         }
     }
 }

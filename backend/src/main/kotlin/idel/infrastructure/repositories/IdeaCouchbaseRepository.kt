@@ -12,20 +12,11 @@ import com.couchbase.client.java.kv.GetOptions
 import com.couchbase.client.java.kv.InsertOptions
 import com.couchbase.client.java.kv.ReplaceOptions
 import com.couchbase.client.java.query.QueryOptions
-import com.fasterxml.jackson.databind.*
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import idel.domain.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 /**
@@ -39,47 +30,16 @@ fun JsonObject.asQueryOptions(readonly: Boolean = true): QueryOptions {
 
 @Repository
 class IdeaCouchbaseRepository(
-    private val cluster: Cluster,
-    private val collection: Collection
-) : IdeaRepository {
+    cluster: Cluster,
+    collection: Collection
+) : AbstractTypedCouchbaseRepository<Idea>(cluster, collection, "idea", Idea::class.java), IdeaRepository {
 
     private val log: Logger = LoggerFactory.getLogger(IdeaCouchbaseRepository::class.java)
 
-    val mapper = initMapper();
-
-    val jsonSerializer = TypedJsonSerializer(
-        mapper =  mapper,
-        rootName = "ie",
-        type = "idea",
-        typedClass =  Idea::class.java)
-
-    private val transcoder: JsonTranscoder = JsonTranscoder.create(jsonSerializer)
-
-    /**
-     * Configure mapper to user custom Voter serializer
-     */
-    private fun initMapper(): ObjectMapper {
-        val timeModule = JavaTimeModule()
-        timeModule.addSerializer(
-            LocalDateTime::class.java,
-            LocalDateTimeSerializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        )
-        timeModule.addDeserializer(
-            LocalDateTime::class.java,
-            LocalDateTimeDeserializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        )
-
-        return jacksonObjectMapper()
-            .registerModule(timeModule)
-            .registerModule(Jdk8Module())
-            .registerModule(ParameterNamesModule())
-
-    }
 
 
     override fun add(idea: Idea): Idea {
-        val options = InsertOptions.insertOptions().transcoder(transcoder)
-        collection.insert(idea.id.toString(), idea, options)
+        collection.insert(idea.id, idea, insertOptions())
         return idea
     }
 
@@ -89,47 +49,13 @@ class IdeaCouchbaseRepository(
      *
      * Return Left(Nothing) if 3 attempts of updating is not working.
      */
-    override fun updateInfo(id: String, info: IdeaInfo): Either<Unit, Idea> {
-        lateinit var idea: Idea
-        var canUpdate: Boolean
-        var attempts = 0
-
-        do {
-            val maybeOriginIdea = this.load(id)
-            if (maybeOriginIdea.isEmpty) {
-                log.warn("Can't load document updateInfo(id=[$id])")
-                return Either.left(Unit)
-            }
-
-
-            val originIdea = maybeOriginIdea.get().idea
-            val originVersion = maybeOriginIdea.get().version
-
-            val options = ReplaceOptions.replaceOptions()
-                .transcoder(transcoder)
-                .cas(originVersion)
-
-            idea = originIdea.copy(
-                title = info.title,
-                description = info.description,
-                link = info.link
+    override fun updateInfo(id: String, info: IdeaInfo): Either<Exception, Idea> {
+        return safelyReplace(id) {
+            it.copy(
+                    title = info.title,
+                    description = info.description,
+                    link = info.link
             )
-
-            canUpdate =
-                try {
-                    collection.replace(idea.id, idea, options)
-                    true
-                } catch (ex: CasMismatchException) {
-                    false
-                }
-
-            attempts++
-        } while (attempts >= 3 && !canUpdate)
-
-        return if (canUpdate) {
-            Either.right(idea)
-        } else {
-            Either.left(Unit)
         }
     }
 
@@ -203,7 +129,7 @@ class IdeaCouchbaseRepository(
             .timeout(Duration.ofSeconds(2))
 
         val queryString = "select * from `ideaelection` as ie " +
-                "where _type = \"idea\" $filterQuery " +
+                "where _type = \"${this.type}\" $filterQuery " +
                 "order by $ordering offset \$offset limit \$limit"
 
         if (log.isTraceEnabled) {

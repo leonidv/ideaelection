@@ -1,13 +1,12 @@
 package idel.infrastructure.security
 
+import idel.domain.Roles
+import org.springframework.security.access.vote.RoleVoter
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class IdelAuthorities {
     companion object {
-        const val USER = "idel_user"
-        val USER_AUTHORITY = SimpleGrantedAuthority(USER)
-
-        const val GROUP_ADMIN = "idel_group_admin"
-        val GROUP_ADMIN_AUTHORITY = SimpleGrantedAuthority(GROUP_ADMIN)
+        val USER_AUTHORITY = SimpleGrantedAuthority(Roles.USER)
+        val SUPER_USER_AUTHORITY = SimpleGrantedAuthority(Roles.SUPER_USER)
     }
 }

@@ -214,8 +214,10 @@ data class IdeaFiltering(
 }
 
 /**
- * The idea with Couchbase CAS for safely updating
+ * The idea with Couchbase CAS for safely updating.
+ * It's not domain level.
  */
+@Deprecated("Will be removed after migration into Postgresql")
 data class IdeaWithVersion(val idea: Idea, val version: Long)
 
 
@@ -233,7 +235,7 @@ interface IdeaRepository {
      *  [Left] with an Idea from storage with current storage version. Left means, that operation is failed!
      *
      */
-    fun updateInfo(id: String, info: IdeaInfo): Either<Unit, Idea>
+    fun updateInfo(id: String, info: IdeaInfo): Either<Exception, Idea>
 
     /**
      * Update idea.

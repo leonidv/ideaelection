@@ -207,11 +207,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         val size = last - first;
 
         if (size <= 0) {
-            val error = ErrorDescription.incorrectArgument(
-                "last: $last, first: $first",
-                "Request non-positive count of document"
-            )
-            return ResponseOrError.badRequest(error)
+            return ResponseOrError.incorrectArgument("last: $last, first: $first","first should be less then first")
         }
 
         if (size > 100) {

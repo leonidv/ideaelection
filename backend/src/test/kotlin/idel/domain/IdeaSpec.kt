@@ -2,8 +2,8 @@ package idel.domain
 
 import assertk.assertThat
 import assertk.assertions.*
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
+import io.kotest.core.spec.style.DescribeSpec
+
 import java.time.LocalDateTime
 
 data class IdeaInfoValues(
@@ -12,26 +12,39 @@ data class IdeaInfoValues(
     override val link: String
 ) : IdeaInfo
 
-class TestUser(override val email: String, override val profileName: String, override val profilePhoto: String) : User {
+class TestUser(
+               private val id : String,
+               override val email: String,
+               override val displayName: String,
+               override val avatar: String,
+               override val roles: Set<String>
+) : User {
+
     companion object {
-        val DUMMY = TestUser("dummy@mail", "dummy dummy","none")
+
+        val DUMMY_USER = TestUser(
+                id = "user1",
+                email = "dummy@mail",
+                displayName =  "dummy dummy",
+                avatar =  "none",
+                roles = setOf(Roles.USER)
+        );
     }
-    override fun id(): String = email;
+
+    override fun id() = this.id
+
 }
 
 fun ideaInfo(title: String = "t", description: String = "d", link: String = "l"): IdeaInfo {
     return IdeaInfoValues(title, description, link)
 }
 
-class IdeaSpec : Spek({
+class IdeaSpec : DescribeSpec({
     describe("An IdeaFactory") {
-        val factory by memoized { IdeaFactory() }
+        val factory = IdeaFactory()
 
         describe("a new idea with title = [t], description = [d], link = [l], offeredBy = [v]") {
-            lateinit var idea: Idea
-            beforeEachTest {
-                idea = factory.createIdea(ideaInfo(), "v")
-            }
+            val idea = factory.createIdea(ideaInfo(),"v")
 
             it("has title [t]") {
                 assertThat(idea.title).isEqualTo("t")
@@ -63,8 +76,8 @@ class IdeaSpec : Spek({
 
         val originIdea = IdeaFactory().createIdea(ideaInfo(), "u@email")
 
-        val voterA = TestUser("a@email", "a", "")
-        val voterB = TestUser("b@email", "b", "")
+        val voterA = TestUser("ua", "a@email", "a", "", setOf(Roles.USER));
+        val voterB = TestUser("ub", "b@email", "b", "", setOf(Roles.USER));
 
         describe("copy") {
             val originIdea = Idea(
@@ -144,14 +157,14 @@ class IdeaSpec : Spek({
 
         describe("voting") {
             describe("user can vote for an idea") {
-                val idea = originIdea.addVote(TestUser.DUMMY.id())
+                val idea = originIdea.addVote(TestUser.DUMMY_USER.id())
 
                 it("id is not changed") {
                     assertThat(idea.id).isEqualTo(originIdea.id)
                 }
 
                 it("has voter [dummy@mail]") {
-                    assertThat(idea.voters).isEqualTo(setOf(TestUser.DUMMY.id()))
+                    assertThat(idea.voters).isEqualTo(setOf(TestUser.DUMMY_USER.id()))
                 }
 
                 it("return 1 vote") {
@@ -175,11 +188,11 @@ class IdeaSpec : Spek({
 
             describe("user can't vote twice for same idea") {
                 val idea = originIdea
-                    .addVote(TestUser.DUMMY.id())
-                    .addVote(TestUser.DUMMY.id())
+                    .addVote(TestUser.DUMMY_USER.id())
+                    .addVote(TestUser.DUMMY_USER.id())
 
                 it("has only one voter [dummy@email]") {
-                    assertThat(idea.voters).isEqualTo(setOf(TestUser.DUMMY.id()))
+                    assertThat(idea.voters).isEqualTo(setOf(TestUser.DUMMY_USER.id()))
                 }
 
                 it("has 1 vote") {
@@ -201,8 +214,8 @@ class IdeaSpec : Spek({
         describe("removing vote") {
             describe("user can remove his vote (only he have voted)") {
                 val idea = originIdea
-                    .addVote(TestUser.DUMMY.id())
-                    .removeVote(TestUser.DUMMY.id())
+                    .addVote(TestUser.DUMMY_USER.id())
+                    .removeVote(TestUser.DUMMY_USER.id())
 
                 it("has not any voters") {
                     assertThat(idea.voters).isEmpty()
@@ -229,7 +242,7 @@ class IdeaSpec : Spek({
             }
 
             describe("user can't remove vote for an idea without any vote") {
-                val idea = originIdea.removeVote(TestUser.DUMMY.id())
+                val idea = originIdea.removeVote(TestUser.DUMMY_USER.id())
 
                 it("has not any voters") {
                     assertThat(idea.voters).isEmpty()
@@ -246,7 +259,7 @@ class IdeaSpec : Spek({
                     .removeVote(voterB.id())
 
                 it("has voter [a@email] ") {
-                    assertThat(idea.voters).isEqualTo(setOf("a@email"))
+                    assertThat(idea.voters).isEqualTo(setOf(voterA.id()))
                 }
 
                 it("has 1 vote") {

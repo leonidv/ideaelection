@@ -286,7 +286,7 @@ class IdeaLoading : DescribeSpec({
                             param("first", 0)
                             param("last", 5)
                             param("sorting", "ctime_asc")
-                            param("offeredBy", "userA")
+                            param("offeredBy", "userA@httpbasic")
                         } When {
                             get("$ideaelUrl/ideas")
                         }
@@ -309,7 +309,7 @@ class IdeaLoading : DescribeSpec({
                             param("first", 0)
                             param("last", 5)
                             param("sorting", "ctime_desc")
-                            param("offeredBy", "userB")
+                            param("offeredBy", "userB@httpbasic")
                         } When {
                             get("$ideaelUrl/ideas")
                         }
@@ -330,7 +330,7 @@ class IdeaLoading : DescribeSpec({
 
                         val r = Given {
                             initRequest(this, "userA")
-                            param("assignee", "userA")
+                            param("assignee", "userA@httpbasic")
                         } When {
                             get("$ideaelUrl/ideas")
                         }
@@ -348,7 +348,7 @@ class IdeaLoading : DescribeSpec({
 
                         val r = Given {
                             initRequest(this, "userC")
-                            param("assignee", "userB")
+                            param("assignee", "userB@httpbasic")
                         } When {
                             get("$ideaelUrl/ideas")
                         }
@@ -433,8 +433,8 @@ class IdeaLoading : DescribeSpec({
                             initRequest(this, "userC")
                             param("offset", 0)
                             param("last", 1)
-                            param("offeredBy", "userA")
-                            param("assignee", "userB")
+                            param("offeredBy", "userA@httpbasic")
+                            param("assignee", "userB@httpbasic")
                             param("implemented", false)
                         } When {
                             get("$ideaelUrl/ideas")

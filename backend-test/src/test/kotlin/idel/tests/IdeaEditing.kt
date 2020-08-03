@@ -4,6 +4,8 @@ import io.kotest.core.spec.style.DescribeSpec
 import assertk.assertThat
 import assertk.assertions.*
 
+import idel.tests.isUser
+
 import io.restassured.module.kotlin.extensions.*
 import io.restassured.response.Response
 import org.apache.http.HttpStatus
@@ -25,7 +27,7 @@ class IdeaEditing : DescribeSpec({
         }
 
         it("offeredBy [userA]") {
-            assertThat(data["offeredBy"]).isEqualTo("userA")
+            assertThat(data["offeredBy"]).isUser("userA")
         }
 
         it("description is [new description]") {
@@ -66,7 +68,7 @@ class IdeaEditing : DescribeSpec({
             }
 
             it("offeredBy [userB]") {
-                assertThat(data.get("offeredBy")).isEqualTo("userB")
+                assertThat(data.get("offeredBy")).isUser("userB")
             }
         }
 
@@ -94,7 +96,7 @@ class IdeaEditing : DescribeSpec({
             }
 
             it("offeredBy [userB]") {
-                assertThat(data.get("offeredBy")).isEqualTo("userB")
+                assertThat(data.get("offeredBy")).isUser("userB")
             }
         }
     }
@@ -195,7 +197,7 @@ class IdeaEditing : DescribeSpec({
                 val data = checkEntityData(this, r, 200)
 
                 it("has userB as voter") {
-                    assertThat(data["voters"]).isEqualTo(listOf("userB"))
+                    assertThat(data["voters"]).isEqualTo(listOf("userB@httpbasic"))
                 }
             }
 
@@ -270,23 +272,23 @@ class IdeaEditing : DescribeSpec({
                 val r = Given {
                     initRequest(this, "userA")
                 } When {
-                    post("/ideas/$ideaId/assignee/userA")
+                    post("/ideas/$ideaId/assignee/userA@httpbasic")
                 }
 
                 val data = checkEntityData(this, r)
 
                 it("response contains assignee as userA") {
-                    assertThat(data["assignee"]).isEqualTo("userA")
+                    assertThat(data["assignee"]).isUser("userA")
                 }
 
                 it("idea loaded by userA contains assignee as userA") {
                     val data = loadIdea("userA", ideaId)
-                    assertThat(data["assignee"]).isEqualTo("userA")
+                    assertThat(data["assignee"]).isUser("userA")
                 }
 
                 it("idea loaded by userB contains assignee as userA") {
                     val data = loadIdea("userB", ideaId)
-                    assertThat(data["assignee"]).isEqualTo("userA")
+                    assertThat(data["assignee"]).isUser("userA")
                 }
             }
 
@@ -327,23 +329,23 @@ class IdeaEditing : DescribeSpec({
                 val r = Given {
                     initRequest(this, "userB")
                 } When {
-                    post("$ideaelUrl/ideas/$ideaId/assignee/userB")
+                    post("$ideaelUrl/ideas/$ideaId/assignee/userB@httpbasic")
                 }
 
                 val data = checkEntityData(this, r)
 
-                it("response contains assignee as empty string") {
-                    assertThat(data["assignee"]).isEqualTo("userB")
+                it("response contains assignee as userB") {
+                    assertThat(data["assignee"]).isUser("userB")
                 }
 
-                it("idea loaded by userA contains assignee as empty string") {
+                it("idea loaded by userA contains assignee as userB") {
                     val data = loadIdea("userA", ideaId)
-                    assertThat(data["assignee"]).isEqualTo("userB")
+                    assertThat(data["assignee"]).isUser("userB")
                 }
 
-                it("idea loaded by userB contains assignee as empty string") {
+                it("idea loaded by userB contains assignee as userB") {
                     val data = loadIdea("userB", ideaId)
-                    assertThat(data["assignee"]).isEqualTo("userB")
+                    assertThat(data["assignee"]).isUser("userB")
                 }
             }
 

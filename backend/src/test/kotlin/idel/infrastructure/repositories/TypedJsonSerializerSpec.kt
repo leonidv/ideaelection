@@ -7,15 +7,13 @@ import assertk.assertions.isFailure
 import com.couchbase.client.core.error.DecodingFailureException
 import com.couchbase.client.java.codec.TypeRef
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
-import org.spekframework.spek2.style.specification.xdescribe
+import io.kotest.core.spec.style.DescribeSpec
 
 class Person(val name: String, val age: Int)
 
 class PersonTypeRef() : TypeRef<Person>()
 
-class TypedJsonSerializerSpec : Spek({
+class TypedJsonSerializerSpec : DescribeSpec({
     val objectMapper = jacksonObjectMapper()
     val serializer = TypedJsonSerializer(objectMapper, "person", "test", Person::class.java)
     
@@ -64,22 +62,22 @@ class TypedJsonSerializerSpec : Spek({
 
 
 
-    xdescribe("deserialize to TypeRef","method is not implemented") {
-        describe("json has correct type, json=[$jsonStr]") {
-            val p = serializer.deserialize(PersonTypeRef(),jsonStr.toByteArray())
-            it ("name is [a]") {
-                assertThat(p.name).isEqualTo("a")
-            }
-
-            it("age is [10]") {
-                assertThat(p.age).isEqualTo(10)
-            }
-        }
-
-        it("json has incorrect type, json=[$incorrectTypeJsonStr]") {
-            assertThat{
-                serializer.deserialize(PersonTypeRef(),incorrectTypeJsonStr.toByteArray())
-            }.isFailure().hasClass(DecodingFailureException::class.java)
-        }
-    }
+//    xdescribe("deserialize to TypeRef","method is not implemented") {
+//        describe("json has correct type, json=[$jsonStr]") {
+//            val p = serializer.deserialize(PersonTypeRef(),jsonStr.toByteArray())
+//            it ("name is [a]") {
+//                assertThat(p.name).isEqualTo("a")
+//            }
+//
+//            it("age is [10]") {
+//                assertThat(p.age).isEqualTo(10)
+//            }
+//        }
+//
+//        it("json has incorrect type, json=[$incorrectTypeJsonStr]") {
+//            assertThat{
+//                serializer.deserialize(PersonTypeRef(),incorrectTypeJsonStr.toByteArray())
+//            }.isFailure().hasClass(DecodingFailureException::class.java)
+//        }
+//    }
 })

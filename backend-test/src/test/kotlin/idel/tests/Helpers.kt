@@ -1,9 +1,13 @@
 package idel.tests
 
+import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.*
+import assertk.assertions.support.expected
+import assertk.assertions.support.fail
 import com.typesafe.config.ConfigFactory
-import io.kotest.core.spec.style.DescribeSpecDsl
+import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.scopes.DescribeScope
 import io.restassured.http.ContentType
 import io.restassured.module.kotlin.extensions.Given
 import io.restassured.module.kotlin.extensions.Then
@@ -16,13 +20,26 @@ import org.apache.http.HttpStatus
 
 val ideaelUrl: String = ConfigFactory.load().getString("ideael.url")
 
+
+fun <T> Assert<T>.isUser(login: T, provider: String = "httpbasic") = given {actual ->
+    if (!(actual is String)) {
+        expected("userId should be String", expected = "String")
+    }
+    val userId = "$login@$provider"
+    if (actual == userId) {
+        return
+    } else {
+        fail(userId, actual)
+    }
+}
+
 /**
  * Initialize RestAssured request with commons settings, like basic auth and conten type.
  */
 fun initRequest(
-    request: RequestSpecification,
-    user: String,
-    contentType: ContentType = ContentType.JSON
+        request: RequestSpecification,
+        user: String,
+        contentType: ContentType = ContentType.JSON
 ): RequestSpecification {
     request.auth().preemptive().basic(user, user)
     request.contentType(contentType)
@@ -47,9 +64,9 @@ fun addIdea(user: String, title: String = "t", description: String = "d", link: 
     return id
 }
 
-fun loadIdea(user : String, ideaId : String) : HashMap<String, Any> {
+fun loadIdea(user: String, ideaId: String): HashMap<String, Any> {
     val r = Given {
-        initRequest(this,user)
+        initRequest(this, user)
     } When {
         get("$ideaelUrl/ideas/$ideaId")
     }
@@ -62,11 +79,12 @@ fun loadIdea(user : String, ideaId : String) : HashMap<String, Any> {
     return r.body().jsonPath()["data"]
 }
 
-fun changeAssignee(user : String, ideaId: String, newAssignee : String) {
+fun changeAssignee(user: String, ideaId: String, newAssignee: String, provider: String = "httpbasic") {
     val r = Given {
-        initRequest(this,user)
+        initRequest(this, user)
     } When {
-        post("$ideaelUrl/ideas/$ideaId/assignee/$newAssignee")
+        var newAssigneeId = "$newAssignee@$provider"
+        post("$ideaelUrl/ideas/$ideaId/assignee/$newAssigneeId")
     }
 
     r Then {
@@ -77,10 +95,10 @@ fun changeAssignee(user : String, ideaId: String, newAssignee : String) {
     return r.body().jsonPath()["data"]
 }
 
-fun markImplemented(user : String, ideaId : String, status : Boolean, expectedHttpCode : Int = HttpStatus.SC_OK) : Response {
+fun markImplemented(user: String, ideaId: String, status: Boolean, expectedHttpCode: Int = HttpStatus.SC_OK): Response {
     val url = "$ideaelUrl/ideas/$ideaId/implemented"
     val r = Given {
-        initRequest(this,user)
+        initRequest(this, user)
     } When {
         if (status) {
             post(url)
@@ -97,10 +115,10 @@ fun markImplemented(user : String, ideaId : String, status : Boolean, expectedHt
     return r
 }
 
-fun vote(user : String, ideaId : String) : Response {
+fun vote(user: String, ideaId: String): Response {
     println("$user votes for $ideaId")
     val r = Given {
-        initRequest(this,user)
+        initRequest(this, user)
     } When {
         post("$ideaelUrl/ideas/${ideaId}/voters")
     }
@@ -113,7 +131,7 @@ fun vote(user : String, ideaId : String) : Response {
     return r
 }
 
-suspend fun checkResponse(suite: DescribeSpecDsl.DescribeScope, r: Response, httpStatus: Int) {
+suspend fun checkResponse(suite: DescribeScope, r: Response, httpStatus: Int) {
     suite.it("http status is $httpStatus") {
         assertThat(r.statusCode()).isEqualTo(httpStatus)
     }
@@ -129,7 +147,7 @@ suspend fun checkResponse(suite: DescribeSpecDsl.DescribeScope, r: Response, htt
 
 }
 
-suspend fun checkError(suite: DescribeSpecDsl.DescribeScope, r: Response, errorCode: Int, httpStatus: Int = 400) {
+suspend fun checkError(suite: DescribeScope, r: Response, errorCode: Int, httpStatus: Int = 400) {
     checkResponse(suite, r, httpStatus)
 
     val json = r.body.jsonPath()
@@ -147,7 +165,7 @@ suspend fun checkError(suite: DescribeSpecDsl.DescribeScope, r: Response, errorC
     }
 }
 
-suspend fun checkEntityData(suite: DescribeSpecDsl.DescribeScope, r: Response, httpStatus: Int = 200): HashMap<String, Any> {
+suspend fun checkEntityData(suite: DescribeScope, r: Response, httpStatus: Int = 200): HashMap<String, Any> {
     val json = checkData(suite, r, httpStatus)
 
     val data: Any = json["data"]
@@ -159,7 +177,7 @@ suspend fun checkEntityData(suite: DescribeSpecDsl.DescribeScope, r: Response, h
     return json["data"]
 }
 
-suspend fun checkListData(suite: DescribeSpecDsl.DescribeScope, r: Response, httpStatus: Int = 200): List<HashMap<String, String>> {
+suspend fun checkListData(suite: DescribeScope, r: Response, httpStatus: Int = 200): List<HashMap<String, String>> {
     val json = checkData(suite, r, httpStatus)
     val data: Any = json.getList<HashMap<String, String>>("data")
     suite.it("data is list of entities") {
@@ -168,7 +186,7 @@ suspend fun checkListData(suite: DescribeSpecDsl.DescribeScope, r: Response, htt
     return json.getList("data")
 }
 
-private suspend fun checkData(suite: DescribeSpecDsl.DescribeScope, r: Response, httpStatus: Int): JsonPath {
+private suspend fun checkData(suite: DescribeScope, r: Response, httpStatus: Int): JsonPath {
     checkResponse(suite, r, httpStatus)
     val json = r.body.jsonPath()
     suite.it("error is null") {
