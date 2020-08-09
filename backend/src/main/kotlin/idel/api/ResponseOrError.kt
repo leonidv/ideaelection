@@ -1,6 +1,9 @@
 package idel.api
 
 import arrow.core.Either
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.Some
 import idel.domain.generateId
 import mu.KLogger
 import org.slf4j.Logger
@@ -66,7 +69,7 @@ class ResponseOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescrip
          * Make [ResponseEntity] [ok] if [operationResult] is [Either.Right]. Otherwise return [internal] and print
          * exception to [log].
          */
-        fun <T>from(operationResult : Either<Exception,T>, log : KLogger) : ResponseEntity<ResponseOrError<T>> {
+        fun <T>fromLoading(operationResult : Either<Exception,T>, log : KLogger) : ResponseEntity<ResponseOrError<T>> {
             return when(operationResult) {
                 is Either.Right -> ok(operationResult.b)
                 is Either.Left -> {
@@ -75,6 +78,16 @@ class ResponseOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescrip
                     log.warn(ex) { "Can't process operation, errorId: ${errorId}"}
                     internal("${ex.message}, errorId: ${errorId}")
                 }
+            }
+        }
+
+        /**
+         * Make [ResponseEntity] [ok] if [operationResult] is [Some], otherwise return [notFound]
+         */
+        fun <T>fromLoading(id : String, operationResult : Option<T>) : ResponseEntity<ResponseOrError<T>> {
+            return when(operationResult) {
+                is Some -> ok(operationResult.t)
+                is None -> notFound(id)
             }
         }
 
@@ -99,9 +112,11 @@ class ResponseOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescrip
             return badRequest(ErrorDescription.ideaNotFound(id), HttpStatus.NOT_FOUND)
         }
 
+
         /**
-         * Return [internal] error with message "not implemented". Use as [TODO] for MVC settings.
+         * Return [internal] error with message "not implemented". Use as [TODO] for MVC controllers.
          */
+        @Suppress("unused")
         fun <T> notImplemented() : ResponseEntity<ResponseOrError<T>> {
             return internal("not implemented yet")
         }

@@ -1,13 +1,12 @@
 package idel.tests
 
-import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.*
-import assertk.assertions.support.expected
-import assertk.assertions.support.fail
 import com.typesafe.config.ConfigFactory
-import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.core.spec.style.scopes.DescribeScope
+import io.restassured.filter.Filter
+import io.restassured.filter.log.RequestLoggingFilter
+import io.restassured.filter.log.ResponseLoggingFilter
 import io.restassured.http.ContentType
 import io.restassured.module.kotlin.extensions.Given
 import io.restassured.module.kotlin.extensions.Then
@@ -18,20 +17,8 @@ import io.restassured.specification.RequestSpecification
 import org.apache.http.HttpStatus
 
 
-val ideaelUrl: String = ConfigFactory.load().getString("ideael.url")
+val idelUrl: String = ConfigFactory.load().getString("idel.url")
 
-
-fun <T> Assert<T>.isUser(login: T, provider: String = "httpbasic") = given {actual ->
-    if (!(actual is String)) {
-        expected("userId should be String", expected = "String")
-    }
-    val userId = "$login@$provider"
-    if (actual == userId) {
-        return
-    } else {
-        fail(userId, actual)
-    }
-}
 
 /**
  * Initialize RestAssured request with commons settings, like basic auth and conten type.
@@ -39,10 +26,14 @@ fun <T> Assert<T>.isUser(login: T, provider: String = "httpbasic") = given {actu
 fun initRequest(
         request: RequestSpecification,
         user: String,
-        contentType: ContentType = ContentType.JSON
+        contentType: ContentType = ContentType.JSON,
+        debug : Boolean = false
 ): RequestSpecification {
     request.auth().preemptive().basic(user, user)
     request.contentType(contentType)
+    if (debug) {
+        request.filters(listOf(ResponseLoggingFilter(), RequestLoggingFilter()))
+    }
     return request
 }
 
@@ -54,7 +45,7 @@ fun addIdea(user: String, title: String = "t", description: String = "d", link: 
         initRequest(this, user)
         body("""{ "title": "$title", "description": "$description", "link": "$link" }""")
     } When {
-        post("$ideaelUrl/ideas")
+        post("$idelUrl/ideas")
     } Then {
         statusCode(201)
         contentType("application/json")
@@ -68,7 +59,7 @@ fun loadIdea(user: String, ideaId: String): HashMap<String, Any> {
     val r = Given {
         initRequest(this, user)
     } When {
-        get("$ideaelUrl/ideas/$ideaId")
+        get("$idelUrl/ideas/$ideaId")
     }
 
     r Then {
@@ -84,7 +75,7 @@ fun changeAssignee(user: String, ideaId: String, newAssignee: String, provider: 
         initRequest(this, user)
     } When {
         var newAssigneeId = "$newAssignee@$provider"
-        post("$ideaelUrl/ideas/$ideaId/assignee/$newAssigneeId")
+        post("$idelUrl/ideas/$ideaId/assignee/$newAssigneeId")
     }
 
     r Then {
@@ -96,7 +87,7 @@ fun changeAssignee(user: String, ideaId: String, newAssignee: String, provider: 
 }
 
 fun markImplemented(user: String, ideaId: String, status: Boolean, expectedHttpCode: Int = HttpStatus.SC_OK): Response {
-    val url = "$ideaelUrl/ideas/$ideaId/implemented"
+    val url = "$idelUrl/ideas/$ideaId/implemented"
     val r = Given {
         initRequest(this, user)
     } When {
@@ -120,7 +111,7 @@ fun vote(user: String, ideaId: String): Response {
     val r = Given {
         initRequest(this, user)
     } When {
-        post("$ideaelUrl/ideas/${ideaId}/voters")
+        post("$idelUrl/ideas/${ideaId}/voters")
     }
 
     r Then {

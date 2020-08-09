@@ -14,11 +14,11 @@ class Couchbase(host: String, username: String, password: String, private val bu
     private val collection: Collection = bucket.defaultCollection()
 
     companion object {
-        private fun init(ideaelUrl: String): Couchbase {
+        private fun init(idelUrl: String): Couchbase {
             val r = Given {
                 auth().preemptive().basic("admin", "admin")
             } When {
-                get("$ideaelUrl/configs/couchbase")
+                get("$idelUrl/configs/couchbase")
             } Then {
                 statusCode(200)
             }
@@ -36,7 +36,7 @@ class Couchbase(host: String, username: String, password: String, private val bu
          * Load settings of couchbase service from IdeaElection application.
          * Application MUST be in test mode, see testing.md in backend folder.
          */
-        val Helper = init(ConfigFactory.load().getString("ideael.url"))
+        val Helper = init(ConfigFactory.load().getString("idel.url"))
     }
 
     init {
@@ -50,7 +50,7 @@ class Couchbase(host: String, username: String, password: String, private val bu
      * Use direct connection to couchbase server.
      */
     fun clearIdeas() {
-        val result = cluster.query("""select id from `$bucketName` where _type = "idea" """)
+        val result = cluster.query("""select id from `$bucketName` where _type = "idea" or _type="user"Lf """)
         result.rowsAsObject().forEach {
             val id = it.getString("id")
             println("delete document id = [$id]")

@@ -47,7 +47,7 @@ class UserController(val userRepository: UserRepository) {
      * @param roles - roles which should be checked
      * @param actionIfCorrect - function which will be called if roles are correct
      */
-    private fun <T> rolesAreNotMisspelled(roles: Set<String>, actionIfCorrect : () -> ResponseEntity<ResponseOrError<T>>) : ResponseEntity<ResponseOrError<T>> {
+    private fun <T> rolesAreNotMisspelled(roles: Set<String>, actionIfCorrect: () -> ResponseEntity<ResponseOrError<T>>): ResponseEntity<ResponseOrError<T>> {
         val incorrectRoles = Roles.findIncorrect(roles)
         return if (incorrectRoles.isEmpty()) {
             actionIfCorrect()
@@ -58,16 +58,17 @@ class UserController(val userRepository: UserRepository) {
 
     @PutMapping("/{userId}/roles")
     @ResponseBody
-    fun putRoles(@PathVariable(name = "userId", required = true) userId : String,
-                 @RequestBody(required = true) roles : Set<String>) : ResponseEntity<out ResponseOrError<out User>> {
+    fun putRoles(@PathVariable(name = "userId", required = true) userId: String,
+                 @RequestBody(required = true) roles: Set<String>): ResponseEntity<out ResponseOrError<out User>> {
         return rolesAreNotMisspelled(roles) {
-            when(val userOption = userRepository.load(userId)) {
+            when (val userOption = userRepository.load(userId)) {
                 is Some -> {
                     val user = userOption.t
                     if (user.roles == roles) {
                         ResponseOrError.ok(user)
                     } else {
-                        ResponseOrError.from(userRepository.update(user), log)
+                        val newUser = PersistsUser.of(user).copy(roles = roles)
+                        ResponseOrError.fromLoading(userRepository.update(newUser), log)
                     }
                 }
                 is None -> {
@@ -83,7 +84,7 @@ class UserController(val userRepository: UserRepository) {
             try {
                 userRepository.add(userInfo)
                 ResponseOrError.ok(userInfo)
-            }   catch (ex : DocumentExistsException) {
+            } catch (ex: DocumentExistsException) {
                 ResponseOrError.incorrectArgument("id", "User with same id already registered")
             }
 
@@ -92,11 +93,11 @@ class UserController(val userRepository: UserRepository) {
 
     @GetMapping
     fun list(@RequestParam(required = false, defaultValue = "0") first: Int,
-             @RequestParam(required = false, defaultValue = "10") last: Int) : ResponseEntity<ResponseOrError<List<User>>> {
+             @RequestParam(required = false, defaultValue = "10") last: Int): ResponseEntity<ResponseOrError<List<User>>> {
         val size = last - first;
 
         if (size <= 0) {
-            return ResponseOrError.incorrectArgument("last: $last, first: $first","first should be less then first")
+            return ResponseOrError.incorrectArgument("last: $last, first: $first", "first should be less then first")
         }
 
         if (size > 100) {
@@ -108,9 +109,14 @@ class UserController(val userRepository: UserRepository) {
         return try {
             ResponseOrError.ok(userRepository.load(first, last))
 
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             log.error(e) {"Can't load users list"}
-            ResponseOrError.internal("Can't load data.  Exception message: "+e.message)
+            ResponseOrError.internal("Can't load data.  Exception message: " + e.message)
         }
+    }
+
+    @GetMapping("/{userId}")
+    fun load(@PathVariable(name = "userId", required = true) userId: String): ResponseEntity<out ResponseOrError<out User>> {
+       return ResponseOrError.fromLoading(userId, userRepository.load(userId))
     }
 }

@@ -117,7 +117,7 @@ class IdeaLoading : DescribeSpec({
                     param("first", 10)
                     param("last", 0)
                 } When {
-                    get("$ideaelUrl/ideas")
+                    get("$idelUrl/ideas")
                 }
 
                 checkError(this, r, 100)
@@ -130,7 +130,7 @@ class IdeaLoading : DescribeSpec({
                     param("first", 0)
                     param("last", 101)
                 } When {
-                    get("$ideaelUrl/ideas")
+                    get("$idelUrl/ideas")
                 }
 
                 checkError(this, r, 101)
@@ -146,7 +146,7 @@ class IdeaLoading : DescribeSpec({
                     val r = Given {
                         initRequest(this, "userA")
                     } When {
-                        get("$ideaelUrl/ideas")
+                        get("$idelUrl/ideas")
                     }
 
                     val data = checkListData(this, r)
@@ -166,7 +166,7 @@ class IdeaLoading : DescribeSpec({
                         param("first", 0)
                         param("last", 5)
                     } When {
-                        get("$ideaelUrl/ideas")
+                        get("$idelUrl/ideas")
                     }
 
                     val data = checkListData(this, r)
@@ -188,7 +188,7 @@ class IdeaLoading : DescribeSpec({
                         param("last", 5)
                         param("sorting", "ctime_asc")
                     } When {
-                        get("$ideaelUrl/ideas")
+                        get("$idelUrl/ideas")
                     }
 
                     val data = checkListData(this, r)
@@ -210,7 +210,7 @@ class IdeaLoading : DescribeSpec({
                             param("last", 6)
                             param("sorting", "ctime_desc")
                         } When {
-                            get("$ideaelUrl/ideas")
+                            get("$idelUrl/ideas")
                         }
 
                     val data = checkListData(this, r)
@@ -230,7 +230,7 @@ class IdeaLoading : DescribeSpec({
                         param("first", 4)
                         param("last", 7)
                     } When {
-                        get("$ideaelUrl/ideas")
+                        get("$idelUrl/ideas")
                     }
 
                     val data = checkListData(this, r)
@@ -249,7 +249,7 @@ class IdeaLoading : DescribeSpec({
                         param("first", 0)
                         param("last", 50)
                     } When {
-                        get("$ideaelUrl/ideas")
+                        get("$idelUrl/ideas")
                     }
 
                     val data = checkListData(this, r)
@@ -265,7 +265,7 @@ class IdeaLoading : DescribeSpec({
                         initRequest(this, "userA")
                         param("sorting", "votes_desc")
                     } When {
-                        get("$ideaelUrl/ideas")
+                        get("$idelUrl/ideas")
                     }
 
                     val data = checkListData(this, r)
@@ -288,7 +288,7 @@ class IdeaLoading : DescribeSpec({
                             param("sorting", "ctime_asc")
                             param("offeredBy", "userA@httpbasic")
                         } When {
-                            get("$ideaelUrl/ideas")
+                            get("$idelUrl/ideas")
                         }
 
                         val data = checkListData(this, r)
@@ -311,7 +311,7 @@ class IdeaLoading : DescribeSpec({
                             param("sorting", "ctime_desc")
                             param("offeredBy", "userB@httpbasic")
                         } When {
-                            get("$ideaelUrl/ideas")
+                            get("$idelUrl/ideas")
                         }
 
                         val data = checkListData(this, r)
@@ -332,7 +332,7 @@ class IdeaLoading : DescribeSpec({
                             initRequest(this, "userA")
                             param("assignee", "userA@httpbasic")
                         } When {
-                            get("$ideaelUrl/ideas")
+                            get("$idelUrl/ideas")
                         }
 
                         val data = checkListData(this, r)
@@ -350,7 +350,7 @@ class IdeaLoading : DescribeSpec({
                             initRequest(this, "userC")
                             param("assignee", "userB@httpbasic")
                         } When {
-                            get("$ideaelUrl/ideas")
+                            get("$idelUrl/ideas")
                         }
 
                         val data = checkListData(this, r)
@@ -371,7 +371,7 @@ class IdeaLoading : DescribeSpec({
                             initRequest(this, "userA")
                             param("implemented", "true")
                         } When {
-                            get("$ideaelUrl/ideas")
+                            get("$idelUrl/ideas")
                         }
 
                         val data = checkListData(this, r)
@@ -392,7 +392,7 @@ class IdeaLoading : DescribeSpec({
                             param("first", 0)
                             param("last", 50)
                         } When {
-                            get("$ideaelUrl/ideas")
+                            get("$idelUrl/ideas")
                         }
 
                         val data = checkListData(this, r)
@@ -414,7 +414,7 @@ class IdeaLoading : DescribeSpec({
                         initRequest(this, "userC")
                         param("text", "userA")
                     } When {
-                        get("$ideaelUrl/ideas")
+                        get("$idelUrl/ideas")
                     }
 
                     val data = checkListData(this, r)
@@ -437,7 +437,7 @@ class IdeaLoading : DescribeSpec({
                             param("assignee", "userB@httpbasic")
                             param("implemented", false)
                         } When {
-                            get("$ideaelUrl/ideas")
+                            get("$idelUrl/ideas")
                         }
 
                         val data = checkListData(this, r)

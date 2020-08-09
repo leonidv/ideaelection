@@ -19,7 +19,7 @@ import org.springframework.stereotype.Repository
 import java.time.Duration
 import java.util.*
 
-class PersistsUser(val id: String,
+data class PersistsUser(val id: String,
                    override val email: String,
                    override val displayName: String,
                    override val avatar: String,

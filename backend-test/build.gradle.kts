@@ -24,6 +24,8 @@ dependencies {
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.21")
 
+    implementation("io.github.microutils:kotlin-logging:1.8.3")
+
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion") // for kotest framework
     testImplementation("io.kotest:kotest-runner-console-jvm:$kotestVersion.2") // for kotest framework
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion") // for kotest core jvm assertions

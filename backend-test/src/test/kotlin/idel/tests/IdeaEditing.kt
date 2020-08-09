@@ -4,8 +4,6 @@ import io.kotest.core.spec.style.DescribeSpec
 import assertk.assertThat
 import assertk.assertions.*
 
-import idel.tests.isUser
-
 import io.restassured.module.kotlin.extensions.*
 import io.restassured.response.Response
 import org.apache.http.HttpStatus
@@ -17,7 +15,7 @@ class IdeaEditing : DescribeSpec({
                 initRequest(this, "userA")
                 body("""{ "title": "new title", "description": "new description", "link":"new link" }""")
             } When {
-                post("$ideaelUrl/ideas")
+                post("$idelUrl/ideas")
             }
 
         val data = checkEntityData(this, r, 201)
@@ -46,7 +44,7 @@ class IdeaEditing : DescribeSpec({
             val r = Given {
                 initRequest(this, "userB")
             } When {
-                get("$ideaelUrl/ideas/$ideaId")
+                get("$idelUrl/ideas/$ideaId")
             }
 
             val data = checkEntityData(this, r)
@@ -78,7 +76,7 @@ class IdeaEditing : DescribeSpec({
             val r = Given {
                 initRequest(this, "userA")
             } When {
-                get("$ideaelUrl/ideas/$ideaId")
+                get("$idelUrl/ideas/$ideaId")
             }
 
             val data = checkEntityData(this, r)
@@ -114,7 +112,7 @@ class IdeaEditing : DescribeSpec({
                 initRequest(this, user)
                 body(info)
             } When {
-                put("$ideaelUrl/ideas/$id")
+                put("$idelUrl/ideas/$id")
             }
         }
 
@@ -164,7 +162,7 @@ class IdeaEditing : DescribeSpec({
                 val r = Given {
                     initRequest(this, "userA")
                 } When {
-                    post("$ideaelUrl/ideas/3fe4f81c943243a2808ea1c8af752dcc/voters")
+                    post("$idelUrl/ideas/3fe4f81c943243a2808ea1c8af752dcc/voters")
                 }
 
                 checkError(this, r, 102, HttpStatus.SC_NOT_FOUND)
@@ -176,7 +174,7 @@ class IdeaEditing : DescribeSpec({
                 val r = Given {
                     initRequest(this, "userA")
                 } When {
-                    delete("$ideaelUrl/ideas/3fe4f81c943243a2808ea1c8af752dcc/voters")
+                    delete("$idelUrl/ideas/3fe4f81c943243a2808ea1c8af752dcc/voters")
                 }
 
                 checkError(this, r, 102, HttpStatus.SC_NOT_FOUND)
@@ -191,7 +189,7 @@ class IdeaEditing : DescribeSpec({
                 val r = Given {
                     initRequest(this, "userB")
                 } When {
-                    post("$ideaelUrl/ideas/$ideaId/voters")
+                    post("$idelUrl/ideas/$ideaId/voters")
                 }
 
                 val data = checkEntityData(this, r, 200)
@@ -209,7 +207,7 @@ class IdeaEditing : DescribeSpec({
                 val r = Given {
                     initRequest(this, "userA")
                 } When {
-                    post("$ideaelUrl/ideas/$ideaId/voters")
+                    post("$idelUrl/ideas/$ideaId/voters")
                 }
 
                 val data = checkEntityData(this, r, 200)
@@ -227,13 +225,13 @@ class IdeaEditing : DescribeSpec({
                 Given {
                     initRequest(this, "userB")
                 } When {
-                    post("$ideaelUrl/ideas/$ideaId/voters")
+                    post("$idelUrl/ideas/$ideaId/voters")
                 }
 
                 val r = Given {
                     initRequest(this, "userB")
                 } When {
-                    delete("$ideaelUrl/ideas/$ideaId/voters")
+                    delete("$idelUrl/ideas/$ideaId/voters")
                 }
 
 
@@ -301,7 +299,7 @@ class IdeaEditing : DescribeSpec({
                 val r = Given {
                     initRequest(this, "userA")
                 } When {
-                    delete("$ideaelUrl/ideas/$ideaId/assignee")
+                    delete("$idelUrl/ideas/$ideaId/assignee")
                 }
 
                 val data = checkEntityData(this, r)
@@ -329,7 +327,7 @@ class IdeaEditing : DescribeSpec({
                 val r = Given {
                     initRequest(this, "userB")
                 } When {
-                    post("$ideaelUrl/ideas/$ideaId/assignee/userB@httpbasic")
+                    post("$idelUrl/ideas/$ideaId/assignee/userB@httpbasic")
                 }
 
                 val data = checkEntityData(this, r)
