@@ -1,0 +1,25 @@
+# enalbe some features for testing, like as basic authentication. See testing.md for more details.
+# Don't use it in production, it's very dangerous!
+testmode: false
+
+couchbase:
+  host: 127.0.0.1
+  port:
+  username: Administrator
+  password: password
+  bucket: ideaelection"
+
+
+security:
+  httpbasic:
+    realm: ideaelection
+
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 115577720302-jtm4mampbkbq62rerrb3thdcj5qq3egb.apps.googleusercontent.com
+            client-secret: yLVkDuyUGMnM6J2iHtJ7t1a-

@@ -18,7 +18,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
     val log = KotlinLogging.logger {}
 
 
-    @Value("\${security.httpbasic.enabled}")
+    @Value("\${testmode}")
     var basicEnabled = false
 
     @Value("\${security.httpbasic.realm}")
