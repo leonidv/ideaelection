@@ -7,7 +7,7 @@ couchbase:
   port:
   username: Administrator
   password: password
-  bucket: ideaelection"
+  bucket: ideaelection
 
 
 security:

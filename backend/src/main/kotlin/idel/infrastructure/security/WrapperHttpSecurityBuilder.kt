@@ -1,5 +1,6 @@
 package idel.infrastructure.security
 
+import idel.domain.UserRepository
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.SecurityConfigurer
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter
@@ -11,9 +12,9 @@ import javax.servlet.Filter
 
 typealias B = SecurityConfigurer<DefaultSecurityFilterChain, HttpSecurity>
 typealias CB = Class<B>
-typealias SCA = SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity>
 
-class WrapperHttpSecurityBuilder(private val http: HttpSecurity) : HttpSecurityBuilder<WrapperHttpSecurityBuilder> {
+class WrapperHttpSecurityBuilder(private val http: HttpSecurity,
+                                 private val userRepository: UserRepository) : HttpSecurityBuilder<WrapperHttpSecurityBuilder> {
 
     override fun <C : Any?> setSharedObject(sharedType: Class<C>?, o: C) {
         this.http.setSharedObject(sharedType, o)
@@ -24,7 +25,7 @@ class WrapperHttpSecurityBuilder(private val http: HttpSecurity) : HttpSecurityB
     }
 
     override fun authenticationProvider(authenticationProvider: AuthenticationProvider): WrapperHttpSecurityBuilder {
-        val provider = OAuth2AuthorityLoaderProxyProvider(authenticationProvider)
+        val provider = OAuth2AuthorityLoaderProxyProvider(authenticationProvider, userRepository)
         this.http.authenticationProvider(provider)
         return this
     }

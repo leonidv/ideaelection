@@ -1,0 +1,22 @@
+:icons: font
+
+= Installation software
+
+== Setup
+
+== Configuration OAuth2 provider
+
+== Initial settings
+
+If an application runs correctly a log has a line with a text like this:
+
+`Started ApplicationKt in 3.056 seconds (JVM running for 6.359)`.
+
+It's mean that the application connected to the storage and ready for initialization.
+
+You should add self as admin of installation. To do it just open `{HOST}/init`
+in your browser.
+
+CAUTION: Don't call `/init` from a terminal, because it is required oauth2 authorization.
+
+Congratulations! You prepared  Idea Election for manages ideas!

@@ -1,5 +1,6 @@
 package idel.infrastructure.security
 
+import idel.domain.UserRepository
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
@@ -14,7 +15,7 @@ import org.springframework.security.crypto.password.NoOpPasswordEncoder
 
 @Configuration
 @EnableWebSecurity
-class WebSecurityConfig : WebSecurityConfigurerAdapter() {
+class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurityConfigurerAdapter() {
     val log = KotlinLogging.logger {}
 
 
@@ -23,6 +24,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
 
     @Value("\${security.httpbasic.realm}")
     lateinit var basicRealmName: String
+
 
     override fun configure(http: HttpSecurity) {
         http
@@ -33,7 +35,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
         http.anonymous().disable()
 
         if (basicEnabled) {
-            log.warn("Basic Authentication is enabled, please don't use this mode in the production")
+            log.warn("Basic Authentication is enabled, please DON'T USE this mode in the production")
             log.warn("By design of IdeaElection, you should use your organization SSO (Google OAuth, for example) for managing users")
             log.warn("Read testing.md file in the project documentation for more information.")
 
@@ -46,7 +48,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
         }
 
         val oauth2LoginConfigurer = OAuth2LoginConfigurer<HttpSecurity>();
-        val customOAuth2LoginConfigurer = WrapperOAuth2LoginConfigurer(oauth2LoginConfigurer)
+        val customOAuth2LoginConfigurer = WrapperOAuth2LoginConfigurer(oauth2LoginConfigurer, userRepository)
         http.apply(customOAuth2LoginConfigurer)
 
 

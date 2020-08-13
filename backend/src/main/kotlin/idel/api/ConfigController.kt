@@ -17,7 +17,7 @@ import javax.annotation.PostConstruct
 class ConfigController {
     private val log = LoggerFactory.getLogger(ConfigController::class.java)
 
-    @Value("\${security.configapi.exposepassword}")
+    @Value("\${testmode}")
     private var exposePassword = false
 
     @Autowired

@@ -38,14 +38,14 @@ class TestUsersDetailsService : UserDetailsService {
         }
 
       val attributesNames = IdelOAuth2User.AttributesNames(
-              providerId = "providerId",
+              externalId = "providerId",
               displayName = "displayName",
               email = "email",
               avatar = "avatar"
       )
 
         val attributes = mutableMapOf<String,Any>(
-                attributesNames.providerId to username,
+                attributesNames.externalId to username,
                 attributesNames.displayName to "${username} ${username}",
                 attributesNames.email to "${username}@mail",
                 attributesNames.avatar to ""

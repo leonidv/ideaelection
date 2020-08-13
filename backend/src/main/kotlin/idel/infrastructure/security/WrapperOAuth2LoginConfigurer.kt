@@ -1,5 +1,6 @@
 package idel.infrastructure.security
 
+import idel.domain.UserRepository
 import org.springframework.security.config.annotation.ObjectPostProcessor
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -10,12 +11,13 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.security.web.util.matcher.RequestMatcher
 
 class WrapperOAuth2LoginConfigurer<B : HttpSecurityBuilder<B>>(
-        private val cfg : OAuth2LoginConfigurer<B>) :
+        private val cfg : OAuth2LoginConfigurer<B>,
+        private val userRepository: UserRepository) :
         AbstractAuthenticationFilterConfigurer<B, OAuth2LoginConfigurer<B>, OAuth2LoginAuthenticationFilter>()
 {
 
     @Suppress("UNCHECKED_CAST")
-    private fun wrap(http : B) : B = WrapperHttpSecurityBuilder(http as HttpSecurity) as B
+    private fun wrap(http : B) : B = WrapperHttpSecurityBuilder(http as HttpSecurity, userRepository) as B
 
     override fun createLoginProcessingUrlMatcher(loginProcessingUrl: String?): RequestMatcher {
         return AntPathRequestMatcher(loginProcessingUrl)
