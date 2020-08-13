@@ -16,11 +16,12 @@ blocks:
           - cd scripts/
           - ./couchbase-init-test.sh
           - cd ..
-          - cache restore gradle
+          - cache restore m2
+          - ls $USER_HOME/.m2/repository/
           - sem-version java 11
       epilogue:
         commands:
-          - cache store gradle $USER_HOME/.gradle
+          - cache store m2 $USER_HOME/.m2
 
       jobs:
         - name: Build backend application
