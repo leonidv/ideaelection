@@ -50,7 +50,7 @@ class Couchbase(host: String, username: String, password: String, private val bu
      * Use direct connection to couchbase server.
      */
     fun clearIdeas() {
-        val result = cluster.query("""select id from `$bucketName` where _type = "idea" or _type="user"Lf """)
+        val result = cluster.query("""select id from `$bucketName` where _type = "idea" or _type="user" """)
         result.rowsAsObject().forEach {
             val id = it.getString("id")
             println("delete document id = [$id]")

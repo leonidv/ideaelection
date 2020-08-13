@@ -31,7 +31,7 @@ blocks:
             - ./gradlew -v
             - ./gradlew bootJar
             - nohup java -Dtestmode=on -jar build/libs/backend-*.jar &
-            - sleep 5
+            - sleep 10
             - cat nohup.out
             - cd ../backend-test
             - ./gradlew test
