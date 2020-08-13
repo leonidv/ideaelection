@@ -17,7 +17,6 @@ blocks:
           - ./couchbase-init-test.sh
           - cd ..
           - cache restore m2
-          - ls $USER_HOME/.m2/repository/
           - sem-version java 11
       epilogue:
         commands:
