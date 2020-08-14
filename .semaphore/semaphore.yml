@@ -4,13 +4,12 @@ agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
-
 blocks:
   - name: Backend building
     task:
       prologue:
         commands:
-          - docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase:community-6.5.0
+          - 'docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase:community-6.5.0'
           - sleep 5
           - checkout
           - cd scripts/
@@ -19,9 +18,9 @@ blocks:
           - cache restore m2
           - sem-version java 11
       epilogue:
-        commands:
-          - cache store m2 $USER_HOME/.m2
-
+        always:
+          commands:
+            - cache store m2 $USER_HOME/.m2
       jobs:
         - name: Build backend application
           commands:
