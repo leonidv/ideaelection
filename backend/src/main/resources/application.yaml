@@ -23,6 +23,3 @@ spring:
           google:
             client-id: 115577720302-jtm4mampbkbq62rerrb3thdcj5qq3egb.apps.googleusercontent.com
             client-secret: yLVkDuyUGMnM6J2iHtJ7t1a-
-          facebook:
-            client-id: 335550487625514
-            client-secret: 0f99f7fe449aa9d041985a26f7919400
