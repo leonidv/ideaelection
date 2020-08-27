@@ -6,3 +6,4 @@ nohup.out
 *.iml
 *.bak
 *.back
+.*

@@ -4,24 +4,25 @@ agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
-
 blocks:
   - name: Backend building
     task:
       prologue:
         commands:
-          - docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase:community-6.5.0
+          - 'docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase:community-6.5.0'
           - sleep 5
           - checkout
           - cd scripts/
           - ./couchbase-init-test.sh
           - cd ..
-          - cache restore gradle
+          - cache restore m2
+          - cache restore gradleCache
           - sem-version java 11
       epilogue:
-        commands:
-          - cache store gradle $USER_HOME/.gradle
-
+        always:
+          commands:
+            - cache store m2 $USER_HOME/.m2
+            - cache store gradleCache $USER_HOME/.gradle/caches/modules-2/files-2.1
       jobs:
         - name: Build backend application
           commands:
@@ -31,7 +32,7 @@ blocks:
             - ./gradlew -v
             - ./gradlew bootJar
             - nohup java -Dtestmode=on -jar build/libs/backend-*.jar &
-            - sleep 5
+            - sleep 10
             - cat nohup.out
             - cd ../backend-test
             - ./gradlew test

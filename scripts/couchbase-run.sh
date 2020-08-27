@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 
-CONTAINER_ID=$(docker ps -a | grep couchbase | head -c 12)
+if [[ -x "$(command -v podman)" ]]; then
+ CONTAINER_MANAGER="podman"
+else
+ echo "Docker is used. Please consider using podman instead of docker (https://podman.io)."
+ CONTAINER_MANAGER="docker"
+fi
+
+
+
+CONTAINER_ID=$(${CONTAINER_MANAGER} ps -a | grep couchbase | head -c 12)
 
 if [[ -z "${CONTAINER_ID}" ]]
 then
-    docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase:community-6.5.0
+    ${CONTAINER_MANAGER} run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase:community-6.5.1
 else
-    docker start ${CONTAINER_ID}
+    ${CONTAINER_MANAGER} start ${CONTAINER_ID}
 fi
 

@@ -1,0 +1,20 @@
+=== Facebook
+
+This section shows how to get Facebook OAuth2 key for custom installation:
+
+. Go to https://developers.facebook.com/apps/
+. Click on "*Add A New App*" big zone
+. Click on "*For everything else*"
+. *App Display Name*: "Idea Election custom installation in <YOUR ORGANIZATION NAME>"
+. *App Contact Email*: Your email
+. Click on *Create App ID*
+
+It creates a new Application and opens an administration panel.
+
+. Click on *Setup* button in *Facebook login* card.
+. In the left menu find group *Facebook Login* and click on "*Settings*"
+. *Valid OAuth Redirect URIs* add  
+   `http://<YOUR IDEA ELECTION URL>/login/oauth2/code/facebook`
+. In the left menu find group *Settings* and click on *Basic*
+.. *App ID* - it's your client Id
+.. *App Secret* - it's your app secret.
