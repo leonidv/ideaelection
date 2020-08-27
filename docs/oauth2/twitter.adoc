@@ -1,0 +1,24 @@
+=== Twitter
+
+This section shows how to get Twitter oauth2 key for custom installation.
+
+. Go to Twitter Developer console https://developer.twitter.com/en/apps
+. Press "Create App" button in top right corner and apply the license, if required.
+. Select "Build customized solutions in-house"
+. In "Organization page" fill information about your organization
+. In "Intended use page" you can use next templates:
+.. In you words:
+----
+Idea Election is an idea management application. Users can add theirs idea
+and votes for them.
+
+Primary it uses Twitter for  users authentication and use twitter as SSO.
+
+In the future, it may be allowed for posting from the application.
+Also, in the future, it is possible to show comments about the idea from Twitter.
+
+It's custom installation into <YOUR COMPANY NAME>
+----
+
+.. Are you planning to analyze Twitter data? *no*
+.. Will your app use Tweet, Retweet, like, follow, or Direct Message functionality? *yes*

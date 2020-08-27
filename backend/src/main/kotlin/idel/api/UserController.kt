@@ -18,7 +18,11 @@ import java.lang.Exception
 @RestController
 @RequestMapping("/users")
 class UserController(val userRepository: UserRepository) {
-    data class MeResult(val id: String, val displayName: String, val avatar: String, val authorities: List<String>)
+    data class MeResult(val id: String,
+                        val displayName: String,
+                        val avatar: String,
+                        val email: String,
+                        val authorities: List<String>)
 
 
     val log: KLogger = KotlinLogging.logger {}
@@ -33,6 +37,7 @@ class UserController(val userRepository: UserRepository) {
                     id = principal.id(),
                     displayName = principal.displayName,
                     avatar = principal.avatar,
+                    email = principal.email,
                     authorities = authentication.authorities.map {it.authority}
             )
             ResponseOrError.ok(result)

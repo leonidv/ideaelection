@@ -1,0 +1,138 @@
+:c: 2
+=== {c}. Users
+
+==== Description
+
+User is a person who shares, discusses and votes for ideas.
+
+==== User stories
+
+[cols="1,1,3,4,4a" options="header"]
+.Registration and Login
+|===
+
+|ID | Who | What | Why | Acceptance criteria
+| {c}.1.1
+| User
+| Process OAuth2 authorization and registers in the application
+| User wants to use application
+| . User can access work with the application
+
+
+|===
+
+[cols="1,1,3,4,4a" options="header"]
+.Editing ideas
+|===
+
+|ID | Who | What | Why | Acceptance criteria
+
+| {c}.2.1
+| User
+| Add new Idea with title, description and other properties
+| User wants to share his new idea
+| . Idea is created
+  . Idea contains the user who offered it
+  . Other users can see Idea and votes for it
+
+| {c}.2.2
+| User
+| Changes Idea, which is offered by user
+| Idea contains errors or can be improved
+| . Idea's properties are changed
+
+| {c}.2.3
+| User
+| Assign himself/herself responsible for the implementation of the idea
+| User wants to implement an Idea
+| . User is assignee of Idea
+  . Another user can't take Idea for implementation
+  . Admin of group can change assignee
+
+| {c}.2.4
+| User
+| Remove responsibility for the implementation of the idea
+| User don't want (or can't) to implement an Idea anymore
+| . User is assignee of Idea
+  . Another user can take Idea for implementation
+
+
+| {c}.2.5
+| User
+| Mark Idea as implemented
+| Idea is implemented
+| . Idea is marked as implemented
+  . Assignee can't be changed anymore
+
+|===
+
+:cc: {c}.3
+[cols="1,1,3,4,4a" options="header"]
+.Voting
+|===
+
+|ID | Who | What | Why | Acceptance criteria
+| {cc}.1
+| User
+| Votes for an Idea
+| User likes an Idea and want to choose it
+| . Counter of votes for the Idea is increased
+  . User can't vote for the Idea again
+  . User see the Idea in the list "I voted for"
+  . Other users see that the User vote for the Idea
+  . User can remove his vote
+
+| {cc}.2
+| User
+| User remove his vote
+| The user changed his mind to vote for the idea
+| . Counter of votes for the Idea is decreased
+  . User can vote for the Idea again
+  . User don't see the Idea in the list "I voted for"
+
+| {cc}.3
+| User see list of the Idea's voters
+| Wants to know who voted for the Idea
+| . User see list of voters
+
+
+|===
+
+
+:cc: {c}.4
+[cols="1,1,3,4,4a" options="header"]
+.Viewing
+|===
+|ID | Who | What | Why | Acceptance criteria
+
+|{cc}.1
+| User
+| View the latest added ideas
+| Want to know what's new
+| . User see Idea sorted by creation time
+
+|{cc}.2
+| User
+| View all Ideas for which User has voted
+| Quick access to all ideas that the User voter for
+| . User sees only Ideas that he voted for
+
+| {cc}.3
+| User
+| View all Ideas that offered by user
+| User is interested in the status of his Ideas
+| . User sees only Ideas that he offered
+
+| {cc}.3
+| User
+| View all Ideas that assigned to user
+| User want to know for that he is responsible
+| . User sees only Ideas that he should implement
+
+| {cc}.4
+| User
+| Search ideas by the text
+| User want to find an idea by words in the title or the description
+| . User sees Ideas with specific words.
+
+|===

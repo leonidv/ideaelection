@@ -1,0 +1,119 @@
+=== Groups
+
+==== Description
+
+This section contains user stories about groups.
+Groups allow to:
+
+* limit visibility of ideas to specifics user
+* group idea by a theme, department etc.
+
+For example, user can create group of his family and discuss ideas between its members.
+Another example - a group is a department of organization and any employee of an organization can
+offer idea for this department.
+
+
+==== User stories
+
+[cols="1,1,3,4,4a" options="header"]
+.Administration
+|===
+|ID | Who | What | Why | Acceptance criteria
+| 1.1.1
+| User
+| Create a new group
+| Allow sharing ideas to groups of persons and vote for them
+| . Group is created
+  . User is admin of group
+  . Group has restriction policy
+
+
+| 1.1.2
+| Group admin
+| Invite user to the group
+| User is part of the group and should sharing ideas
+| . User is member of the group
+  . User see the group in the list of their groups
+  . User can work with ideas from the group
+
+| 1.1.3
+| Group admin
+| Kick user from the group
+| User is not member of the group anymore.
+| . User is not member of the group
+  . User doesn't see group in the list of their groups
+  . User can't work with ideas from the group
+
+| 1.1.4
+| Group admin
+| Edit settings of group
+| Some properties of group are out of date
+| . Settings of group is changed
+
+| 1.1.5
+| Group admin
+| Close the group
+| Group does not need anymore
+| . Group is not visible in list of users members
+  . Ideas from the group is not visible for members
+
+| 1.1.6
+| Group admin
+| Change assignee of any idea
+| Current assignee can't or should not implement an idea.
+| . Assignee of idea is changed to another user
+
+| 1.1.7
+| Group admin
+| Edit properties and description of an idea.
+| Idea contains errors or can be improved
+| .Settings of description of Idea is changed
+
+|===
+
+
+[cols="1,1,3,4,4a" options="header"]
+.Working
+|===
+|ID | Who | What | Why | Acceptance criteria
+As a Group Admin,
+
+| 1.2.1
+| User
+| Join to the group by invite
+| Want to share my ideas with members of the group
+| . User is member of group
+  . User can see other members of the group
+  . User see the group in the list of their groups
+  . User can works with ideas from the groups
+
+| 1.2.2
+| User
+| Join to the available group
+| Want to share my ideas with members of the group
+| . User is member of group
+  . User can see other members of the group
+  . User see the group in the list of their groups
+  . User can works with ideas from the groups
+
+
+| 1.2.3
+| User
+| Leave the group
+| Don't want to work with ideas in the groups
+| . User is not member of group
+  . User can't see other members of the group
+  . User doesn't see the group in the list of their groups
+  . User can't work with ideas from the groups
+
+| 1.2.4
+| User
+| Join to available groups after registration
+| Want to start with Idea Election just after registration
+| . User can see list of available groups
+  . User is member of selected groups
+
+|===
+
+
+
