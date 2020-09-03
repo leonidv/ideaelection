@@ -53,4 +53,10 @@ open class IdelOAuth2User(
                 provider = this.provider
         )
     }
+
+    override fun toString(): String {
+        return "IdelOAuth2User(provider='$provider', externalId='$externalId', email='$email', displayName='$displayName', avatar='$avatar', roles=$roles)"
+    }
+
+
 }

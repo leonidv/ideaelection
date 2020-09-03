@@ -7,7 +7,7 @@ typealias UserId = String
 
 
 interface User {
-    fun id() : String
+    fun id() : UserId
     val email : String
     val displayName : String
     val avatar : String

@@ -5,8 +5,8 @@
 This section contains user stories about groups.
 Groups allow to:
 
-* limit visibility of ideas to specifics user
-* group idea by a theme, department etc.
+* limit visibility of ideas to specifics users
+* group ideas by a theme, department etc.
 
 For example, user can create group of his family and discuss ideas between its members.
 Another example - a group is a department of organization and any employee of an organization can
@@ -21,12 +21,13 @@ offer idea for this department.
 |ID | Who | What | Why | Acceptance criteria
 | 1.1.1
 | User
-| Create a new group
+| Create a new group with title, description and users restrictions
 | Allow sharing ideas to groups of persons and vote for them
 | . Group is created
-  . User is admin of group
-  . Group has restriction policy
-
+  . User is admin of the group
+  . Group has the restriction policy
+  . Group has the title
+  . Group has the description
 
 | 1.1.2
 | Group admin
