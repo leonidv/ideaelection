@@ -1,8 +1,12 @@
+val kotlinVersion = "1.4.0"
+
+
+
 plugins {
-    id("org.springframework.boot") version "2.3.1.RELEASE"
+    id("org.springframework.boot") version "2.3.3.RELEASE"
     id("io.spring.dependency-management") version "1.0.9.RELEASE"
-    kotlin("jvm") version "1.3.72"
-    kotlin("plugin.spring") version "1.3.72"
+    kotlin("jvm") version "1.4.0"
+    kotlin("plugin.spring") version "1.4.0"
     id("idea")
 }
 
@@ -47,8 +51,6 @@ dependencies {
     implementation(kotlin("reflect"))
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.21")
-//    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.9")
-//    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.9")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion") // for kotest framework
     testImplementation("io.kotest:kotest-runner-console-jvm:$kotestVersion.2") // for kotest framework

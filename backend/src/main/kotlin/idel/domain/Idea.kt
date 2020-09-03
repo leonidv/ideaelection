@@ -30,6 +30,11 @@ class Idea(
     val id: String,
 
     /**
+     * Time of creation.
+     */
+    val ctime: LocalDateTime,
+
+    /**
      * Title of idea
      */
     override val title: String,
@@ -62,10 +67,6 @@ class Idea(
      */
     val voters: Set<UserId>,
 
-    /**
-     * Time of creation.
-     */
-    val ctime: LocalDateTime
 ) : IdeaInfo {
 
     init {
@@ -112,7 +113,7 @@ class Idea(
         implemented: Boolean = this.implemented,
         offeredBy: UserId = this.offeredBy,
         voters: Set<UserId> = this.voters
-    ): Idea = Idea(id, title, description, link, assigned, implemented, offeredBy, voters, ctime)
+    ): Idea = Idea(id, ctime,  title, description, link, assigned, implemented, offeredBy, voters)
 
     fun assign(userId: UserId): Idea {
         return if (this.assignee == userId) {
@@ -131,7 +132,7 @@ class Idea(
         description: String = this.description,
         link: String = this.link,
         implemented: Boolean = this.implemented
-    ): Idea = Idea(this.id, title, description, link, assignee, implemented, this.offeredBy, this.voters, this.ctime)
+    ): Idea = Idea(this.id, this.ctime, title, description, link, assignee, implemented, this.offeredBy, this.voters)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
