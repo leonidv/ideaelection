@@ -1,9 +1,10 @@
 package idel.api
 
-import idel.domain.Group
-import idel.domain.GroupFactory
-import idel.domain.GroupRepository
+import arrow.core.Either
+import idel.domain.*
 import idel.infrastructure.security.IdelOAuth2User
+import io.konform.validation.Invalid
+import io.konform.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PostMapping
@@ -17,18 +18,25 @@ class GroupController(private val repository: GroupRepository) {
 
     val factory = GroupFactory()
 
-    data class GroupProperties(
-            override val title : String,
-            override val description : String,
-            override val usersRestrictions : Set<String>) : idel.domain.GroupEditableProperties
+
+    fun <T> editablePropertiesAreValid(
+            properties: IGroupEditableProperties,
+            ifValid :() -> ResponseEntity<ResponseOrError<T>>) : ResponseEntity<ResponseOrError<T>> {
+        val validateResult = IGroupEditableProperties.validation(properties);
+        return when (validateResult) {
+            is Valid -> ifValid()
+            is Invalid -> ResponseOrError.invalid(validateResult.errors)
+        }
+    }
 
     @PostMapping
     fun create(
-            @RequestBody properties : GroupProperties,
+            @RequestBody properties : GroupEditableProperties,
             @AuthenticationPrincipal user : IdelOAuth2User
-    ) : ResponseEntity<ResponseOrError<Group>> {
-        val group = factory.from(user.id(), properties)
+    ) : ResponseEntity<ResponseOrError<Group>> = editablePropertiesAreValid(properties) {
+        val either = factory.createGroup(user.id(), properties) as Either.Right<Group>
+        val group = either.b
         repository.add(group)
-        return ResponseOrError.ok(group)
+        ResponseOrError.ok(group)
     }
 }

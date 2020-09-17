@@ -21,7 +21,7 @@ class GroupCouchbaseRepository(
         TODO("Not yet implemented")
     }
 
-    override fun update(id: String, group: Group) {
+    override fun replace(group: Group) {
         TODO("Not yet implemented")
     }
 }
