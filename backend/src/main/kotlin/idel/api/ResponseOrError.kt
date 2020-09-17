@@ -5,6 +5,8 @@ import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
 import idel.domain.generateId
+import io.konform.validation.ValidationError
+import io.konform.validation.ValidationErrors
 import mu.KLogger
 import org.slf4j.Logger
 import org.springframework.http.HttpStatus
@@ -13,7 +15,9 @@ import java.lang.Exception
 import java.time.LocalDateTime
 import java.util.*
 
-data class ErrorDescription(val code: Int, val message: String) {
+data class ErrorDescription(val code: Int,
+                            val message: String,
+                            val validationErrors : Collection<ValidationError> = emptySet()) {
     val timestamp = LocalDateTime.now()
 
     companion object {
@@ -40,6 +44,10 @@ data class ErrorDescription(val code: Int, val message: String) {
         fun internal(msg : String) : ErrorDescription {
             return ErrorDescription(105, msg)
         }
+
+        fun validationFailed(msg : String, errors: Collection<ValidationError>) : ErrorDescription {
+            return ErrorDescription(106, msg, errors)
+        }
     }
 }
 
@@ -65,6 +73,12 @@ class ResponseOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescrip
             return ResponseEntity(x, code)
         }
 
+        /**
+         * Make [badRequest] with collection of [ValidationError].
+         */
+        fun <T> invalid(errors : ValidationErrors) : ResponseEntity<ResponseOrError<T>> {
+            return badRequest(ErrorDescription.validationFailed("Properties is not valid", errors))
+        }
         /**
          * Make [ResponseEntity] [ok] if [operationResult] is [Either.Right]. Otherwise return [internal] and print
          * exception to [log].

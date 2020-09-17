@@ -8,8 +8,8 @@ Groups allow to:
 * limit visibility of ideas to specifics users
 * group ideas by a theme, department etc.
 
-For example, user can create group of his family and discuss ideas between its members.
-Another example - a group is a department of organization and any employee of an organization can
+For example, the user can create a group of his family and discuss ideas between members of it.
+Another example - a group is a department of an organization and any employee of it can
 offer idea for this department.
 
 
@@ -21,7 +21,7 @@ offer idea for this department.
 |ID | Who | What | Why | Acceptance criteria
 | 1.1.1
 | User
-| Create a new group with title, description and users restrictions
+| Create a new group with title, description and users restrictions (all of them are not blank)
 | Allow sharing ideas to groups of persons and vote for them
 | . Group is created
   . User is admin of the group
@@ -32,10 +32,11 @@ offer idea for this department.
 | 1.1.2
 | Group admin
 | Invite user to the group
-| User is part of the group and should sharing ideas
+| User is part of the group and should share ideas
 | . User is member of the group
   . User see the group in the list of their groups
   . User can work with ideas from the group
+  . User may not satisfy to the restriction policy
 
 | 1.1.3
 | Group admin
@@ -69,6 +70,24 @@ offer idea for this department.
 | Edit properties and description of an idea.
 | Idea contains errors or can be improved
 | .Settings of description of Idea is changed
+
+
+| 1.1.8
+| Group admin
+| Can approve the join request from the user
+| User may share and vote for ideas in the group
+| . User is member of group
+  . User get notification that his join request was approved
+  . User's join request is hidden from the list of active requests
+
+| 1.1.9
+| Group admin
+| Can reject the join request from the user
+| User can't be member of the group
+| . User is not member of the group
+  . User get notification that his join request was rejected
+  . User's join request is hiddent from the list of active requests
+
 
 |===
 
@@ -114,6 +133,15 @@ As a Group Admin,
 | . User can see list of available groups
   . User is member of selected groups
 
+| 1.2.5
+| User
+| See all my groups
+| Want to know my groups and get access to their ideas
+| . User see list of it groups
+
+| 1.2.6
+| User
+| See all group which still not accepted my
 |===
 
 

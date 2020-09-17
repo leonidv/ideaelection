@@ -13,10 +13,11 @@ plugins {
 group = "ideaelection"
 version = "1.0-SNAPSHOT"
 
-val kotestVersion="4.1.3"
+val kotestVersion="4.2.4"
 
 repositories {
     mavenCentral()
+    maven("https://dl.bintray.com/konform-kt/konform")
 }
 
 idea {
@@ -40,6 +41,8 @@ dependencies {
 
     implementation("io.github.microutils:kotlin-logging:1.7.9")
 
+    implementation("io.konform:konform-jvm:0.2.0")
+
     implementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
@@ -53,8 +56,10 @@ dependencies {
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.21")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion") // for kotest framework
-    testImplementation("io.kotest:kotest-runner-console-jvm:$kotestVersion.2") // for kotest framework
+    //testImplementation("io.kotest:kotest-runner-console-jvm:4.2.3") // for kotest framework
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion") // for kotest core jvm assertions
+    testImplementation("io.kotest:kotest-assertions-arrow-jvm:$kotestVersion")
+    testImplementation("io.kotest:kotest-assertions-konform-jvm:$kotestVersion")
 
 }
 
