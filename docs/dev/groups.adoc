@@ -140,42 +140,41 @@ offer idea for this department.
 
 |===
 
-==== Joining to group
+==== Joining to a group
 
 Each group has an entry mode that regulates how the user can get access to the group.
 
-===== User wants to join to the group
-
-
 Self-registration:: The user, which email is satisfying group's restrictions, can join to group
-                    without approving from group's administrator.
+without approving from group's administrator.
 Only by approve:: Even if the user's email is satisfying the group's restriction,
-                  the user should send a join request for accessing to the group.
+the user should send a join request for accessing to the group.
+
+===== User wants to join to a group
 
 [cols="1,1,4a" options="header"]
-.Working
+.Cases
 |===
 |Group's restriction |Entry mode |Use case steps
 
 | email is satisfying
-| Self-registration
+| self-registration
 | . User sees the group in the list of available groups
   . User requires the access to the group
   . User immediately accesses the group.
 
 | email is satysfying
-| Only by approve
+| only by approve
 | . User sees the group in the list of available groups.
   . User creates the join request.
   . Admin approves the join request.
   . User has got access to the group.
 
 | email is not satysfying
-| Self-registration
+| self-registration
 | User doesn't see the group in the list of available groups.
 
 | email is not satysfying
-| Only by approve
+| only by approve
 | User doesn't see the group in the list of available groups.
 |===
 
