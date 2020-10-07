@@ -179,7 +179,7 @@ Only by approve:: Even if the user's email is satisfying the group's restriction
 | User doesn't see the group in the list of available groups.
 |===
 
-====== Admin want to include a user to a group
+===== Admin want to include a user to a group
 
 Regardless of entry mode and user's restrictions, admin always can add a user to the group.
 He should send an invite to a user. User sees the invite in the list of invites and can accept it.
