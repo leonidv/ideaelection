@@ -17,7 +17,7 @@ class GroupSpec : DescribeSpec({
             val props = GroupEditableProperties(
                     title = "title",
                     description = "description",
-                    usersRestrictions = setOf("user@httpbasic"))
+                    usersRestrictions = listOf("user@httpbasic"))
 
             val eitherGroup = factory.createGroup("user@testuser", props)
 
@@ -49,7 +49,7 @@ class GroupSpec : DescribeSpec({
             val badProperties = GroupEditableProperties(
                     title = "",
                     description = "",
-                    usersRestrictions = setOf("(]")
+                    usersRestrictions = listOf("(]")
             )
 
             val eitherGroup = factory.createGroup("user@test", badProperties)

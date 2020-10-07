@@ -13,6 +13,7 @@ import com.couchbase.client.java.kv.InsertOptions
 import com.couchbase.client.java.kv.ReplaceOptions
 import com.couchbase.client.java.query.QueryOptions
 import idel.domain.*
+import mu.KotlinLogging
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -30,13 +31,11 @@ fun JsonObject.asQueryOptions(readonly: Boolean = true): QueryOptions {
 
 @Repository
 class IdeaCouchbaseRepository(
-    cluster: Cluster,
-    collection: Collection
+        cluster: Cluster,
+        collection: Collection
 ) : AbstractTypedCouchbaseRepository<Idea>(cluster, collection, "idea", Idea::class.java), IdeaRepository {
 
-    private val log: Logger = LoggerFactory.getLogger(IdeaCouchbaseRepository::class.java)
-
-
+    private val log = KotlinLogging.logger {}
 
     override fun add(idea: Idea): Idea {
         collection.insert(idea.id, idea, insertOptions())
@@ -63,10 +62,10 @@ class IdeaCouchbaseRepository(
         val (idea, version) = ideaWithVersion
 
         val options =
-            ReplaceOptions
-                .replaceOptions()
-                .transcoder(transcoder)
-                .cas(version)
+                ReplaceOptions
+                    .replaceOptions()
+                    .transcoder(transcoder)
+                    .cas(version)
         return try {
             collection.replace(idea.id, idea, options)
             Either.right(Unit)
@@ -77,10 +76,10 @@ class IdeaCouchbaseRepository(
     }
 
     override fun load(
-        first: Int,
-        last: Int,
-        sorting: IdeaSorting,
-        filtering: IdeaFiltering
+            first: Int,
+            last: Int,
+            sorting: IdeaSorting,
+            filtering: IdeaFiltering
     ): List<Idea> {
         val limit = last - first
         val params = JsonObject.create()
@@ -94,19 +93,19 @@ class IdeaCouchbaseRepository(
         }
 
         val filters = listOf(
-            filtering.assignee.map { "assignee" to it },
-            filtering.offeredBy.map { "offeredBy" to it },
-            filtering.implemented.map { "implemented" to it }
+                filtering.assignee.map {"assignee" to it},
+                filtering.offeredBy.map {"offeredBy" to it},
+                filtering.implemented.map {"implemented" to it}
         )
-            .filter { it.isPresent }
-            .map { it.get() }
+            .filter {it.isPresent}
+            .map {it.get()}
 
-        filters.forEach { (field, value) ->
+        filters.forEach {(field, value) ->
             params.put(field, value)
         }
 
 
-        var filterQueryParts = filters.map { (field, _) ->
+        var filterQueryParts = filters.map {(field, _) ->
             "$field = \$${field}"  //should get [name == \$name], for example
         }
 
@@ -118,11 +117,11 @@ class IdeaCouchbaseRepository(
 
 
         val filterQuery =
-            if (filterQueryParts.isNotEmpty()) {
-                filterQueryParts.joinToString(prefix = " and ", separator = " and ")
-            } else {
-                ""
-            }
+                if (filterQueryParts.isNotEmpty()) {
+                    filterQueryParts.joinToString(prefix = " and ", separator = " and ")
+                } else {
+                    ""
+                }
 
         val options = params.asQueryOptions()
             .serializer(jsonSerializer)
@@ -132,13 +131,13 @@ class IdeaCouchbaseRepository(
                 "where _type = \"${this.type}\" $filterQuery " +
                 "order by $ordering offset \$offset limit \$limit"
 
-        if (log.isTraceEnabled) {
-            log.trace("query: [$queryString], params: [$params]")
-        }
+
+        log.trace {"query: [$queryString], params: [$params]"}
+
 
         val q = cluster.query(
-            queryString,
-            options
+                queryString,
+                options
         )
 
 
