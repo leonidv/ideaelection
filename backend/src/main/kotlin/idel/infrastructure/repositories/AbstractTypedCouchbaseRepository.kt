@@ -17,7 +17,9 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
+import mu.KotlinLogging
 import java.lang.Exception
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -31,6 +33,8 @@ abstract class AbstractTypedCouchbaseRepository<T>(
         protected val typedClass: Class<T>
 
 ) {
+
+    private val log = KotlinLogging.logger {}
 
     protected val mapper = initMapper();
 
@@ -68,12 +72,15 @@ abstract class AbstractTypedCouchbaseRepository<T>(
      */
     protected fun getOptions(): GetOptions = GetOptions.getOptions().transcoder(transcoder)
 
+    /**
+     * Return QueryOptions with [[params]], 2-seconds timeout and [transcoder]
+     */
     protected fun queryOptions(params: JsonObject): QueryOptions =
             QueryOptions
                 .queryOptions()
                 .parameters(params)
+                .timeout(Duration.ofSeconds(2))
                 .serializer(jsonSerializer)
-
     /**
      * Return [InsertOptions] with [transcoder]
      */
@@ -111,5 +118,28 @@ abstract class AbstractTypedCouchbaseRepository<T>(
             attempts++
         } while (attempts >= maxAttempts && canUpdate.isLeft())
         return canUpdate
+    }
+
+    protected fun load(filterQueryParts : List<String>, ordering : String, params : JsonObject, first : Int, last : Int) : List<T> {
+        val limit = last - first
+        params
+            .put("offset", first)
+            .put("limit", limit)
+
+        val filterQuery =
+                if (filterQueryParts.isNotEmpty()) {
+                    filterQueryParts.joinToString(prefix = " and ", separator = " and ")
+                } else {
+                    ""
+                }
+
+        val options = queryOptions(params)
+        val queryString = "select * from `ideaelection` as ie " +
+                "where _type = \"${this.type}\" $filterQuery " +
+                "order by $ordering offset \$offset limit \$limit"
+
+        log.trace {"query: [$queryString], params: [$params]"}
+
+        return cluster.query(queryString, options).rowsAs(typedClass)
     }
 }

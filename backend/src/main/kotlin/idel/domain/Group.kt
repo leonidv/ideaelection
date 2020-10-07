@@ -172,10 +172,25 @@ class GroupFactory {
     }
 }
 
+enum class GroupSorting {
+    CTIME_ASC,
+    CTIME_DESC
+}
+
+data class GroupFiltering(
+        /**
+         * Filter groups by user users email.
+         */
+        val availableForJoiningEmail : Option<String>
+)
+
 interface GroupRepository {
     fun add(group: Group)
 
     fun load(id: String): Option<Group>
 
+    fun findAvailableForJoining(user: User) : List<Group>
+
     fun replace(group: Group)
+    fun load(first: Int, last: Int, sorting: GroupSorting, filtering: GroupFiltering): List<Group>
 }

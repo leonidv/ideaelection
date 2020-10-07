@@ -1,0 +1,43 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+skinparam Sequence {
+    GroupBorderColor #ff0f0f
+    GroupShadow false
+    GroupBorderThickness 1
+    GroupHeaderFontStyle normal
+    GroupBodyBackgroundColor white
+}
+
+
+actor User
+User -> "groups" : GET ?onlyAvailable=true
+activate "groups"
+User <-- "groups" : list of groups
+deactivate "groups"
+
+User -> "joinrequests" : POST groupId
+activate "joinrequests"
+
+alt user can join without approving
+    User <-- "joinrequests" : status=APPROVED
+    User ->  "groups"  : GET /{groupId}
+    User <-- "groups" : group info
+else
+    User <-- "joinrequests" : status=UNRESOLVED
+    actor Admin
+    Admin ->  "joinrequests" : GET ?groupId={groupId}
+    Admin <-- "joinrequests" : joinrequestsId
+    Admin ->  "joinrequests" : PUT /{joinrequestsId} status=APPROVED
+    deactivate "joinrequests"
+end
+
+User -> "groups" : GET
+activate "groups"
+User <-- "groups" : [... groupId ...]
+deactivate "groups"
+
+@enduml
+

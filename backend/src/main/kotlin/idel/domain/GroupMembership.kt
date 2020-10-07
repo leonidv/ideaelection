@@ -192,7 +192,7 @@ class GroupMembershipService(
 
                     when(membership) {
                         is Either.Left -> {
-                            // error in the code, so throw exception
+                            // error in the code, so throw the exception
                             val cause = membership.a
                             throw IllegalStateException("can't create membership for approved join request $request",cause)
                         }

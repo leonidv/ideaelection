@@ -232,14 +232,16 @@ class IdeasController(val ideaRepository: IdeaRepository) {
  * Convert string to IdeaSorting. If string is empty, return [IdeaSorting.CTIME_DESC] as default value.
  */
 class StringToIdeaSortingConverter : Converter<String, IdeaSorting> {
+    val DEFAULT = IdeaSorting.CTIME_DESC
+
     override fun convert(source: String): IdeaSorting {
         return if (source.isNullOrBlank()) {
-            IdeaSorting.CTIME_DESC
+            DEFAULT
         } else {
             try {
                 IdeaSorting.valueOf(source.toUpperCase())
             } catch (ex: IllegalArgumentException) {
-                IdeaSorting.CTIME_DESC
+                DEFAULT
             }
         }
     }
