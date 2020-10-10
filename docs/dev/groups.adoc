@@ -25,7 +25,7 @@ offer idea for this department.
 | Allow sharing ideas to groups of persons and vote for them
 | . Group is created
   . User is admin of the group
-  . Group has the restriction policy
+  . Group has the entry mode
   . Group has the title
   . Group has the description
   . Group has the entry mode
@@ -144,41 +144,39 @@ offer idea for this department.
 
 Each group has an entry mode that regulates how the user can get access to the group.
 
-Self-registration:: The user, which email is satisfying group's restrictions, can join to group
-without approving from group's administrator.
-Only by approve:: Even if the user's email is satisfying the group's restriction,
-the user should send a join request for accessing to the group.
+Public:: Any user can join to a group without approving from group's administrator.
+Moderated:: Any user can send join request to a group.
+Private:: User can join to group only if accept an invite from a group's administrator.
+
+Users also can join a group or create join request using a link to join.
 
 ===== User wants to join to a group
 
 [cols="1,1,4a" options="header"]
 .Cases
 |===
-|Group's restriction |Entry mode |Use case steps
-
-| email is satisfying
-| self-registration
+|Entry mode |Link to join |Use case steps
+| public
+| available
 | . User sees the group in the list of available groups
   . User requires the access to the group
   . User immediately accesses the group.
 
-| email is satysfying
-| only by approve
+| moderated
+| available
 | . User sees the group in the list of available groups.
   . User creates the join request.
   . Admin approves the join request.
   . User has got access to the group.
 
-| email is not satysfying
-| self-registration
-| User doesn't see the group in the list of available groups.
-
-| email is not satysfying
-| only by approve
+| private
+| not available
 | User doesn't see the group in the list of available groups.
 |===
 
 ===== Admin want to include a user to a group
 
-Regardless of entry mode and user's restrictions, admin always can add a user to the group.
+Regardless of entry mode, admin always can try to add a user to the group.
 He should send an invite to a user. User sees the invite in the list of invites and can accept it.
+
+For private groups only admin can invite user's to groups.
