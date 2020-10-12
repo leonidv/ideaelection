@@ -145,38 +145,53 @@ offer idea for this department.
 Each group has an entry mode that regulates how the user can get access to the group.
 
 Public:: Any user can join to a group without approving from group's administrator.
-Moderated:: Any user can send join request to a group.
+Closed:: Any user can send join request to a group.
 Private:: User can join to group only if accept an invite from a group's administrator.
 
 Users also can join a group or create join request using a link to join.
 
 ===== User wants to join to a group
 
-[cols="1,1,4a" options="header"]
-.Cases
+[cols="1,4a" options="header"]
+.User joins to group
 |===
-|Entry mode |Link to join |Use case steps
+|Entry mode |Use case steps
 | public
-| available
 | . User sees the group in the list of available groups
   . User requires the access to the group
   . User immediately accesses the group.
 
-| moderated
-| available
+| closed
 | . User sees the group in the list of available groups.
   . User creates the join request.
   . Admin approves the join request.
   . User has got access to the group.
 
 | private
-| not available
 | User doesn't see the group in the list of available groups.
+  If user try to open group's link, (not link to join), he will see error 404
+  (group is not exists).
 |===
 
-===== Admin want to include a user to a group
+===== Admin wants to invite a user to a group
 
-Regardless of entry mode, admin always can try to add a user to the group.
-He should send an invite to a user. User sees the invite in the list of invites and can accept it.
+Regardless of entry mode, admin always can try to add a user to the group:
 
-For private groups only admin can invite user's to groups.
+* administrator can send a direct invite to a user. User sees the invite in the list of invites
+  and can accept or reject it.
+* administrator can send a link to join by email or by posting a link in a messenger.
+  Any who knows a link   can try to join into group.
+
+[cols="1,4a" options="header"]
+.Administror invites by link to join
+|===
+|Entry mode |Use case steps
+| public
+| User can join to group without join request.
+
+| closed
+| User should create join request.
+
+| private
+| User should create join request.
+|===

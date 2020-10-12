@@ -10,8 +10,6 @@ import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minItems
 import io.konform.validation.jsonschema.minLength
 import java.time.LocalDateTime
-import java.util.regex.Pattern
-import java.util.regex.PatternSyntaxException
 
 /**
  * Editable properties of Group.
@@ -19,19 +17,35 @@ import java.util.regex.PatternSyntaxException
  * See properties documentation in the [Group] class.
  */
 interface IGroupEditableProperties {
-    companion object {
-
-    }
-
     val title: String
     val description: String
-    val usersRestrictions: List<String>
+    val entryMode: GroupEntryMode
+    val administrators: Set<UserId>
 }
 
 class GroupEditableProperties(
         override val title: String,
         override val description: String,
-        override val usersRestrictions: List<String>) : IGroupEditableProperties {
+        override val entryMode: GroupEntryMode,
+        override val administrators: Set<UserId>,
+) : IGroupEditableProperties {
+}
+
+enum class GroupEntryMode {
+    /**
+     * Anybody can join a group without approving by group's administrator.
+     */
+    PUBLIC,
+
+    /**
+     * Anybody can try to join a group, but group's admin should accept join request.
+     */
+    CLOSED,
+
+    /**
+     * Only admin can invite users to group.
+     */
+    PRIVATE
 }
 
 /**
@@ -67,47 +81,23 @@ class Group(
         override val description: String,
 
         /**
-         * Regexp with users restriction. May include patterns like domains and other.
+         * Regulate how user's can join to group.
          */
-        override val usersRestrictions: List<String>
+        override val entryMode: GroupEntryMode,
+        
+        /**
+         * Administrators of groups.
+         */
+        override val administrators: Set<UserId>,
 
-) : IGroupEditableProperties {
 
-    private val usersRestrictionsRegexp: List<Regex>
+        ) : IGroupEditableProperties {
 
-    init {
-        val validationErrors = GroupValidation.validate(this)
-        validationErrors.count()
-        if (!validationErrors.isEmpty()) {
-            throw ValidationException("Initial value of Group is incorrect", validationErrors)
-        }
-
-        usersRestrictionsRegexp = usersRestrictions.map {it.toRegex(RegexOption.IGNORE_CASE)}
-    }
-
-    /**
-     * User satisfies the group's restrictions.
-     */
-    fun allowToJoin(user: User): Boolean {
-        return usersRestrictionsRegexp.firstOrNone {it.matches(user.email)}.isDefined()
-    }
 
 }
 
 class GroupValidation {
     companion object {
-        fun ValidationBuilder<String>.isRegexp(): Constraint<String> {
-            return addConstraint(
-                    errorMessage = "Should be valid regexp"
-            ) {value ->
-                try {
-                    Pattern.compile(value)
-                    true
-                } catch (e: PatternSyntaxException) {
-                    false
-                }
-            }
-        }
 
         val propertiesValidation = Validation<IGroupEditableProperties> {
             IGroupEditableProperties::title {
@@ -120,13 +110,10 @@ class GroupValidation {
                 maxLength(300)
             }
 
-            IGroupEditableProperties::usersRestrictions {
+            IGroupEditableProperties::administrators {
                 minItems(1)
             }
 
-            IGroupEditableProperties::usersRestrictions onEach {
-                isRegexp()
-            }
         }
 
         val groupValidation = Validation<Group> {
@@ -136,23 +123,12 @@ class GroupValidation {
             }
 
         }
-
-        fun validate(group: Group): Collection<ValidationError> {
-            val validationResult = listOf(
-                    propertiesValidation(group), groupValidation(group)
-            )
-                .filterIsInstance<Invalid<*>>()
-                .map {it.errors}
-                .flatten()
-
-            return validationResult
-        }
     }
 }
 
 class GroupFactory {
-    fun createGroup(creator: UserId, editableProperties: IGroupEditableProperties): Either<Invalid<IGroupEditableProperties>, Group> {
-        val validationResult = GroupValidation.propertiesValidation(editableProperties)
+    fun createGroup(creatorId: UserId, properties: IGroupEditableProperties): Either<Invalid<IGroupEditableProperties>, Group> {
+        val validationResult = GroupValidation.propertiesValidation(properties)
 
         return when (validationResult) {
             is Invalid -> Either.left(validationResult)
@@ -160,15 +136,15 @@ class GroupFactory {
                 val group = Group(
                         id = generateId(),
                         ctime = LocalDateTime.now(),
-                        creator = creator,
-                        title = editableProperties.title,
-                        description = editableProperties.description,
-                        usersRestrictions = editableProperties.usersRestrictions
+                        creator = creatorId,
+                        title = properties.title,
+                        description = properties.description,
+                        entryMode = properties.entryMode,
+                        administrators = properties.administrators + creatorId
                 )
                 Either.right(group)
             }
         }
-
     }
 }
 
@@ -179,9 +155,9 @@ enum class GroupSorting {
 
 data class GroupFiltering(
         /**
-         * Filter groups by user users email.
+         *  Filter only groups which are available for joining.
          */
-        val availableForJoiningEmail : Option<String>
+        val onlyAvailable: Boolean
 )
 
 interface GroupRepository {
@@ -189,8 +165,10 @@ interface GroupRepository {
 
     fun load(id: String): Option<Group>
 
-    fun findAvailableForJoining(user: User) : List<Group>
-
     fun replace(group: Group)
+
+    /**
+     * [GroupFiltering.onlyAvailable] processed only if is true. Load NO available groups is senselessly and not secure.
+     */
     fun load(first: Int, last: Int, sorting: GroupSorting, filtering: GroupFiltering): List<Group>
 }
