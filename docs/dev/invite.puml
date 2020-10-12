@@ -13,7 +13,7 @@ skinparam Sequence {
 
 
 actor User
-User -> "groups" : GET ?onlyAvailable=true
+User -> "groups" : GET ?onlyPublic=true
 activate "groups"
 User <-- "groups" : list of groups
 deactivate "groups"

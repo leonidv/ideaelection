@@ -107,7 +107,7 @@ class UserController(val userRepository: UserRepository) {
 
         if (size > 100) {
             val error = ErrorDescription.tooManyItems(size, 100);
-            return ResponseOrError.badRequest(error)
+            return ResponseOrError.errorResponse(error)
         }
 
 

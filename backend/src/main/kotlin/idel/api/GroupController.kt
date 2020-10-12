@@ -22,7 +22,7 @@ class GroupController(private val repository: GroupRepository) {
 
     fun <T> editablePropertiesAreValid(
             properties: IGroupEditableProperties,
-            ifValid :() -> ResponseEntity<ResponseOrError<T>>) : ResponseEntity<ResponseOrError<T>> {
+            ifValid: () -> ResponseEntity<ResponseOrError<T>>): ResponseEntity<ResponseOrError<T>> {
         val validateResult = GroupValidation.propertiesValidation(properties);
         return when (validateResult) {
             is Valid -> ifValid()
@@ -32,9 +32,9 @@ class GroupController(private val repository: GroupRepository) {
 
     @PostMapping
     fun create(
-            @RequestBody properties : GroupEditableProperties,
-            @AuthenticationPrincipal user : IdelOAuth2User
-    ) : ResponseEntity<ResponseOrError<Group>> = editablePropertiesAreValid(properties) {
+            @RequestBody properties: GroupEditableProperties,
+            @AuthenticationPrincipal user: IdelOAuth2User
+    ): ResponseEntity<ResponseOrError<Group>> = editablePropertiesAreValid(properties) {
         val either = factory.createGroup(user.id(), properties) as Either.Right<Group>
         val group = either.b
         repository.add(group)
@@ -42,18 +42,19 @@ class GroupController(private val repository: GroupRepository) {
     }
 
     @GetMapping
-    fun findAvailableForJoining(@AuthenticationPrincipal user : IdelOAuth2User,
+    fun findAvailableForJoining(@AuthenticationPrincipal user: IdelOAuth2User,
                                 @RequestParam(required = false, defaultValue = "0") first: Int,
                                 @RequestParam(required = false, defaultValue = "10") last: Int,
                                 @RequestParam(required = false, defaultValue = "") sorting: GroupSorting,
-                                @RequestParam("onlyAvailable") onlyAvailableForJoining : Optional<Boolean>
-    ) : ResponseEntity<ResponseOrError<List<Group>>> {
+                                @RequestParam(required = false, defaultValue = "false") onlyAvailable: Boolean
+    ): ResponseEntity<ResponseOrError<List<Group>>> {
 
-        // no time to add Option support
-        val onlyAvailable = Option.fromNullable(onlyAvailableForJoining.orElseGet {null})
-        val filtering = GroupFiltering(availableForJoiningEmail = onlyAvailable.map {user.email} )
-
-        return ResponseOrError.data(repository.load(first, last, sorting, filtering))
+        val filtering = GroupFiltering(onlyAvailable = onlyAvailable)
+        return try {
+            ResponseOrError.data(repository.load(first, last, sorting, filtering))
+        } catch (e: Exception) {
+            ResponseOrError.internal("can't load groups", e)
+        }
     }
 
 }

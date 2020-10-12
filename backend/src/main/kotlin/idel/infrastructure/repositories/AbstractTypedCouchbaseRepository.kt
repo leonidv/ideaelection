@@ -134,7 +134,7 @@ abstract class AbstractTypedCouchbaseRepository<T>(
                 }
 
         val options = queryOptions(params)
-        val queryString = "select * from `ideaelection` as ie " +
+        val queryString = "select * from `${collection.bucketName()}` as ie " +
                 "where _type = \"${this.type}\" $filterQuery " +
                 "order by $ordering offset \$offset limit \$limit"
 

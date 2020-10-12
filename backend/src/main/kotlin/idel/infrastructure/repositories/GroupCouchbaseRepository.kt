@@ -30,39 +30,18 @@ class GroupCouchbaseRepository(
             GroupSorting.CTIME_DESC -> "ctime desc"
         }
 
-        var filterQueryParts = emptyList<String>()
+        var filterQueryParts = mutableListOf<String>()
 
-        if (filtering.availableForJoiningEmail is Some) {
-            params.put("userEmail", filtering.availableForJoiningEmail.t)
-            val queryPart = """
-                ANY userRestriction IN usersRestrictions SATISFIES 
-                        REGEXP_LIKE("${'$'}userEmail",userRestriction) 
-                    END
-            """.trimIndent()
-            filterQueryParts = filterQueryParts + queryPart
+
+        if(filtering.onlyAvailable) {
+            filterQueryParts.add("""entryMode IN ["${GroupEntryMode.PUBLIC}","${GroupEntryMode.CLOSED}"]""")
         }
 
         return super.load(filterQueryParts, ordering, params, first, last)
 
     }
 
-    override fun findAvailableForJoining(user: User): List<Group> {
-        val userEmailParam = "userEmail"
-        val query = """
-            select * from `ideaelection` as ie where _type = "group" 
-                and ANY userRestriction IN usersRestrictions SATISFIES 
-                        REGEXP_LIKE("${'$'}$userEmailParam",userRestriction) 
-                    END
-        """.trimIndent()
 
-        val params = JsonObject.create(1);
-        params.put(userEmailParam, user.email)
-        val queryOptions = queryOptions(params)
-        log.trace {"query: [$query], params: [$params]"}
-
-        val q = cluster.query(query, queryOptions)
-        return q.rowsAs(typedClass)
-    }
 
     override fun load(id: String): Option<Group> {
         TODO("Not yet implemented")

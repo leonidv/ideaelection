@@ -178,37 +178,39 @@ class GroupMembershipService(
         }
     }
 
-    /**
-     * Process the request for join to the group. If request is approved by group create group membership.
-     *
-     * Check that group and user are exists.
-     */
-    fun requestMembership(groupId: String, userId: UserId): Either<Exception, JoinRequest> {
-        return try {
-            loadEntities(groupId = groupId, userId = userId).map {(user: User, group: Group) ->
-                if (group.allowToJoin(user)) {
-                    val request = JoinRequest.createApproved(groupId = groupId, userId = userId)
-                    val membership = groupMembershipFactory.createMembership(request)
-
-                    when(membership) {
-                        is Either.Left -> {
-                            // error in the code, so throw the exception
-                            val cause = membership.a
-                            throw IllegalStateException("can't create membership for approved join request $request",cause)
-                        }
-
-                        is Either.Right -> membershipRepository.add(membership.b)
-                    }
-
-                    request
-                } else {
-                    val request = JoinRequest.createUnresloved(groupId = groupId, userId = userId)
-                    joinRequestRepository.add(request)
-                    request
-                }
-            }
-        } catch (ex : Exception) {
-            Either.left(ex)
-        }
-    }
+//    /**
+//     * Process the request for join to the group. If request is approved by group create group membership.
+//     *
+//     * Check that group and user are exists.
+//     */
+//    fun requestMembership(groupId: String, userId: UserId): Either<Exception, JoinRequest> {
+//        return try {
+//            loadEntities(groupId = groupId, userId = userId).map {(user: User, group: Group) ->
+//                when(group.en)
+//
+//                if (group.allowToJoin(user)) {
+//                    val request = JoinRequest.createApproved(groupId = groupId, userId = userId)
+//                    val membership = groupMembershipFactory.createMembership(request)
+//
+//                    when(membership) {
+//                        is Either.Left -> {
+//                            // error in the code, so throw the exception
+//                            val cause = membership.a
+//                            throw IllegalStateException("can't create membership for approved join request $request",cause)
+//                        }
+//
+//                        is Either.Right -> membershipRepository.add(membership.b)
+//                    }
+//
+//                    request
+//                } else {
+//                    val request = JoinRequest.createUnresloved(groupId = groupId, userId = userId)
+//                    joinRequestRepository.add(request)
+//                    request
+//                }
+//            }
+//        } catch (ex : Exception) {
+//            Either.left(ex)
+//        }
+//    }
 }
