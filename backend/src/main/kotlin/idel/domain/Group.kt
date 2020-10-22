@@ -163,7 +163,7 @@ data class GroupFiltering(
 interface GroupRepository {
     fun add(group: Group)
 
-    fun load(id: String): Option<Group>
+    fun load(id: String):  Either<Exception,Option<Group>>
 
     fun replace(group: Group)
 

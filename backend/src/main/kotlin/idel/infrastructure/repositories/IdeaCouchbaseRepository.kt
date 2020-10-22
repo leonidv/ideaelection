@@ -9,13 +9,10 @@ import com.couchbase.client.java.Collection
 import com.couchbase.client.java.codec.*
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.kv.GetOptions
-import com.couchbase.client.java.kv.InsertOptions
 import com.couchbase.client.java.kv.ReplaceOptions
 import com.couchbase.client.java.query.QueryOptions
 import idel.domain.*
 import mu.KotlinLogging
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.Duration
 import java.util.*
@@ -29,13 +26,13 @@ fun JsonObject.asQueryOptions(readonly: Boolean = true): QueryOptions {
         .readonly(readonly)
 }
 
-@Repository
+
 class IdeaCouchbaseRepository(
         cluster: Cluster,
         collection: Collection
 ) : AbstractTypedCouchbaseRepository<Idea>(cluster, collection, "idea", Idea::class.java), IdeaRepository {
 
-    private val log = KotlinLogging.logger {}
+    override val log = KotlinLogging.logger {}
 
     override fun add(idea: Idea): Idea {
         collection.insert(idea.id, idea, insertOptions())
@@ -70,12 +67,12 @@ class IdeaCouchbaseRepository(
             collection.replace(idea.id, idea, options)
             Either.right(Unit)
         } catch (ex: CasMismatchException) {
-            val currentIdeaWithVersion = load(idea.id)
+            val currentIdeaWithVersion = loadWithVersion(idea.id)
             Either.left(currentIdeaWithVersion.get())
         }
     }
 
-    override fun load(
+    override fun loadWithVersion(
             first: Int,
             last: Int,
             sorting: IdeaSorting,
@@ -145,7 +142,7 @@ class IdeaCouchbaseRepository(
         return q.rowsAs(Idea::class.java)
     }
 
-    override fun load(id: String): Optional<IdeaWithVersion> {
+    override fun loadWithVersion(id: String): Optional<IdeaWithVersion> {
         val transcoder = JsonTranscoder.create(jsonSerializer)
         val getOptions = GetOptions.getOptions().transcoder(transcoder)
 

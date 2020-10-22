@@ -1,7 +1,10 @@
 package idel.infrastructure.repositories
 
 import arrow.core.Either
+import arrow.core.Option
+import arrow.core.Some
 import com.couchbase.client.core.error.CasMismatchException
+import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.codec.JsonTranscoder
@@ -17,11 +20,11 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
-import mu.KotlinLogging
-import java.lang.Exception
+import mu.KLogger
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
 
 /**
  * Contains support function for using [TypedJsonSerializer]
@@ -34,7 +37,7 @@ abstract class AbstractTypedCouchbaseRepository<T>(
 
 ) {
 
-    private val log = KotlinLogging.logger {}
+    abstract val log: KLogger
 
     protected val mapper = initMapper();
 
@@ -118,6 +121,21 @@ abstract class AbstractTypedCouchbaseRepository<T>(
             attempts++
         } while (attempts >= maxAttempts && canUpdate.isLeft())
         return canUpdate
+    }
+
+    /**
+     * Load entity by id.
+     */
+    open fun load(id : String) : Either<Exception,Option<T>> {
+        return try {
+            val result = collection.get(id, getOptions())
+            val entity = Some(result.contentAs(typedClass))
+            Either.right(entity)
+        } catch (e : DocumentNotFoundException) {
+            Either.right(Option.empty())
+        } catch (e : Exception) {
+            Either.left(e)
+        }
     }
 
     protected fun load(filterQueryParts : List<String>, ordering : String, params : JsonObject, first : Int, last : Int) : List<T> {

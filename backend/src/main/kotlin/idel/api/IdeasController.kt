@@ -46,7 +46,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
     )
     @ResponseBody
     fun load(@PathVariable id: String): IdeaResponse {
-        val maybeIdea: Optional<IdeaWithVersion> = ideaRepository.load(id)
+        val maybeIdea: Optional<IdeaWithVersion> = ideaRepository.loadWithVersion(id)
         return if (maybeIdea.isPresent) {
             ResponseOrError.data(maybeIdea.get().idea)
         } else {
@@ -59,7 +59,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         produces = ["application/json"]
     )
     fun updateInfo(@PathVariable id: String, @RequestBody ideaInfo: IdeaInfo): IdeaResponse {
-        val maybeIdeaWithCas = ideaRepository.load(id)
+        val maybeIdeaWithCas = ideaRepository.loadWithVersion(id)
         if (maybeIdeaWithCas.isEmpty) {
             return ResponseOrError.notFound(id)
         }
@@ -90,7 +90,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         var attempt = 1
         lateinit var newIdea: Idea
         do {
-            var maybeIdea = ideaRepository.load(ideaId)
+            var maybeIdea = ideaRepository.loadWithVersion(ideaId)
             if (maybeIdea.isEmpty) {
                 return ResponseOrError.notFound(ideaId)
             }
@@ -174,7 +174,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
 
      */
     private fun changeOnlyIfAssignedToUser(id: String, callerId: UserId, mutation: () -> IdeaResponse): IdeaResponse {
-        val maybeIdea = this.ideaRepository.load(id)
+        val maybeIdea = this.ideaRepository.loadWithVersion(id)
         if (maybeIdea.isEmpty) {
             return ResponseOrError.notFound(id)
         }
@@ -223,7 +223,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
             text = text
         )
 
-        val data = ideaRepository.load(first, last, sorting, filtering)
+        val data = ideaRepository.loadWithVersion(first, last, sorting, filtering)
         return ResponseOrError.data(data)
     }
 }

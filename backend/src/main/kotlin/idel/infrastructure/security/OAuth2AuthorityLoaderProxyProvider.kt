@@ -1,8 +1,6 @@
 package idel.infrastructure.security
 
-import arrow.core.None
-import arrow.core.Some
-import arrow.core.getOption
+import arrow.core.*
 import idel.domain.UserRepository
 import mu.KotlinLogging
 import org.springframework.security.authentication.AuthenticationProvider
@@ -55,7 +53,7 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
         val attributesNames = attributesPerProvider.getOption(registrationId)
         return when (attributesNames) {
             is Some ->
-                makeIdelOAuth2User(oauth2token,attributesNames, userRepository)
+                makeIdelOAuth2User(oauth2token, attributesNames, userRepository)
 
             is None -> {
                 printIncorrectRegistrationWarning(registrationId)
@@ -86,7 +84,13 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
                 attributesNames = attributesNames.t
         )
 
-        val userFromRepository = userRepository.load(idelUser.id())
+
+        val userFromRepository = when (val eUser = userRepository.load(idelUser.id())) {
+            is Either.Left -> throw eUser.a
+            is Either.Right -> eUser.b
+        }
+
+
         val authorities = when (userFromRepository) {
             is Some -> {
                 val userRoles = userFromRepository.t.roles
@@ -101,6 +105,7 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
                 idelUser.authorities
             }
         }
+
 
         val newToken = OAuth2LoginAuthenticationToken(
                 oauth2token.clientRegistration,

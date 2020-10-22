@@ -5,6 +5,7 @@ import io.kotest.assertions.arrow.either.shouldBeLeft
 import io.kotest.assertions.arrow.either.shouldBeRight
 import io.kotest.assertions.konform.shouldContainError
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 
@@ -17,9 +18,11 @@ class GroupSpec : DescribeSpec({
             val props = GroupEditableProperties(
                     title = "title",
                     description = "description",
-                    usersRestrictions = listOf("user@httpbasic"))
+                    entryMode = GroupEntryMode.PUBLIC,
+                    administrators = setOf("userA@testuser")
+                    )
 
-            val eitherGroup = factory.createGroup("user@testuser", props)
+            val eitherGroup = factory.createGroup("userB@testuser", props)
 
             it("should be created") {
                 eitherGroup.shouldBeRight()
@@ -32,14 +35,19 @@ class GroupSpec : DescribeSpec({
                 }
 
                 it("has creator [user@testuser]") {
-                    group.creator.shouldBe("user@testuser")
+                    group.creator.shouldBe("userB@testuser")
                 }
 
                 it("id is initialized") {
                     group.id.isNotBlank()
                 }
-                it("user restrictions is [user@httpbasic]") {
-                    group.usersRestrictions.shouldContainAll("user@httpbasic")
+
+                it("creator is administrator") {
+                    group.administrators.shouldContain("userB@testuser")
+                }
+
+                it("administrators is [userA@testuser, userB@testuser]") {
+                    group.administrators.shouldBe(setOf("userA@testuser","userB@testuser"))
                 }
 
             }
@@ -49,7 +57,8 @@ class GroupSpec : DescribeSpec({
             val badProperties = GroupEditableProperties(
                     title = "",
                     description = "",
-                    usersRestrictions = listOf("(]")
+                    entryMode = GroupEntryMode.PUBLIC,
+                    administrators = emptySet()
             )
 
             val eitherGroup = factory.createGroup("user@test", badProperties)
@@ -70,9 +79,7 @@ class GroupSpec : DescribeSpec({
                 }
 
                 it("should contains the error about restrictions") {
-                    val error = invalid[IGroupEditableProperties::usersRestrictions,0]!![0]
-                   // error.shouldNotBeNull()
-                    error.shouldBe("Should be valid regexp")
+                    invalid.shouldContainError(IGroupEditableProperties::administrators,"must have at least 1 items")
                 }
 
             }
