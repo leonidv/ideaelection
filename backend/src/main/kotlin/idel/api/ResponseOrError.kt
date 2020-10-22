@@ -112,6 +112,11 @@ data class ErrorDescription(val code: Int,
 }
 
 
+/**
+ *  Common used in rest controllers.
+ */
+typealias EntityOrError<T> = ResponseEntity<ResponseOrError<T>>
+
 class ResponseOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription>) {
     companion object {
         fun <T> error(description: ErrorDescription): ResponseOrError<T> {
@@ -133,6 +138,10 @@ class ResponseOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescrip
             return ResponseEntity(x, code)
         }
 
+        fun <T> internal(ex : Exception) : ResponseEntity<ResponseOrError<T>> {
+            return internal("can't process operation", ex)
+        }
+
         fun <T> internal(msg: String): ResponseEntity<ResponseOrError<T>> {
             return errorResponse(ErrorDescription.internal(msg), HttpStatus.INTERNAL_SERVER_ERROR)
         }
@@ -151,13 +160,21 @@ class ResponseOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescrip
             return errorResponse(ErrorDescription.validationFailed("Properties is not valid", errors))
         }
 
+
+        fun <T> fromEither(operationResult : Either<Exception, T>, log : KLogger) : ResponseEntity<ResponseOrError<T>> {
+            return when(operationResult) {
+                is Either.Right -> ok(operationResult.b)
+                is Either.Left -> internal(operationResult.a)
+            }
+        }
+
         /**
-         * Make [ResponseEntity] [ok] if [operationResult] is [Either.Right]. Otherwise return [internal] and print
+         * Make [ResponseEntity] with [fromLoading] if [operationResult] is [Either.Right]. Otherwise return [internal]  and print
          * exception to [log].
          */
-        fun <T> fromLoading(operationResult: Either<Exception, T>, log: KLogger): ResponseEntity<ResponseOrError<T>> {
+        fun <T> fromLoading(id: String, operationResult: Either<Exception, Option<T>>, log: KLogger): ResponseEntity<ResponseOrError<T>> {
             return when (operationResult) {
-                is Either.Right -> ok(operationResult.b)
+                is Either.Right -> fromLoading(id, operationResult.b)
                 is Either.Left -> {
                     val errorId = generateId();
                     val ex = operationResult.a

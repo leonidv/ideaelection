@@ -39,25 +39,13 @@ data class PersistsUser(val id: String,
     }
 }
 
-@Repository
 class UserCouchbaseRepository(
         cluster: Cluster,
         collection: Collection) :
         AbstractTypedCouchbaseRepository<PersistsUser>(cluster, collection, "user", PersistsUser::class.java),
         UserRepository {
 
-    val log = KotlinLogging.logger {}
-
-    override fun load(id: String): Option<PersistsUser> {
-        val result = try {
-            val getResult = collection.get(id, getOptions())
-            Option.fromNullable(getResult.contentAs(PersistsUser::class.java))
-        } catch (e: DocumentNotFoundException) {
-            return Option.empty()
-        }
-
-        return result;
-    }
+    override val log = KotlinLogging.logger {}
 
     override fun add(user: User) {
         val persistsUser = PersistsUser.of(user)

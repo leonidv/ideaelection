@@ -249,7 +249,7 @@ interface IdeaRepository {
      */
     fun replace(ideaWithVersion: IdeaWithVersion): Either<IdeaWithVersion, Unit>
 
-    fun load(first: Int, last: Int, sorting: IdeaSorting, filtering: IdeaFiltering): List<Idea>
+    fun loadWithVersion(first: Int, last: Int, sorting: IdeaSorting, filtering: IdeaFiltering): List<Idea>
 
-    fun load(id: String): Optional<IdeaWithVersion>
+    fun loadWithVersion(id: String): Optional<IdeaWithVersion>
 }

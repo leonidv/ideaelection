@@ -19,7 +19,7 @@ interface UserRepository {
     /**
      * Load user by id.
      */
-    fun load(id : String) : Option<User>
+    fun load(id : String) : Either<Exception,Option<User>>
 
     /**
      * Persists new user.

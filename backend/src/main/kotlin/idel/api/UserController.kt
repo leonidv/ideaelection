@@ -1,8 +1,8 @@
 package idel.api
 
-import arrow.core.None
-import arrow.core.Some
+import arrow.core.*
 import com.couchbase.client.core.error.DocumentExistsException
+import idel.api.ResponseOrError.Companion.fromLoading
 import idel.domain.Roles
 import idel.domain.User
 import idel.domain.UserRepository
@@ -13,7 +13,7 @@ import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
-import java.lang.Exception
+
 
 @RestController
 @RequestMapping("/users")
@@ -64,22 +64,25 @@ class UserController(val userRepository: UserRepository) {
     @PutMapping("/{userId}/roles")
     @ResponseBody
     fun putRoles(@PathVariable(name = "userId", required = true) userId: String,
-                 @RequestBody(required = true) roles: Set<String>): ResponseEntity<out ResponseOrError<out User>> {
+                 @RequestBody(required = true) roles: Set<String>): EntityOrError<User> {
         return rolesAreNotMisspelled(roles) {
-            when (val userOption = userRepository.load(userId)) {
-                is Some -> {
-                    val user = userOption.t
-                    if (user.roles == roles) {
-                        ResponseOrError.ok(user)
-                    } else {
-                        val newUser = PersistsUser.of(user).copy(roles = roles)
-                        ResponseOrError.fromLoading(userRepository.update(newUser), log)
+            val eUser = userRepository.load(userId)
+            val xUser = eUser.flatMap {oUser: Option<User> ->
+                when (oUser) {
+                    is None -> Either.right(oUser)
+                    is Some -> {
+                        if (oUser.t.roles == roles) {
+                            Either.right(oUser)
+                        } else {
+                            val user = PersistsUser.of(oUser.t).copy(roles = roles)
+                            userRepository.update(user).map {Option.just(it)}
+                        }
                     }
                 }
-                is None -> {
-                    ResponseOrError.notFound(userId)
-                }
             }
+
+
+            ResponseOrError.fromLoading(userId, xUser, log)
         }
     }
 
@@ -122,6 +125,6 @@ class UserController(val userRepository: UserRepository) {
 
     @GetMapping("/{userId}")
     fun load(@PathVariable(name = "userId", required = true) userId: String): ResponseEntity<out ResponseOrError<out User>> {
-       return ResponseOrError.fromLoading(userId, userRepository.load(userId))
+        return ResponseOrError.fromLoading(userId, userRepository.load(userId), log)
     }
 }

@@ -1,5 +1,6 @@
 package idel.infrastructure.repositories
 
+import arrow.core.Either
 import arrow.core.Option
 import arrow.core.Some
 import com.couchbase.client.java.Cluster
@@ -9,13 +10,12 @@ import idel.domain.*
 import mu.KotlinLogging
 import org.springframework.stereotype.Repository
 
-@Repository
 class GroupCouchbaseRepository(
         cluster: Cluster,
         collection: Collection
 ) : AbstractTypedCouchbaseRepository<Group>(cluster, collection, type = "group", Group::class.java), GroupRepository {
 
-    private val log = KotlinLogging.logger {}
+     override val log = KotlinLogging.logger {}
 
     override fun add(group: Group) {
         collection.insert(group.id, group, insertOptions())
@@ -41,11 +41,6 @@ class GroupCouchbaseRepository(
 
     }
 
-
-
-    override fun load(id: String): Option<Group> {
-        TODO("Not yet implemented")
-    }
 
     override fun replace(group: Group) {
         TODO("Not yet implemented")

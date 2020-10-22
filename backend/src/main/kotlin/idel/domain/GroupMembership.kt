@@ -1,8 +1,8 @@
 package idel.domain
 
-import arrow.core.Either
-import arrow.core.Option
-import arrow.core.Some
+import arrow.core.*
+import arrow.core.extensions.fx
+import arrow.core.extensions.option.monadFilter.monadFilter
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.time.LocalDateTime
@@ -82,7 +82,7 @@ class JoinRequest(groupId: String, userId: UserId, status: AcceptStatus) : Membe
 interface InviteRepository {
     fun add(invite: Invite)
 
-    fun load(id: String): Option<Invite>
+    fun load(id: String): Either<Exception, Option<Invite>>
 
     fun replace(invite: Invite)
 }
@@ -90,7 +90,7 @@ interface InviteRepository {
 interface JoinRequestRepository {
     fun add(request: JoinRequest)
 
-    fun load(id: String): Option<Invite>
+    fun load(id: String): Either<Exception, Option<JoinRequest>>
 
     fun replace(invite: JoinRequest)
 }
@@ -109,30 +109,20 @@ class GroupMembership(
 
 class GroupMembershipFactory {
 
-    fun createMembership(request: MembershipRequest): Either<Exception, GroupMembership> {
-        return when (request.status) {
-            AcceptStatus.APPROVED -> Either.right(GroupMembership(
-                    id = generateId(),
-                    ctime = LocalDateTime.now(),
-                    userId = request.userId,
-                    groupId = request.groupId
-            ))
+    fun create(request: MembershipRequest) =
+        GroupMembership(
+                id = generateId(),
+                ctime = LocalDateTime.now(),
+                userId = request.userId,
+                groupId = request.groupId
+        )
 
-            AcceptStatus.REJECTED -> {
-                Either.left(IllegalStateException("request was rejected, $request"))
-            }
-
-            AcceptStatus.UNRESOLVED -> {
-                Either.left(IllegalStateException( "request is still waiting for resolution, $request"))
-            }
-        }
-    }
 }
 
 interface GroupMembershipRepository {
     fun add(membership: GroupMembership)
 
-    fun load(membershipId : String) : Option<GroupMembership>
+    fun load(membershipId: String): Either<Exception, Option<GroupMembership>>
 }
 
 /**
@@ -148,23 +138,30 @@ class GroupMembershipService(
         private val membershipRepository: GroupMembershipRepository
 ) {
 
-    private val groupMembershipFactory = GroupMembershipFactory()
+    private val membershipFactory = GroupMembershipFactory()
 
-    data class UserAndGroup(val user: User, val group: Group)
+    data class UserAndGroup(val group: Group, val user: User)
 
     private fun loadEntities(groupId: String, userId: UserId): Either<Exception, UserAndGroup> {
-        val optGroup = groupRepository.load(groupId)
-        if (optGroup !is Some) {
-            return Either.left(IllegalArgumentException("group is not exists, groupId = $groupId"))
+        val x: Either<Exception, Pair<Option<Group>, Option<User>>> = Either.fx {
+            val (group) = groupRepository.load(groupId)
+            val (user) = userRepository.load(userId)
+            Pair(group, user)
         }
 
-        val optUser = userRepository.load(userId)
-        if (optUser !is Some) {
-            return Either.left(IllegalArgumentException("user is not exists, userId = $userId"))
+        val y: Either<Exception, UserAndGroup> = x.flatMap {(oGroup, oUser) ->
+            if (oGroup is Some && oUser is Some) {
+                Either.right(UserAndGroup(oGroup.t, oUser.t))
+            } else if (oGroup is None) {
+                Either.left(IllegalArgumentException("group is not exists, groupId = $groupId"))
+            } else if (oUser is None) {
+                Either.left(IllegalArgumentException("user is not exists, userId = $userId"))
+            } else {
+                Either.left(IllegalStateException("Option is not Some and not None :)"))
+            }
         }
 
-        return Either.right(UserAndGroup(optUser.t, optGroup.t))
-
+        return y
     }
 
     /**
@@ -178,39 +175,27 @@ class GroupMembershipService(
         }
     }
 
-//    /**
-//     * Process the request for join to the group. If request is approved by group create group membership.
-//     *
-//     * Check that group and user are exists.
-//     */
-//    fun requestMembership(groupId: String, userId: UserId): Either<Exception, JoinRequest> {
-//        return try {
-//            loadEntities(groupId = groupId, userId = userId).map {(user: User, group: Group) ->
-//                when(group.en)
-//
-//                if (group.allowToJoin(user)) {
-//                    val request = JoinRequest.createApproved(groupId = groupId, userId = userId)
-//                    val membership = groupMembershipFactory.createMembership(request)
-//
-//                    when(membership) {
-//                        is Either.Left -> {
-//                            // error in the code, so throw the exception
-//                            val cause = membership.a
-//                            throw IllegalStateException("can't create membership for approved join request $request",cause)
-//                        }
-//
-//                        is Either.Right -> membershipRepository.add(membership.b)
-//                    }
-//
-//                    request
-//                } else {
-//                    val request = JoinRequest.createUnresloved(groupId = groupId, userId = userId)
-//                    joinRequestRepository.add(request)
-//                    request
-//                }
-//            }
-//        } catch (ex : Exception) {
-//            Either.left(ex)
-//        }
-//    }
+    /**
+     * Process the request for join to the group. If request is approved by group create group membership.
+     *
+     * Check that group and user are exists.
+     */
+    fun requestMembership(groupId: String, userId: UserId): Either<Exception, JoinRequest> {
+        return try {
+            loadEntities(groupId = groupId, userId = userId).map {(group: Group, user: User) ->
+                when (group.entryMode) {
+                    GroupEntryMode.PUBLIC -> {
+                        val request = JoinRequest.createApproved(groupId, userId)
+                        val membership = membershipFactory.create(request)
+                        membershipRepository.add(membership)
+                        request
+                    }
+                    GroupEntryMode.CLOSED,
+                    GroupEntryMode.PRIVATE -> JoinRequest.createUnresloved(groupId, userId)
+                }
+            }
+        } catch (ex: Exception) {
+            Either.left(ex)
+        }
+    }
 }
