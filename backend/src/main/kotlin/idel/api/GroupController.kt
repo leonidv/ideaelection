@@ -1,66 +1,81 @@
 package idel.api
 
 import arrow.core.Either
-import arrow.core.Option
+import arrow.core.extensions.fx
 import idel.domain.*
 import idel.infrastructure.security.IdelOAuth2User
 import io.konform.validation.Invalid
-import io.konform.validation.Valid
+import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.lang.IllegalArgumentException
-import java.util.*
+import java.util.Optional
 
 @RestController
 @RequestMapping("/groups")
-class GroupController(private val repository: GroupRepository) {
+class GroupController(
+        private val groupRepository: GroupRepository,
+        private val userRepository: UserRepository
+) {
+    val log = KotlinLogging.logger {}
 
     val factory = GroupFactory()
 
 
-    fun <T> editablePropertiesAreValid(
-            properties: IGroupEditableProperties,
-            ifValid: () -> ResponseEntity<ResponseOrError<T>>): ResponseEntity<ResponseOrError<T>> {
-        val validateResult = GroupValidation.propertiesValidation(properties);
-        return when (validateResult) {
-            is Valid -> ifValid()
-            is Invalid -> ResponseOrError.invalid(validateResult.errors)
-        }
-    }
+    data class GroupInitInfo(
+            override val title: String,
+            override val description: String,
+            override val entryMode: GroupEntryMode,
+            val administrators: List<UserId>,
+            val members: List<UserId>
+    ) : IGroupEditableProperties
 
     @PostMapping
     fun create(
-            @RequestBody properties: GroupEditableProperties,
+            @RequestBody properties: GroupInitInfo,
             @AuthenticationPrincipal user: IdelOAuth2User
-    ): ResponseEntity<ResponseOrError<Group>> = editablePropertiesAreValid(properties) {
-        val either = factory.createGroup(user.id(), properties) as Either.Right<Group>
-        val group = either.b
-        repository.add(group)
-        ResponseOrError.ok(group)
+    ): EntityOrError<Group> {
+        val y: Either<Exception, Either<Invalid<IGroupEditableProperties>, Group>> = Either.fx {
+            val (adminsUserInfo) = userRepository.loadUserInfo(properties.administrators)
+            val (membersUserInfo) = userRepository.loadUserInfo(properties.members)
+            val (creatorUserInfo) = userRepository.loadUserInfo(listOf(user.id))
+
+            val eGroup = factory.createGroup(creatorUserInfo.first(), properties, adminsUserInfo, membersUserInfo)
+            eGroup
+        }
+
+        return when (y) {
+            is Either.Left -> DataOrError.internal(y.a) // trouble on getting data from database
+            is Either.Right -> when (val eGroup = y.b) {
+                is Either.Left -> DataOrError.invalid(eGroup.a.errors)
+                is Either.Right -> DataOrError.fromEither(groupRepository.add(eGroup.b), log)
+            }
+        }
     }
 
-    @GetMapping
-    fun findAvailableForJoining(@AuthenticationPrincipal user: IdelOAuth2User,
-                                @RequestParam(required = false, defaultValue = "0") first: Int,
-                                @RequestParam(required = false, defaultValue = "10") last: Int,
-                                @RequestParam(required = false, defaultValue = "") sorting: GroupSorting,
-                                @RequestParam(required = false, defaultValue = "false") onlyAvailable: Boolean
-    ): ResponseEntity<ResponseOrError<List<Group>>> {
 
-        val filtering = GroupFiltering(onlyAvailable = onlyAvailable)
-        return try {
-            ResponseOrError.data(repository.load(first, last, sorting, filtering))
-        } catch (e: Exception) {
-            ResponseOrError.internal("can't load groups", e)
+    @GetMapping
+    fun load(@AuthenticationPrincipal user: IdelOAuth2User,
+             @RequestParam(required = false, defaultValue = "0") first: Int,
+             @RequestParam(required = false, defaultValue = "10") last: Int,
+             @RequestParam(required = false, defaultValue = "") sorting: GroupSorting,
+             @RequestParam(required = false, defaultValue = "false") onlyAvailable: Boolean,
+             @RequestParam("userId") userId: Optional<String>
+    ): ResponseEntity<DataOrError<List<Group>>> {
+        val pagination = Repository.Pagination(first, last)
+        return if (onlyAvailable) {
+            DataOrError.fromEither(groupRepository.loadOnlyAvailable(pagination, sorting), log)
+        } else {
+            DataOrError.ok(emptyList())
         }
     }
 
 }
 
 class StringToGroupSortingConverter : Converter<String, GroupSorting> {
-    val DEFAULT = GroupSorting.CTIME_DESC;
+    val DEFAULT = GroupSorting.CTIME_DESC
 
     override fun convert(source: String): GroupSorting {
         return if (source.isNullOrBlank()) {

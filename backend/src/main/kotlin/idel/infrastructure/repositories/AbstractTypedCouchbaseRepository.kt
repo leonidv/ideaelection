@@ -2,6 +2,7 @@ package idel.infrastructure.repositories
 
 import arrow.core.Either
 import arrow.core.Option
+import arrow.core.Right
 import arrow.core.Some
 import com.couchbase.client.core.error.CasMismatchException
 import com.couchbase.client.core.error.DocumentNotFoundException
@@ -20,6 +21,8 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
+import idel.api.Repository
+import idel.domain.Identifiable
 import mu.KLogger
 import java.time.Duration
 import java.time.LocalDateTime
@@ -29,7 +32,7 @@ import java.time.format.DateTimeFormatter
 /**
  * Contains support function for using [TypedJsonSerializer]
  */
-abstract class AbstractTypedCouchbaseRepository<T>(
+abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         protected val cluster: Cluster,
         protected val collection: Collection,
         protected val type: String,
@@ -94,6 +97,7 @@ abstract class AbstractTypedCouchbaseRepository<T>(
      */
     protected fun replaceOptions(): ReplaceOptions = ReplaceOptions.replaceOptions().transcoder(transcoder)
 
+
     /**
      * Replace entity by id with mutation.
      */
@@ -124,6 +128,18 @@ abstract class AbstractTypedCouchbaseRepository<T>(
     }
 
     /**
+     * Add entity to collection
+     */
+    open fun add(entity: T) : Either<Exception, T> {
+        return try {
+            collection.insert(entity.id, entity, insertOptions())
+            Either.Right(entity)
+        } catch (e : Exception) {
+            Either.Left(e)
+        }
+    }
+
+    /**
      * Load entity by id.
      */
     open fun load(id : String) : Either<Exception,Option<T>> {
@@ -138,26 +154,41 @@ abstract class AbstractTypedCouchbaseRepository<T>(
         }
     }
 
-    protected fun load(filterQueryParts : List<String>, ordering : String, params : JsonObject, first : Int, last : Int) : List<T> {
-        val limit = last - first
-        params
-            .put("offset", first)
-            .put("limit", limit)
+    /**
+     * Check exists entity or not without loading full document.
+     */
+    open fun exists(groupId: String): Either<Exception, Boolean> {
+       return try {
+            Either.right(collection.exists(groupId).exists())
+        } catch (e : Exception) {
+            Either.left(e)
+        }
+    }
 
-        val filterQuery =
-                if (filterQueryParts.isNotEmpty()) {
-                    filterQueryParts.joinToString(prefix = " and ", separator = " and ")
-                } else {
-                    ""
-                }
 
-        val options = queryOptions(params)
-        val queryString = "select * from `${collection.bucketName()}` as ie " +
-                "where _type = \"${this.type}\" $filterQuery " +
-                "order by $ordering offset \$offset limit \$limit"
+    protected fun load(filterQueryParts : List<String>, ordering : String, params : JsonObject, pagination: Repository.Pagination) : Either<Exception,List<T>> {
+       return try {
+            params
+                .put("offset", pagination.first)
+                .put("limit", pagination.limit)
 
-        log.trace {"query: [$queryString], params: [$params]"}
+            val filterQuery =
+                    if (filterQueryParts.isNotEmpty()) {
+                        filterQueryParts.joinToString(prefix = " and ", separator = " and ")
+                    } else {
+                        ""
+                    }
 
-        return cluster.query(queryString, options).rowsAs(typedClass)
+            val options = queryOptions(params).readonly(true)
+            val queryString = "select * from `${collection.bucketName()}` as ie " +
+                    "where _type = \"${this.type}\" $filterQuery " +
+                    "order by $ordering offset \$offset limit \$limit"
+
+            log.trace {"query: [$queryString], params: [$params]"}
+
+            Either.right(cluster.query(queryString, options).rowsAs(typedClass))
+        } catch (e :Exception) {
+            Either.left(e)
+        }
     }
 }

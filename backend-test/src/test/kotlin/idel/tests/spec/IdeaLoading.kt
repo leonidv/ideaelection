@@ -1,7 +1,9 @@
-package idel.tests
+package idel.tests.spec
 
 import assertk.assertThat
 import assertk.assertions.*
+import idel.tests.*
+import idel.tests.apiobject.Couchbase
 import io.kotest.core.spec.style.DescribeSpec
 import io.restassured.module.kotlin.extensions.*
 import io.restassured.response.Response
@@ -77,7 +79,7 @@ class IdeaLoading : DescribeSpec({
     lateinit var votedIdeas: List<String>
 
     beforeSpec {
-        Couchbase.Helper.clearIdeas()
+        Couchbase().clearIdeas()
 
         userAIdeas = addIdeas("userA")
         userBIdeas = addIdeas("userB")

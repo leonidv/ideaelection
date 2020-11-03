@@ -33,13 +33,6 @@ class IdeaCouchbaseRepository(
 ) : AbstractTypedCouchbaseRepository<Idea>(cluster, collection, "idea", Idea::class.java), IdeaRepository {
 
     override val log = KotlinLogging.logger {}
-
-    override fun add(idea: Idea): Idea {
-        collection.insert(idea.id, idea, insertOptions())
-        return idea
-    }
-
-
     /**
      * Update idea's information.
      *

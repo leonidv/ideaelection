@@ -5,21 +5,52 @@ import arrow.core.Option
 
 typealias UserId = String
 
-
-interface User {
-    fun id() : UserId
+interface IUserInfo : Identifiable {
     val email : String
     val displayName : String
     val avatar : String
+}
+
+interface User : IUserInfo {
     val roles : Set<String>
 }
 
+/**
+ * View of user info. Used for persists short information about user.
+ */
+data class UserInfo(
+        override val id: String,
+        override val email: String,
+        override val displayName: String,
+        override val avatar: String
+) : IUserInfo {
+    companion object {
+        fun ofUser(user : User) : UserInfo {
+            return UserInfo(
+                    id = user.id,
+                    avatar = user.avatar,
+                    email = user.email,
+                    displayName = user.displayName
+            )
+        }
+    }
+}
 
 interface UserRepository {
     /**
      * Load user by id.
      */
     fun load(id : String) : Either<Exception,Option<User>>
+
+    /**
+     * Check that user is exists without loading from database.
+     */
+    fun exists(id : String) : Either<Exception,Boolean>
+
+    /**
+     * Load users by their id. Ignore id if user is not found.
+     */
+    fun loadUserInfo(ids : List<UserId>) : Either<Exception,List<UserInfo>>
 
     /**
      * Persists new user.

@@ -85,7 +85,7 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
         )
 
 
-        val userFromRepository = when (val eUser = userRepository.load(idelUser.id())) {
+        val userFromRepository = when (val eUser = userRepository.load(idelUser.id)) {
             is Either.Left -> throw eUser.a
             is Either.Right -> eUser.b
         }

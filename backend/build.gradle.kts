@@ -1,5 +1,5 @@
 val kotlinVersion = "1.4.0"
-
+val jacksonVersion = "2.11.2"
 
 
 plugins {
@@ -43,8 +43,8 @@ dependencies {
 
     implementation("io.konform:konform-jvm:0.2.0")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
     implementation("io.arrow-kt:arrow-core:0.10.4")
 

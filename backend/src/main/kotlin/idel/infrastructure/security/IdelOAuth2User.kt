@@ -41,7 +41,7 @@ open class IdelOAuth2User(
     override val displayName: String = safeAttribute(attributesNames.displayName,"displayName")
     override val avatar: String = safeAttribute(attributesNames.avatar, "avatar", required = false)
 
-    override fun id() = "${externalId}@${provider}"
+    override val id = "${externalId}@${provider}"
 
     override val roles = IdelAuthorities.asRoles(this.authorities).toSet()
 

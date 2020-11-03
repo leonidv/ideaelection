@@ -10,9 +10,6 @@ import mu.KotlinLogging
 class InviteCouchbaseRepository(cluster : Cluster, collection : Collection) :
         AbstractTypedCouchbaseRepository<Invite>(cluster, collection, type = "invite", Invite::class.java), InviteRepository {
     override val log = KotlinLogging.logger {}
-    override fun add(invite: Invite) {
-        TODO("Not yet implemented")
-    }
 
     override fun replace(invite: Invite) {
         TODO("Not yet implemented")

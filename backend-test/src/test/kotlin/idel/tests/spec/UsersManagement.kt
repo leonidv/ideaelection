@@ -1,6 +1,9 @@
-package idel.tests
+package idel.tests.spec
 
 import com.typesafe.config.ConfigFactory
+import idel.tests.checkEntityData
+import idel.tests.checkError
+import idel.tests.initRequest
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.data.forAll
 import io.kotest.data.headers
