@@ -52,7 +52,7 @@ class FirstSetupController(val userRepository: UserRepository)  {
 
         val responseContent = HTML_OK_CONTENT
             .replace("#{name}", user.displayName)
-            .replace("#{id}", user.id())
+            .replace("#{id}", user.id)
 
         return HTML_TEMPLATE.replace("#{content}", responseContent)
     }

@@ -2,12 +2,8 @@ package idel.api
 
 import idel.domain.GroupMembershipService
 import idel.domain.JoinRequest
-import idel.domain.JoinRequestRepository
-import idel.domain.MembershipRequest
 import idel.infrastructure.security.IdelOAuth2User
-import mu.KLogger
 import mu.KotlinLogging
-import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -31,6 +27,6 @@ class JoinRequestController(val groupMembershipService: GroupMembershipService) 
 
     @PostMapping
    fun add(@AuthenticationPrincipal user : IdelOAuth2User, @RequestBody groupId: GroupId) : EntityOrError<JoinRequest> {
-       return ResponseOrError.fromEither(groupMembershipService.requestMembership(groupId.groupId, user.id()), log)
+       return DataOrError.fromEither(groupMembershipService.requestMembership(groupId.groupId, user.id), log)
    }
 }

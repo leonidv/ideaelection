@@ -1,35 +1,26 @@
 package idel.infrastructure.repositories
 
 import arrow.core.Either
-import arrow.core.Option
-import com.couchbase.client.core.error.DocumentNotFoundException
+import arrow.core.Left
+import arrow.core.Some
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
-import com.couchbase.client.java.codec.JsonTranscoder
 import com.couchbase.client.java.json.JsonObject
-import com.couchbase.client.java.kv.GetOptions
-import com.couchbase.client.java.kv.InsertOptions
-import idel.domain.Idea
-import idel.domain.IdeaSorting
-import idel.domain.User
-import idel.domain.UserRepository
-import mu.KLogger
+import idel.domain.*
 import mu.KotlinLogging
-import org.springframework.stereotype.Repository
-import java.time.Duration
-import java.util.*
 
-data class PersistsUser(val id: String,
-                   override val email: String,
-                   override val displayName: String,
-                   override val avatar: String,
-                   override val roles: Set<String>) : User {
-    override fun id() = id;
+data class PersistsUser(
+        override val id: String,
+        override val email: String,
+        override val displayName: String,
+        override val avatar: String,
+        override val roles: Set<String>) : User {
+
 
     companion object {
         fun of(user: User): PersistsUser {
             return PersistsUser(
-                    id = user.id(),
+                    id = user.id,
                     email = user.email,
                     displayName = user.displayName,
                     avatar = user.avatar,
@@ -54,7 +45,7 @@ class UserCouchbaseRepository(
 
 
     override fun update(user: User): Either<Exception, User> {
-        return safelyReplace(user.id()) { PersistsUser.of(user) }
+        return safelyReplace(user.id) {PersistsUser.of(user)}
     }
 
     override fun load(first: Int, last: Int): List<User> {
@@ -76,5 +67,21 @@ class UserCouchbaseRepository(
         )
 
         return q.rowsAs(this.typedClass)
+    }
+
+    override fun loadUserInfo(ids: List<UserId>): Either<Exception, List<UserInfo>> {
+        val users = mutableListOf<UserInfo>()
+        for (id in ids) {
+            when (val eUser = load(id)) {
+                is Either.Left -> return eUser
+                is Either.Right -> {
+                    val oUser = eUser.b
+                    if (oUser is Some) {
+                       users.add(UserInfo.ofUser(oUser.t))
+                    }
+                }
+            }
+        }
+        return Either.right(users)
     }
 }

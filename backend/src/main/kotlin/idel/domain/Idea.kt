@@ -27,7 +27,7 @@ class Idea(
     /**
      * Generated identifier
      */
-    val id: String,
+    override val id: String,
 
     /**
      * Time of creation.
@@ -67,7 +67,7 @@ class Idea(
      */
     val voters: Set<UserId>,
 
-) : IdeaInfo {
+) : IdeaInfo, Identifiable {
 
     init {
         require(id.isNotBlank()) { "id can't be blank" }
@@ -226,7 +226,7 @@ interface IdeaRepository {
     /**
      * Add new idea.
      */
-    fun add(idea: Idea): Idea
+    fun add(idea: Idea) : Either<Exception, Idea>
 
     /**
      * Update an idea's info.

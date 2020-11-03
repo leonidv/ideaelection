@@ -17,7 +17,7 @@ import io.restassured.specification.RequestSpecification
 import org.apache.http.HttpStatus
 
 
-val idelUrl: String = ConfigFactory.load().getString("idel.url")
+val idelUrl = Idel.URL
 
 
 /**

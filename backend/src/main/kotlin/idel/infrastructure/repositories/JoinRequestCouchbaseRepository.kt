@@ -16,10 +16,6 @@ class JoinRequestCouchbaseRepository(
 
     override val log = KotlinLogging.logger {}
 
-    override fun add(request: JoinRequest) {
-        collection.insert(request.id,request,insertOptions())
-    }
-
     override fun replace(invite: JoinRequest) {
         TODO("Not yet implemented")
     }

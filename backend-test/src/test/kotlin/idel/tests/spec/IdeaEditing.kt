@@ -1,8 +1,9 @@
-package idel.tests
+package idel.tests.spec
 
 import io.kotest.core.spec.style.DescribeSpec
 import assertk.assertThat
 import assertk.assertions.*
+import idel.tests.*
 
 import io.restassured.module.kotlin.extensions.*
 import io.restassured.response.Response

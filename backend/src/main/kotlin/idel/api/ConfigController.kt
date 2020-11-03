@@ -47,18 +47,18 @@ class ConfigController {
     }
 
     @DeleteMapping("/couchbase/{type}")
-    fun  deleteEntities(@PathVariable type : String) : ResponseEntity<ResponseOrError<String>> {
+    fun  deleteEntities(@PathVariable type : String) : ResponseEntity<DataOrError<String>> {
        return if (testMode) {
            try {
               val result = cluster.query("""delete from `${params.bucket}` where _type = "${type}" returning *""")
               val deleted = result.rowsAsObject().size
-               ResponseOrError.ok("Deleted ${deleted} documents")
+               DataOrError.ok("Deleted ${deleted} documents")
            } catch (e : Exception) {
                log.error("can't delete entities", e)
-               ResponseOrError.internal("oops :(", e)
+               DataOrError.internal("oops :(", e)
            }
         } else {
-            ResponseOrError.notFound("not found")
+            DataOrError.notFound("not found")
         }
     }
 }

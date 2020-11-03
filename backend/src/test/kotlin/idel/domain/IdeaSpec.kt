@@ -13,7 +13,7 @@ data class IdeaInfoValues(
 ) : IdeaInfo
 
 class TestUser(
-               private val id : String,
+               override val id : String,
                override val email: String,
                override val displayName: String,
                override val avatar: String,
@@ -30,8 +30,6 @@ class TestUser(
                 roles = setOf(Roles.USER)
         );
     }
-
-    override fun id() = this.id
 
 }
 
@@ -157,14 +155,14 @@ class IdeaSpec : DescribeSpec({
 
         describe("voting") {
             describe("user can vote for an idea") {
-                val idea = originIdea.addVote(TestUser.DUMMY_USER.id())
+                val idea = originIdea.addVote(TestUser.DUMMY_USER.id)
 
                 it("id is not changed") {
                     assertThat(idea.id).isEqualTo(originIdea.id)
                 }
 
                 it("has voter [dummy@mail]") {
-                    assertThat(idea.voters).isEqualTo(setOf(TestUser.DUMMY_USER.id()))
+                    assertThat(idea.voters).isEqualTo(setOf(TestUser.DUMMY_USER.id))
                 }
 
                 it("return 1 vote") {
@@ -174,11 +172,11 @@ class IdeaSpec : DescribeSpec({
 
             describe("many users can vote for an idea") {
                 val idea = originIdea
-                    .addVote(voterA.id())
-                    .addVote(voterB.id())
+                    .addVote(voterA.id)
+                    .addVote(voterB.id)
 
                 it("has voter [a@email, b@email]") {
-                    assertThat(idea.voters).isEqualTo(setOf(voterA.id(), voterB.id()))
+                    assertThat(idea.voters).isEqualTo(setOf(voterA.id, voterB.id))
                 }
 
                 it("has 2 votes") {
@@ -188,11 +186,11 @@ class IdeaSpec : DescribeSpec({
 
             describe("user can't vote twice for same idea") {
                 val idea = originIdea
-                    .addVote(TestUser.DUMMY_USER.id())
-                    .addVote(TestUser.DUMMY_USER.id())
+                    .addVote(TestUser.DUMMY_USER.id)
+                    .addVote(TestUser.DUMMY_USER.id)
 
                 it("has only one voter [dummy@email]") {
-                    assertThat(idea.voters).isEqualTo(setOf(TestUser.DUMMY_USER.id()))
+                    assertThat(idea.voters).isEqualTo(setOf(TestUser.DUMMY_USER.id))
                 }
 
                 it("has 1 vote") {
@@ -214,8 +212,8 @@ class IdeaSpec : DescribeSpec({
         describe("removing vote") {
             describe("user can remove his vote (only he have voted)") {
                 val idea = originIdea
-                    .addVote(TestUser.DUMMY_USER.id())
-                    .removeVote(TestUser.DUMMY_USER.id())
+                    .addVote(TestUser.DUMMY_USER.id)
+                    .removeVote(TestUser.DUMMY_USER.id)
 
                 it("has not any voters") {
                     assertThat(idea.voters).isEmpty()
@@ -242,7 +240,7 @@ class IdeaSpec : DescribeSpec({
             }
 
             describe("user can't remove vote for an idea without any vote") {
-                val idea = originIdea.removeVote(TestUser.DUMMY_USER.id())
+                val idea = originIdea.removeVote(TestUser.DUMMY_USER.id)
 
                 it("has not any voters") {
                     assertThat(idea.voters).isEmpty()
@@ -255,11 +253,11 @@ class IdeaSpec : DescribeSpec({
 
             describe("user can't remove vote, if he doesn't vote for an idea") {
                 val idea = originIdea
-                    .addVote(voterA.id())
-                    .removeVote(voterB.id())
+                    .addVote(voterA.id)
+                    .removeVote(voterB.id)
 
                 it("has voter [a@email] ") {
-                    assertThat(idea.voters).isEqualTo(setOf(voterA.id()))
+                    assertThat(idea.voters).isEqualTo(setOf(voterA.id))
                 }
 
                 it("has 1 vote") {

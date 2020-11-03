@@ -2,6 +2,7 @@ package idel.domain
 
 
 import arrow.core.*
+import idel.api.Repository
 
 import io.konform.validation.*
 import io.konform.validation.Invalid
@@ -20,14 +21,12 @@ interface IGroupEditableProperties {
     val title: String
     val description: String
     val entryMode: GroupEntryMode
-    val administrators: Set<UserId>
 }
 
 class GroupEditableProperties(
         override val title: String,
         override val description: String,
         override val entryMode: GroupEntryMode,
-        override val administrators: Set<UserId>,
 ) : IGroupEditableProperties {
 }
 
@@ -58,7 +57,7 @@ class Group(
         /**
          * Generated idenitfier.
          */
-        val id: String,
+        override val id: String,
 
         /**
          * Time of the creation
@@ -68,7 +67,7 @@ class Group(
         /**
          * User which created the group
          */
-        val creator: UserId,
+        val creator: UserInfo,
 
         /**
          * Name of group.
@@ -84,16 +83,63 @@ class Group(
          * Regulate how user's can join to group.
          */
         override val entryMode: GroupEntryMode,
-        
+
         /**
          * Administrators of groups.
          */
-        override val administrators: Set<UserId>,
+        val administrators: List<UserInfo>,
+
+        /**
+         * Group's members
+         */
+        val members: List<GroupMember>
+
+) : IGroupEditableProperties, Identifiable {
 
 
-        ) : IGroupEditableProperties {
+    fun clone(members: List<GroupMember> = this.members): Group {
+        return Group(
+                id = this.id,
+                ctime = this.ctime,
+                creator = this.creator,
+                title = this.title,
+                description = this.description,
+                entryMode = this.entryMode,
+                administrators = this.administrators,
+                members = members
+        )
+    }
 
 
+    fun addMember(user: GroupMember): Group {
+        val newMembers = members + user
+        return clone(members = newMembers)
+    }
+
+    fun removeMember(userId: UserId): Group {
+        val newMembers = members.filterNot {it.id == userId}.toList()
+        return clone(members = newMembers)
+    }
+}
+
+data class GroupMember(
+        override val id: String,
+        val ctime: LocalDateTime,
+        override val email: String,
+        override val displayName: String,
+        override val avatar: String,
+) : IUserInfo {
+    companion object {
+        fun of(userInfo: IUserInfo): GroupMember {
+            return GroupMember(
+                    id = userInfo.id,
+                    ctime = LocalDateTime.now(),
+                    email = userInfo.email,
+                    displayName = userInfo.displayName,
+                    avatar = userInfo.avatar
+            )
+        }
+    }
 }
 
 class GroupValidation {
@@ -109,25 +155,18 @@ class GroupValidation {
                 minLength(1)
                 maxLength(300)
             }
-
-            IGroupEditableProperties::administrators {
-                minItems(1)
-            }
-
-        }
-
-        val groupValidation = Validation<Group> {
-            Group::creator {
-                minLength(3)
-                maxLength(255)
-            }
-
         }
     }
 }
 
+
 class GroupFactory {
-    fun createGroup(creatorId: UserId, properties: IGroupEditableProperties): Either<Invalid<IGroupEditableProperties>, Group> {
+    fun createGroup(
+            creator: UserInfo,
+            properties: IGroupEditableProperties,
+            administrators: List<UserInfo>,
+            members: List<UserInfo>
+    ): Either<Invalid<IGroupEditableProperties>, Group> {
         val validationResult = GroupValidation.propertiesValidation(properties)
 
         return when (validationResult) {
@@ -136,11 +175,12 @@ class GroupFactory {
                 val group = Group(
                         id = generateId(),
                         ctime = LocalDateTime.now(),
-                        creator = creatorId,
+                        creator = creator,
                         title = properties.title,
                         description = properties.description,
                         entryMode = properties.entryMode,
-                        administrators = properties.administrators + creatorId
+                        administrators = administrators + creator,
+                        members = members.map {GroupMember.of(it)}
                 )
                 Either.right(group)
             }
@@ -154,21 +194,36 @@ enum class GroupSorting {
 }
 
 data class GroupFiltering(
+
         /**
-         *  Filter only groups which are available for joining.
+         * Filter groups with member
          */
-        val onlyAvailable: Boolean
+        val member: Option<UserId>
 )
 
 interface GroupRepository {
-    fun add(group: Group)
+    fun add(group: Group): Either<Exception, Group>
 
-    fun load(id: String):  Either<Exception,Option<Group>>
+    fun load(id: String): Either<Exception, Option<Group>>
+
+    /**
+     *  Case-specific function. Used for adding members to group. It allows dont' load full group with all members from
+     *  database.
+     */
+    fun loadEntryMode(id: String): Either<Exception, GroupEntryMode>
 
     fun replace(group: Group)
 
+    fun load(first: Int, last: Int, sorting: GroupSorting, filtering: GroupFiltering): Either<Exception, List<Group>>
+
     /**
-     * [GroupFiltering.onlyAvailable] processed only if is true. Load NO available groups is senselessly and not secure.
+     * Loads only available and visible groups.
      */
-    fun load(first: Int, last: Int, sorting: GroupSorting, filtering: GroupFiltering): List<Group>
+    fun loadOnlyAvailable(pagination: Repository.Pagination, sorting: GroupSorting): Either<Exception, List<Group>>
+
+    /**
+     * Add member to group. Granular operation for performance.
+     */
+    fun addMember(groupId: String, member: GroupMember): Either<Exception, Unit>;
+
 }

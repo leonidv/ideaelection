@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.*
 import java.lang.IllegalArgumentException
 import java.util.*
 
-typealias IdeaResponse = ResponseEntity<ResponseOrError<Idea>>
-typealias IdeaListResponse = ResponseEntity<ResponseOrError<List<Idea>>>
+typealias IdeaResponse = ResponseEntity<DataOrError<Idea>>
+typealias IdeaListResponse = ResponseEntity<DataOrError<List<Idea>>>
 
 @RestController
 @RequestMapping("/ideas")
@@ -36,8 +36,9 @@ class IdeasController(val ideaRepository: IdeaRepository) {
     @ResponseBody
     fun create(@RequestBody info: IdeaInfo): IdeaResponse {
         val voter = currentUser()
-        val newIdea = factory.createIdea(info, voter.id())
-        return ResponseOrError.data(ideaRepository.add(newIdea), HttpStatus.CREATED)
+        val newIdea = factory.createIdea(info, voter.id)
+        ideaRepository.add(newIdea)
+        return DataOrError.data(newIdea, HttpStatus.CREATED)
     }
 
     @GetMapping(
@@ -48,9 +49,9 @@ class IdeasController(val ideaRepository: IdeaRepository) {
     fun load(@PathVariable id: String): IdeaResponse {
         val maybeIdea: Optional<IdeaWithVersion> = ideaRepository.loadWithVersion(id)
         return if (maybeIdea.isPresent) {
-            ResponseOrError.data(maybeIdea.get().idea)
+            DataOrError.data(maybeIdea.get().idea)
         } else {
-            ResponseOrError.notFound(id)
+            DataOrError.notFound(id)
         }
     }
 
@@ -61,21 +62,21 @@ class IdeasController(val ideaRepository: IdeaRepository) {
     fun updateInfo(@PathVariable id: String, @RequestBody ideaInfo: IdeaInfo): IdeaResponse {
         val maybeIdeaWithCas = ideaRepository.loadWithVersion(id)
         if (maybeIdeaWithCas.isEmpty) {
-            return ResponseOrError.notFound(id)
+            return DataOrError.notFound(id)
         }
 
         val currentVoter = currentUser()
         val originIdea = maybeIdeaWithCas.get().idea
 
-        if (originIdea.offeredBy != currentVoter.id()) {
-            return ResponseOrError.forbidden("Only user which offered Idea can change it")
+        if (originIdea.offeredBy != currentVoter.id) {
+            return DataOrError.forbidden("Only user which offered Idea can change it")
         }
 
         var updateResult = ideaRepository.updateInfo(id, ideaInfo)
 
         return when (updateResult) {
-            is Either.Left -> ResponseOrError.internal("Can't update idea. CAS mismatching. You can retry")
-            is Either.Right -> ResponseOrError.data(updateResult.b)
+            is Either.Left -> DataOrError.internal("Can't update idea. CAS mismatching. You can retry")
+            is Either.Right -> DataOrError.data(updateResult.b)
         }
     }
 
@@ -92,7 +93,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         do {
             var maybeIdea = ideaRepository.loadWithVersion(ideaId)
             if (maybeIdea.isEmpty) {
-                return ResponseOrError.notFound(ideaId)
+                return DataOrError.notFound(ideaId)
             }
 
             var (originIdea, version) = maybeIdea.get()
@@ -104,9 +105,9 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         } while (!canReplace && attempt <= 3)
 
         return if (canReplace) {
-            ResponseOrError.data(newIdea)
+            DataOrError.data(newIdea)
         } else {
-            ResponseOrError.internal("Can't update idea. CAS mismatching. You can retry")
+            DataOrError.internal("Can't update idea. CAS mismatching. You can retry")
         }
     }
 
@@ -115,7 +116,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
     )
     @ResponseStatus(HttpStatus.CREATED)
     fun vote(@PathVariable id: String): IdeaResponse {
-        val voterId = currentUser().id()
+        val voterId = currentUser().id
         return updateIdea(id) { it.addVote(voterId) }
     }
 
@@ -123,7 +124,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         path = ["/{id}/voters"]
     )
     fun devote(@PathVariable id: String): IdeaResponse {
-        val voterId = currentUser().id()
+        val voterId = currentUser().id
         return updateIdea(id) { it.removeVote(voterId) }
     }
 
@@ -131,9 +132,9 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         path = ["/{id}/assignee/{userId}"]
     )
     fun assign(@PathVariable id: String, @PathVariable userId: UserId): IdeaResponse {
-        val callerId = currentUser().id()
+        val callerId = currentUser().id
         if (userId != callerId) {
-            return ResponseOrError.forbidden("User can take idea for implementation only by self")
+            return DataOrError.forbidden("User can take idea for implementation only by self")
         }
 
         return updateIdea(id) { it.assign(userId) }
@@ -144,7 +145,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         path = ["/{id}/assignee"]
     )
     fun removeAssign(@PathVariable id: String): IdeaResponse {
-        return changeOnlyIfAssignedToUser(id, currentUser().id()) {
+        return changeOnlyIfAssignedToUser(id, currentUser().id) {
             this.updateIdea(id) { it.removeAssign() }
         }
     }
@@ -153,7 +154,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         path = ["/{id}/implemented"]
     )
     fun markAsImplemented(@PathVariable id: String): IdeaResponse {
-        return changeOnlyIfAssignedToUser(id, currentUser().id()) {
+        return changeOnlyIfAssignedToUser(id, currentUser().id) {
             this.updateIdea(id) { it.copy(implemented = true) }
         }
     }
@@ -162,7 +163,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         path = ["/{id}/implemented"]
     )
     fun markAsUnimplemented(@PathVariable id: String): IdeaResponse {
-        return changeOnlyIfAssignedToUser(id, currentUser().id()) {
+        return changeOnlyIfAssignedToUser(id, currentUser().id) {
             this.updateIdea(id) { it.copy(implemented = false) }
         }
     }
@@ -176,12 +177,12 @@ class IdeasController(val ideaRepository: IdeaRepository) {
     private fun changeOnlyIfAssignedToUser(id: String, callerId: UserId, mutation: () -> IdeaResponse): IdeaResponse {
         val maybeIdea = this.ideaRepository.loadWithVersion(id)
         if (maybeIdea.isEmpty) {
-            return ResponseOrError.notFound(id)
+            return DataOrError.notFound(id)
         }
 
         val currentAssignee = maybeIdea.get().idea.assignee
         return if (currentAssignee != callerId) {
-            ResponseOrError.forbidden("Only assignee can make remove his from idea implementation")
+            DataOrError.forbidden("Only assignee can make remove his from idea implementation")
         } else {
             mutation()
         }
@@ -207,12 +208,12 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         val size = last - first;
 
         if (size <= 0) {
-            return ResponseOrError.incorrectArgument("last: $last, first: $first","first should be less then first")
+            return DataOrError.incorrectArgument("last: $last, first: $first","first should be less then first")
         }
 
         if (size > 100) {
             val error = ErrorDescription.tooManyItems(size, 100);
-            return ResponseOrError.errorResponse(error)
+            return DataOrError.errorResponse(error)
         }
 
 
@@ -224,7 +225,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         )
 
         val data = ideaRepository.loadWithVersion(first, last, sorting, filtering)
-        return ResponseOrError.data(data)
+        return DataOrError.data(data)
     }
 }
 
