@@ -1,6 +1,6 @@
 package idel.api
 
-import arrow.core.Either
+import arrow.core.*
 import arrow.core.extensions.fx
 import idel.domain.*
 import idel.infrastructure.security.IdelOAuth2User
@@ -10,8 +10,8 @@ import org.springframework.core.convert.converter.Converter
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import java.lang.IllegalArgumentException
 import java.util.Optional
+import kotlin.IllegalArgumentException
 
 @RestController
 @RequestMapping("/groups")
@@ -27,6 +27,7 @@ class GroupController(
     data class GroupInitInfo(
             override val title: String,
             override val description: String,
+            override val logo: String,
             override val entryMode: GroupEntryMode,
             val administrators: List<UserId>,
             val members: List<UserId>
@@ -70,6 +71,13 @@ class GroupController(
         } else {
             DataOrError.ok(emptyList())
         }
+    }
+
+    @DeleteMapping("{groupId}/members/{userId}")
+    fun kick(@PathVariable groupId: String, @PathVariable userId: String
+    ): EntityOrError<String> {
+        val result = groupRepository.removeMember(groupId, userId).map {"ok"}
+        return DataOrError.fromEither(result, log)
     }
 
 }

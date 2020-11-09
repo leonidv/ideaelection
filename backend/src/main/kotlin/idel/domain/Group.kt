@@ -8,8 +8,8 @@ import io.konform.validation.*
 import io.konform.validation.Invalid
 import io.konform.validation.Valid
 import io.konform.validation.jsonschema.maxLength
-import io.konform.validation.jsonschema.minItems
 import io.konform.validation.jsonschema.minLength
+import io.konform.validation.jsonschema.pattern
 import java.time.LocalDateTime
 
 /**
@@ -21,12 +21,14 @@ interface IGroupEditableProperties {
     val title: String
     val description: String
     val entryMode: GroupEntryMode
+    val logo: String
 }
 
 class GroupEditableProperties(
         override val title: String,
         override val description: String,
         override val entryMode: GroupEntryMode,
+        override val logo: String
 ) : IGroupEditableProperties {
 }
 
@@ -80,6 +82,11 @@ class Group(
         override val description: String,
 
         /**
+         * Logotype of group. Link to image.
+         */
+        override val logo: String,
+
+        /**
          * Regulate how user's can join to group.
          */
         override val entryMode: GroupEntryMode,
@@ -94,33 +101,8 @@ class Group(
          */
         val members: List<GroupMember>
 
-) : IGroupEditableProperties, Identifiable {
+) : IGroupEditableProperties, Identifiable
 
-
-    fun clone(members: List<GroupMember> = this.members): Group {
-        return Group(
-                id = this.id,
-                ctime = this.ctime,
-                creator = this.creator,
-                title = this.title,
-                description = this.description,
-                entryMode = this.entryMode,
-                administrators = this.administrators,
-                members = members
-        )
-    }
-
-
-    fun addMember(user: GroupMember): Group {
-        val newMembers = members + user
-        return clone(members = newMembers)
-    }
-
-    fun removeMember(userId: UserId): Group {
-        val newMembers = members.filterNot {it.id == userId}.toList()
-        return clone(members = newMembers)
-    }
-}
 
 data class GroupMember(
         override val id: String,
@@ -145,6 +127,11 @@ data class GroupMember(
 class GroupValidation {
     companion object {
 
+        // https://rgxdb.com/r/1NUN74O6
+        private val base64Regex = """data\:image/(png|jpg);base64,(?:[A-Za-z0-9+\/]{4})*""" +
+                """(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{4})""".toRegex()
+
+
         val propertiesValidation = Validation<IGroupEditableProperties> {
             IGroupEditableProperties::title {
                 minLength(3)
@@ -154,6 +141,10 @@ class GroupValidation {
             IGroupEditableProperties::description {
                 minLength(1)
                 maxLength(300)
+            }
+
+            IGroupEditableProperties::logo {
+                pattern(base64Regex)
             }
         }
     }
@@ -178,6 +169,7 @@ class GroupFactory {
                         creator = creator,
                         title = properties.title,
                         description = properties.description,
+                        logo = properties.logo,
                         entryMode = properties.entryMode,
                         administrators = administrators + creator,
                         members = members.map {GroupMember.of(it)}
@@ -204,7 +196,7 @@ data class GroupFiltering(
 interface GroupRepository {
     fun add(group: Group): Either<Exception, Group>
 
-    fun load(id: String): Either<Exception, Option<Group>>
+    fun load(id: String): Either<Exception, Group>
 
     /**
      *  Case-specific function. Used for adding members to group. It allows dont' load full group with all members from
@@ -222,8 +214,12 @@ interface GroupRepository {
     fun loadOnlyAvailable(pagination: Repository.Pagination, sorting: GroupSorting): Either<Exception, List<Group>>
 
     /**
-     * Add member to group. Granular operation for performance.
+     * Add a member to a group. Granular operation for performance.
      */
     fun addMember(groupId: String, member: GroupMember): Either<Exception, Unit>;
 
+    /**
+     * Add a member to a group. Granular operation for performance.
+     */
+    fun removeMember(groupId: String, userId: String): Either<Exception, Unit>;
 }

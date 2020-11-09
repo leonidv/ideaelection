@@ -5,6 +5,7 @@ import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
 import com.couchbase.client.core.error.CouchbaseException
+import idel.domain.EntityNotFound
 import idel.domain.generateId
 import io.konform.validation.Invalid
 import io.konform.validation.ValidationError
@@ -28,7 +29,7 @@ data class ExceptionDescription(
         fun of(exception: Throwable): ExceptionDescription {
 
             val msg = if (exception is CouchbaseException) {
-                exception.context()?.toString()?:""
+                exception.context()?.toString() ?: ""
             } else {
                 exception.message ?: ""
             }
@@ -92,6 +93,10 @@ data class ErrorDescription(val code: Int,
             return ErrorDescription(102, "An idea with id = ${id} is not found")
         }
 
+        fun entityNotFound(ex : EntityNotFound) : ErrorDescription {
+            return ErrorDescription(102, ex.message!!)
+        }
+
         fun notAllowed(msg: String): ErrorDescription {
             return ErrorDescription(103, msg)
         }
@@ -112,8 +117,8 @@ data class ErrorDescription(val code: Int,
             return ErrorDescription(106, msg, errors)
         }
 
-        fun badRequestFormat(ex : Exception) : ErrorDescription{
-            return ErrorDescription(107,"bad format of request", exception = Optional.of(ExceptionDescription.of(ex)))
+        fun badRequestFormat(ex: Exception): ErrorDescription {
+            return ErrorDescription(107, "bad format of request", exception = Optional.of(ExceptionDescription.of(ex)))
         }
     }
 }
@@ -145,11 +150,11 @@ class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription
             return ResponseEntity(x, code)
         }
 
-        fun <T> badRequest(ex : Exception) : ResponseEntity<DataOrError<T>> {
+        fun <T> badRequest(ex: Exception): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.badRequestFormat(ex))
         }
 
-        fun <T> internal(ex : Exception) : ResponseEntity<DataOrError<T>> {
+        fun <T> internal(ex: Exception): ResponseEntity<DataOrError<T>> {
             return internal("can't process operation", ex)
         }
 
@@ -175,8 +180,8 @@ class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription
         /**
          * Make response from ValidationErrors ([invalid]) of from Data ([ok]).
          */
-        fun <T> fromValidation(operationResult : Either<Invalid<*>,T>) : ResponseEntity<DataOrError<T>> {
-            return when(operationResult) {
+        fun <T> fromValidation(operationResult: Either<Invalid<*>, T>): ResponseEntity<DataOrError<T>> {
+            return when (operationResult) {
                 is Either.Right -> ok(operationResult.b)
                 is Either.Left -> invalid(operationResult.a.errors)
             }
@@ -185,36 +190,13 @@ class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription
         /**
          * If [operationResult] is [Left] make [ok], else [internal] error.
          */
-        fun <T> fromEither(operationResult : Either<Exception, T>, log : KLogger) : ResponseEntity<DataOrError<T>> {
-            return when(operationResult) {
+        fun <T> fromEither(operationResult: Either<Exception, T>, log: KLogger): ResponseEntity<DataOrError<T>> {
+            return when (operationResult) {
                 is Either.Right -> ok(operationResult.b)
-                is Either.Left -> internal(operationResult.a)
-            }
-        }
-
-        /**
-         * Make [ResponseEntity] with [fromLoading] if [operationResult] is [Either.Right]. Otherwise return [internal]  and print
-         * exception to [log].
-         */
-        fun <T> fromLoading(id: String, operationResult: Either<Exception, Option<T>>, log: KLogger): ResponseEntity<DataOrError<T>> {
-            return when (operationResult) {
-                is Either.Right -> fromLoading(id, operationResult.b)
-                is Either.Left -> {
-                    val errorId = generateId();
-                    val ex = operationResult.a
-                    log.warn(ex) {"Can't process operation, errorId: ${errorId}"}
-                    internal("${ex.message}, errorId: ${errorId}")
+                is Either.Left -> when (val ex = operationResult.a) {
+                    is EntityNotFound -> notFound(ex)
+                    else -> internal(operationResult.a)
                 }
-            }
-        }
-
-        /**
-         * Make [ResponseEntity] [ok] if [operationResult] is [Some], otherwise return [notFound]
-         */
-        fun <T> fromLoading(id: String, operationResult: Option<T>): ResponseEntity<DataOrError<T>> {
-            return when (operationResult) {
-                is Some -> ok(operationResult.t)
-                is None -> notFound(id)
             }
         }
 
@@ -237,6 +219,10 @@ class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription
          */
         fun <T> notFound(id: String): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.ideaNotFound(id), HttpStatus.NOT_FOUND)
+        }
+
+        fun <T> notFound(ex : EntityNotFound): ResponseEntity<DataOrError<T>> {
+            return errorResponse(ErrorDescription.entityNotFound(ex), HttpStatus.NOT_FOUND)
         }
 
 

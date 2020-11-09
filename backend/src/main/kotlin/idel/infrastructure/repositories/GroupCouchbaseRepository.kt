@@ -11,7 +11,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import idel.api.Repository
 import idel.domain.*
 import mu.KotlinLogging
-import com.fasterxml.jackson.databind.node.ObjectNode
 
 class GroupCouchbaseRepository(
         cluster: Cluster,
@@ -28,14 +27,14 @@ class GroupCouchbaseRepository(
 
     override fun loadEntryMode(id: String): Either<Exception, GroupEntryMode> {
         return try {
-            val query = "select entryMode from `${collection.bucketName()}` where id = \$id and _type=\"group\""
+            val query = "select entryMode from `$bucketName` where id = \$id and _type=\"group\""
             val params = JsonObject.create().put("id", id)
             val serializer = JacksonJsonSerializer.create(jacksonObjectMapper())
             val options = QueryOptions.queryOptions().serializer(serializer).parameters(params)
 
             val result = cluster.query(query, options).rowsAs(EntryModeRow::class.java)
             if (result.isEmpty()) {
-                Either.left(IllegalArgumentException("Group not found, id = $id"))
+                Either.left(EntityNotFound(type, id))
             } else {
                 Either.right(result.last().entryMode)
             }
@@ -67,12 +66,12 @@ class GroupCouchbaseRepository(
         return try {
             val pMember = "\$member"
             val query = """
-            UPDATE `${collection.bucketName()}`
-            SET members = ARRAY_APPEND(members,$pMember)
-            WHERE _type="$type"
-                  AND id=${'$'}id 
-                  AND NOT ANY member IN members SATISFIES member.id = ${'$'}memberId END 
-            RETURNING id
+                    UPDATE `$bucketName`
+                    SET members = ARRAY_APPEND(members,$pMember)
+                    WHERE _type="$type"
+                          AND id=${'$'}id 
+                          AND NOT ANY member IN members SATISFIES member.id = ${'$'}memberId END 
+                    RETURNING id
         """.trimIndent()
 
             val mapper = initMapper()
@@ -98,5 +97,45 @@ class GroupCouchbaseRepository(
         } catch (e: Exception) {
             Either.left(e)
         }
+    }
+
+    override fun removeMember(groupId: String, userId: String): Either<Exception, Unit> {
+        return try {
+            val pGroupId = "\$groupId"
+            val pUserId = "\$userId"
+            val query = """UPDATE `$bucketName`
+                    SET members = ARRAY_REMOVE(members, (
+                        SELECT RAW FIRST member FOR member IN members WHEN member.id = $pUserId END AS member
+                        FROM `$bucketName` ie_member
+                        WHERE id = $pGroupId
+                            AND _type="$type")[0] )
+                    WHERE _type="$type" 
+                        AND id=$pGroupId 
+                        AND ANY member IN members SATISFIES member.id = $pUserId END
+                    RETURNING *""".trimIndent()
+
+//            val mapper = initMapper()
+//            val jsonStrMember = mapper.writeValueAsString(userId)
+//            val jsonMember = JsonObject.fromJson(jsonStrMember) // ugly hack :(
+
+            val params = JsonObject.create();
+            params.put("groupId", groupId)
+            params.put("userId", userId)
+
+//            val serializer = JacksonJsonSerializer.create(mapper)
+            val options = QueryOptions
+                .queryOptions()
+//                .serializer(serializer)
+                .parameters(params)
+
+            log.trace {"query: [$query], params: [$params]"}
+
+            cluster.query(query, options)
+            Either.right(Unit)
+
+        } catch (e: Exception) {
+            Either.left(e)
+        }
+
     }
 }

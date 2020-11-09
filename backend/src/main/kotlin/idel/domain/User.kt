@@ -40,7 +40,7 @@ interface UserRepository {
     /**
      * Load user by id.
      */
-    fun load(id : String) : Either<Exception,Option<User>>
+    fun load(id : String) : Either<Exception,User>
 
     /**
      * Check that user is exists without loading from database.
