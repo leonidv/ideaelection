@@ -1,6 +1,7 @@
 package idel.infrastructure.security
 
 import arrow.core.*
+import idel.domain.EntityNotFound
 import idel.domain.UserRepository
 import mu.KotlinLogging
 import org.springframework.security.authentication.AuthenticationProvider
@@ -86,8 +87,11 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
 
 
         val userFromRepository = when (val eUser = userRepository.load(idelUser.id)) {
-            is Either.Left -> throw eUser.a
-            is Either.Right -> eUser.b
+            is Either.Left -> when(val ex = eUser.a) {
+                is EntityNotFound -> Option.empty()
+                else -> throw ex
+            }
+            is Either.Right -> Option.just(eUser.b)
         }
 
 

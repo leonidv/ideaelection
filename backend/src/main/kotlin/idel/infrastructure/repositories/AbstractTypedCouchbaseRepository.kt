@@ -1,9 +1,6 @@
 package idel.infrastructure.repositories
 
 import arrow.core.Either
-import arrow.core.Option
-import arrow.core.Right
-import arrow.core.Some
 import com.couchbase.client.core.error.CasMismatchException
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.java.Cluster
@@ -22,6 +19,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import idel.api.Repository
+import idel.domain.EntityNotFound
 import idel.domain.Identifiable
 import mu.KLogger
 import java.time.Duration
@@ -42,7 +40,10 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
 
     abstract val log: KLogger
 
+    protected val bucketName = collection.bucketName()
+
     protected val mapper = initMapper();
+
 
     protected val jsonSerializer = TypedJsonSerializer(
             mapper = mapper,
@@ -142,13 +143,13 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     /**
      * Load entity by id.
      */
-    open fun load(id : String) : Either<Exception,Option<T>> {
+    open fun load(id : String) : Either<Exception,T> {
         return try {
             val result = collection.get(id, getOptions())
-            val entity = Some(result.contentAs(typedClass))
+            val entity = result.contentAs(typedClass)
             Either.right(entity)
         } catch (e : DocumentNotFoundException) {
-            Either.right(Option.empty())
+            Either.left(EntityNotFound(entityType = type, id = id))
         } catch (e : Exception) {
             Either.left(e)
         }
@@ -157,9 +158,9 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     /**
      * Check exists entity or not without loading full document.
      */
-    open fun exists(groupId: String): Either<Exception, Boolean> {
+    open fun exists(id: String): Either<Exception, Boolean> {
        return try {
-            Either.right(collection.exists(groupId).exists())
+            Either.right(collection.exists(id).exists())
         } catch (e : Exception) {
             Either.left(e)
         }
@@ -180,7 +181,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
                     }
 
             val options = queryOptions(params).readonly(true)
-            val queryString = "select * from `${collection.bucketName()}` as ie " +
+            val queryString = "select * from `$bucketName` as ie " +
                     "where _type = \"${this.type}\" $filterQuery " +
                     "order by $ordering offset \$offset limit \$limit"
 

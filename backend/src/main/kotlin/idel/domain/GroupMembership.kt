@@ -81,7 +81,7 @@ class JoinRequest(groupId: String, userId: UserId, status: AcceptStatus) : Membe
 interface InviteRepository {
     fun add(invite: Invite): Either<Exception, Invite>
 
-    fun load(id: String): Either<Exception, Option<Invite>>
+    fun load(id: String): Either<Exception, Invite>
 
     fun replace(invite: Invite)
 }
@@ -89,7 +89,7 @@ interface InviteRepository {
 interface JoinRequestRepository {
     fun add(request: JoinRequest): Either<Exception, JoinRequest>
 
-    fun load(id: String): Either<Exception, Option<JoinRequest>>
+    fun load(id: String): Either<Exception, JoinRequest>
 
     fun replace(invite: JoinRequest)
 }
@@ -110,23 +110,11 @@ class GroupMembershipService(
     data class Entities(val groupEntryMode: GroupEntryMode, val user: User)
 
     private fun loadEntities(groupId: String, userId: UserId): Either<Exception, Entities> {
-        val x: Either<Exception, Pair<GroupEntryMode, Option<User>>> = Either.fx {
-            val (group) = groupRepository.loadEntryMode(groupId)
+        return Either.fx {
+            val (entryMode) = groupRepository.loadEntryMode(groupId)
             val (user) = userRepository.load(userId)
-            Pair(group, user)
+            Entities(entryMode, user)
         }
-
-        val y: Either<Exception, Entities> = x.flatMap {(entryMode, oUser) ->
-            if (oUser is Some) {
-                Either.right(Entities(entryMode, oUser.t))
-            } else if (oUser is None) {
-                Either.left(IllegalArgumentException("user is not exists, userId = $userId"))
-            } else {
-                Either.left(IllegalStateException("Option is not Some and not None :)"))
-            }
-        }
-
-        return y
     }
 
     /**
@@ -156,7 +144,10 @@ class GroupMembershipService(
 
                     }
                     GroupEntryMode.CLOSED,
-                    GroupEntryMode.PRIVATE -> Either.right(JoinRequest.createUnresloved(groupId, userId))
+                    GroupEntryMode.PRIVATE -> {
+                        val request = JoinRequest.createUnresloved(groupId, userId)
+                        joinRequestRepository.add(request)
+                    }
                 }
             }
         } catch (ex: Exception) {

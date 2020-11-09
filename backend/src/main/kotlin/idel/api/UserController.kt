@@ -66,23 +66,16 @@ class UserController(val userRepository: UserRepository) {
     fun putRoles(@PathVariable(name = "userId", required = true) userId: String,
                  @RequestBody(required = true) roles: Set<String>): EntityOrError<User> =
             rolesAreNotMisspelled(roles) {
-                val eUser = userRepository.load(userId)
-                val xUser = eUser.flatMap {oUser: Option<User> ->
-                    when (oUser) {
-                        is None -> Either.right(oUser)
-                        is Some -> {
-                            if (oUser.t.roles == roles) {
-                                Either.right(oUser)
-                            } else {
-                                val user = PersistsUser.of(oUser.t).copy(roles = roles)
-                                userRepository.update(user).map {Option.just(it)}
-                            }
-                        }
+                val eUser = userRepository.load(userId).flatMap {user ->
+                    if (user.roles == roles) {
+                        Either.right(user)
+                    } else {
+                        val pUser = PersistsUser.of(user).copy(roles = roles)
+                        userRepository.update(pUser)
                     }
                 }
 
-
-                DataOrError.fromLoading(userId, xUser, log)
+                DataOrError.fromEither(eUser, log)
             }
 
 
@@ -125,6 +118,8 @@ class UserController(val userRepository: UserRepository) {
 
     @GetMapping("/{userId}")
     fun load(@PathVariable(name = "userId", required = true) userId: String): ResponseEntity<out DataOrError<out User>> {
-        return DataOrError.fromLoading(userId, userRepository.load(userId), log)
+        val eUser = userRepository.load(userId)
+        return DataOrError.fromEither(eUser, log)
+
     }
 }
