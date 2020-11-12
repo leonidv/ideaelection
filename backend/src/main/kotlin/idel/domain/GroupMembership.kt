@@ -2,8 +2,7 @@ package idel.domain
 
 import arrow.core.*
 import arrow.core.extensions.fx
-import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
+import org.springframework.util.DigestUtils
 import java.time.LocalDateTime
 import kotlin.Exception
 
@@ -36,9 +35,10 @@ sealed class MembershipRequest(
         val userId: UserId,
         val status: AcceptStatus
 ) : Identifiable {
-    override val id: String = generateId()
+    override val id: String = compositeId(groupId, userId)
     val ctime: LocalDateTime = LocalDateTime.now()
 }
+
 
 /**
  * Group admin creates an invite when wants a user to join a group.
@@ -78,6 +78,11 @@ class JoinRequest(groupId: String, userId: UserId, status: AcceptStatus) : Membe
     }
 }
 
+enum class GroupMembershipRequestOrdering {
+    CTIME_ASC,
+    CTIME_DESC
+}
+
 interface InviteRepository {
     fun add(invite: Invite): Either<Exception, Invite>
 
@@ -86,12 +91,17 @@ interface InviteRepository {
     fun replace(invite: Invite)
 }
 
+
 interface JoinRequestRepository {
     fun add(request: JoinRequest): Either<Exception, JoinRequest>
 
     fun load(id: String): Either<Exception, JoinRequest>
 
     fun replace(invite: JoinRequest)
+
+    fun loadByUser(userId: UserId, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination) : Either<Exception, List<JoinRequest>>
+
+    fun loadByGroup(groupId : String, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination) : Either<Exception, List<JoinRequest>>
 }
 
 /**
