@@ -2,6 +2,7 @@ package idel.infrastructure.repositories
 
 import arrow.core.Either
 import com.couchbase.client.core.error.CasMismatchException
+import com.couchbase.client.core.error.DocumentExistsException
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
@@ -18,7 +19,8 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
-import idel.api.Repository
+import idel.domain.EntityAlreadyExists
+import idel.domain.Repository
 import idel.domain.EntityNotFound
 import idel.domain.Identifiable
 import mu.KLogger
@@ -135,6 +137,8 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         return try {
             collection.insert(entity.id, entity, insertOptions())
             Either.Right(entity)
+        } catch (e : DocumentExistsException) {
+            Either.left(EntityAlreadyExists(type, entity.id))
         } catch (e : Exception) {
             Either.Left(e)
         }

@@ -2,7 +2,6 @@ package idel.domain
 
 
 import arrow.core.*
-import idel.api.Repository
 
 import io.konform.validation.*
 import io.konform.validation.Invalid

@@ -5,6 +5,7 @@ import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
 import com.couchbase.client.core.error.CouchbaseException
+import idel.domain.EntityAlreadyExists
 import idel.domain.EntityNotFound
 import idel.domain.generateId
 import io.konform.validation.Invalid
@@ -120,6 +121,10 @@ data class ErrorDescription(val code: Int,
         fun badRequestFormat(ex: Exception): ErrorDescription {
             return ErrorDescription(107, "bad format of request", exception = Optional.of(ExceptionDescription.of(ex)))
         }
+
+        fun conflict(ex : EntityAlreadyExists): ErrorDescription {
+            return ErrorDescription(108, ex.message!!)
+        }
     }
 }
 
@@ -154,8 +159,9 @@ class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription
             return errorResponse(ErrorDescription.badRequestFormat(ex))
         }
 
-        fun <T> internal(ex: Exception): ResponseEntity<DataOrError<T>> {
-            return internal("can't process operation", ex)
+        fun <T> internal(ex: Exception, log: KLogger): ResponseEntity<DataOrError<T>> {
+
+            return internal("can't process operation", ex, log)
         }
 
         fun <T> internal(msg: String): ResponseEntity<DataOrError<T>> {
@@ -165,7 +171,8 @@ class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription
         /**
          * Make [ResponseEntity] with [ErrorDescription.internal]
          */
-        fun <T> internal(msg: String, ex: Exception): ResponseEntity<DataOrError<T>> {
+        fun <T> internal(msg: String, ex: Exception, log: KLogger): ResponseEntity<DataOrError<T>> {
+            log.warn(ex) {"Operation is failed, msg = $msg"}
             return errorResponse(ErrorDescription.internal(msg, ex), HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
@@ -176,6 +183,9 @@ class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription
             return errorResponse(ErrorDescription.validationFailed("Properties is not valid", errors), HttpStatus.BAD_REQUEST)
         }
 
+        fun <T> conflict(ex : EntityAlreadyExists) : ResponseEntity<DataOrError<T>> {
+            return errorResponse(ErrorDescription.conflict(ex), HttpStatus.CONFLICT)
+        }
 
         /**
          * Make response from ValidationErrors ([invalid]) of from Data ([ok]).
@@ -188,14 +198,18 @@ class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription
         }
 
         /**
-         * If [operationResult] is [Left] make [ok], else [internal] error.
+         * Choose result based on [operationResult]:
+         *
+         * * isRight then return ok
+         * * isLeft - then select error result based on exception type.
          */
         fun <T> fromEither(operationResult: Either<Exception, T>, log: KLogger): ResponseEntity<DataOrError<T>> {
             return when (operationResult) {
                 is Either.Right -> ok(operationResult.b)
                 is Either.Left -> when (val ex = operationResult.a) {
                     is EntityNotFound -> notFound(ex)
-                    else -> internal(operationResult.a)
+                    is EntityAlreadyExists -> conflict(ex)
+                    else -> internal(operationResult.a, log)
                 }
             }
         }

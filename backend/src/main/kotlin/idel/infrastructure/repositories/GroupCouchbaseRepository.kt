@@ -8,7 +8,7 @@ import com.couchbase.client.java.codec.JacksonJsonSerializer
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.query.QueryOptions
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import idel.api.Repository
+import idel.domain.Repository
 import idel.domain.*
 import mu.KotlinLogging
 

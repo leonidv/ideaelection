@@ -21,6 +21,7 @@ class WebMvcConfig : WebMvcConfigurer {
     override fun addFormatters(registry: FormatterRegistry) {
         registry.addConverter(StringToIdeaSortingConverter())
         registry.addConverter(StringToGroupSortingConverter())
+        registry.addConverter(StringToGroupMembershipRequestOrderingConverter())
     }
 }
 

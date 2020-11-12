@@ -48,7 +48,7 @@ class GroupController(
         }
 
         return when (y) {
-            is Either.Left -> DataOrError.internal(y.a) // trouble on getting data from database
+            is Either.Left -> DataOrError.fromEither(y, log) // process possible options of error
             is Either.Right -> when (val eGroup = y.b) {
                 is Either.Left -> DataOrError.invalid(eGroup.a.errors)
                 is Either.Right -> DataOrError.fromEither(groupRepository.add(eGroup.b), log)
