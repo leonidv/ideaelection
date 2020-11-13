@@ -1,7 +1,6 @@
 package idel.domain
 
 import org.springframework.util.DigestUtils
-import java.lang.RuntimeException
 import java.util.*
 
 interface Identifiable {

@@ -193,7 +193,7 @@ data class GroupFiltering(
 )
 
 interface GroupRepository {
-    fun add(group: Group): Either<Exception, Group>
+    fun add(entity: Group): Either<Exception, Group>
 
     fun load(id: String): Either<Exception, Group>
 
@@ -203,7 +203,7 @@ interface GroupRepository {
      */
     fun loadEntryMode(id: String): Either<Exception, GroupEntryMode>
 
-    fun replace(group: Group)
+    fun replace(entity: Group) : Either<Exception, Group>
 
     fun load(first: Int, last: Int, sorting: GroupSorting, filtering: GroupFiltering): Either<Exception, List<Group>>
 

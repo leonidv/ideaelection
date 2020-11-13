@@ -30,7 +30,7 @@ else
     actor Admin
     Admin ->  "joinrequests" : GET ?groupId={groupId}
     Admin <-- "joinrequests" : joinrequestsId
-    Admin ->  "joinrequests" : PUT /{joinrequestsId} status=APPROVED
+    Admin ->  "joinrequests" : POST /{joinrequestsId}/status APPROVED
     deactivate "joinrequests"
 end
 

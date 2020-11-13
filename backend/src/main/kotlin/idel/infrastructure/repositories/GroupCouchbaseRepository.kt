@@ -43,9 +43,6 @@ class GroupCouchbaseRepository(
         }
     }
 
-    override fun replace(group: Group) {
-        TODO("Not yet implemented")
-    }
 
     override fun loadOnlyAvailable(pagination: Repository.Pagination, sorting: GroupSorting): Either<Exception, List<Group>> {
         val params = JsonObject.create()

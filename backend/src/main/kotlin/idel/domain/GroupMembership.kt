@@ -2,7 +2,6 @@ package idel.domain
 
 import arrow.core.*
 import arrow.core.extensions.fx
-import org.springframework.util.DigestUtils
 import java.time.LocalDateTime
 import kotlin.Exception
 
@@ -33,19 +32,30 @@ enum class AcceptStatus {
 sealed class MembershipRequest(
         val groupId: String,
         val userId: UserId,
-        val status: AcceptStatus
+        val status: AcceptStatus,
+        val ctime: LocalDateTime,
+        val mtime: LocalDateTime
 ) : Identifiable {
     override val id: String = compositeId(groupId, userId)
-    val ctime: LocalDateTime = LocalDateTime.now()
 }
 
 
 /**
  * Group admin creates an invite when wants a user to join a group.
  */
-class Invite(groupId: String, userId: UserId, status: AcceptStatus) : MembershipRequest(groupId, userId, status) {
+class Invite(
+        groupId: String,
+        userId: UserId,
+        status: AcceptStatus,
+        ctime: LocalDateTime = LocalDateTime.now(),
+        mtime: LocalDateTime = ctime
+) :
+        MembershipRequest(groupId, userId, status, ctime, mtime) {
     companion object {
-        fun create(groupId: String, userId: UserId) = Invite(groupId = groupId, userId = userId, AcceptStatus.UNRESOLVED)
+        fun create(groupId: String, userId: UserId) =
+                Invite(groupId = groupId,
+                        userId = userId,
+                        status = AcceptStatus.UNRESOLVED)
     }
 
     override fun toString(): String {
@@ -57,13 +67,19 @@ class Invite(groupId: String, userId: UserId, status: AcceptStatus) : Membership
 /**
  * User creates a join request when want to join the group.
  */
-class JoinRequest(groupId: String, userId: UserId, status: AcceptStatus) : MembershipRequest(groupId, userId, status) {
+class JoinRequest(groupId: String,
+                  userId: UserId,
+                  status: AcceptStatus,
+                  ctime: LocalDateTime = LocalDateTime.now(),
+                  mtime: LocalDateTime = ctime
+) : MembershipRequest(groupId, userId, status, ctime, mtime) {
     companion object {
         fun createUnresloved(groupId: String, userId: UserId) =
                 JoinRequest(
                         groupId = groupId,
                         userId = userId,
-                        AcceptStatus.UNRESOLVED)
+                        status = AcceptStatus.UNRESOLVED
+                )
 
         fun createApproved(groupId: String, userId: UserId) =
                 JoinRequest(
@@ -71,6 +87,18 @@ class JoinRequest(groupId: String, userId: UserId, status: AcceptStatus) : Membe
                         userId = userId,
                         AcceptStatus.APPROVED
                 )
+    }
+
+    fun resolve(resolution: AcceptStatus): JoinRequest {
+        require(resolution != AcceptStatus.UNRESOLVED) {"can't resolve to ${AcceptStatus.UNRESOLVED}"}
+
+        return JoinRequest(
+                groupId = this.groupId,
+                userId = this.userId,
+                status = resolution,
+                ctime = this.ctime,
+                mtime = LocalDateTime.now()
+        )
     }
 
     override fun toString(): String {
@@ -88,7 +116,7 @@ interface InviteRepository {
 
     fun load(id: String): Either<Exception, Invite>
 
-    fun replace(invite: Invite)
+    fun replace(invite: Invite) : Either<Exception, Invite>
 }
 
 
@@ -97,11 +125,13 @@ interface JoinRequestRepository {
 
     fun load(id: String): Either<Exception, JoinRequest>
 
-    fun replace(invite: JoinRequest)
+    fun remove(id: String): Either<Exception, Unit>
 
-    fun loadByUser(userId: UserId, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination) : Either<Exception, List<JoinRequest>>
+    fun replace(invite: JoinRequest): Either<Exception, JoinRequest>
 
-    fun loadByGroup(groupId : String, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination) : Either<Exception, List<JoinRequest>>
+    fun loadByUser(userId: UserId, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination): Either<Exception, List<JoinRequest>>
+
+    fun loadByGroup(groupId: String, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination): Either<Exception, List<JoinRequest>>
 }
 
 /**
@@ -114,7 +144,6 @@ class GroupMembershipService(
         private val userRepository: UserRepository,
         private val joinRequestRepository: JoinRequestRepository,
         private val inviteRepository: InviteRepository,
-        // private val membershipRepository: GroupMembershipRepository
 ) {
 
     data class Entities(val groupEntryMode: GroupEntryMode, val user: User)
@@ -163,5 +192,27 @@ class GroupMembershipService(
         } catch (ex: Exception) {
             Either.left(ex)
         }
+    }
+
+    fun resolveRequest(requestId: String, status: AcceptStatus): Either<Exception, JoinRequest> {
+        return joinRequestRepository.load(requestId).flatMap {joinRequest ->
+            when (status) {
+                AcceptStatus.UNRESOLVED -> Either.left(IllegalArgumentException("Can't resolve to UNRESOLVED"))
+                AcceptStatus.APPROVED -> {
+                    Either.fx {
+                        val (user) = userRepository.load(joinRequest.userId)
+                        groupRepository.addMember(joinRequest.groupId, GroupMember.of(user)).bind()
+                        joinRequest.resolve(AcceptStatus.APPROVED) // for future notification and event-based perstence
+                        joinRequestRepository.remove(joinRequest.id).bind()
+                        joinRequest
+                    }
+                }
+                AcceptStatus.REJECTED -> {
+                    val rejectedRequest = joinRequest.resolve(AcceptStatus.REJECTED)
+                    joinRequestRepository.replace(rejectedRequest)
+                }
+            }
+        }
+
     }
 }
