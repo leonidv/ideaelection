@@ -10,6 +10,7 @@ import com.couchbase.client.java.codec.JsonTranscoder
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.kv.GetOptions
 import com.couchbase.client.java.kv.InsertOptions
+import com.couchbase.client.java.kv.MutationResult
 import com.couchbase.client.java.kv.ReplaceOptions
 import com.couchbase.client.java.query.QueryOptions
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -76,6 +77,18 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
 
     }
 
+    protected fun <T> safely(id: String, action: () -> T): Either<Exception, T> {
+        return try {
+            Either.right(action())
+        } catch (e: DocumentNotFoundException) {
+            Either.left(EntityNotFound(type, id))
+        } catch (e: DocumentExistsException) {
+            Either.left(EntityAlreadyExists(type, id))
+        } catch (e: Exception) {
+            Either.left(e)
+        }
+    }
+
     /**
      * Return [GetOptions] with [transcoder]
      */
@@ -90,6 +103,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
                 .parameters(params)
                 .timeout(Duration.ofSeconds(2))
                 .serializer(jsonSerializer)
+
     /**
      * Return [InsertOptions] with [transcoder]
      */
@@ -133,29 +147,21 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     /**
      * Add entity to collection
      */
-    open fun add(entity: T) : Either<Exception, T> {
-        return try {
+    open fun add(entity: T): Either<Exception, T> {
+        return safely(entity.id) {
             collection.insert(entity.id, entity, insertOptions())
-            Either.Right(entity)
-        } catch (e : DocumentExistsException) {
-            Either.left(EntityAlreadyExists(type, entity.id))
-        } catch (e : Exception) {
-            Either.Left(e)
+            entity
         }
     }
 
     /**
      * Load entity by id.
      */
-    open fun load(id : String) : Either<Exception,T> {
-        return try {
+    open fun load(id: String): Either<Exception, T> {
+        return safely(id) {
             val result = collection.get(id, getOptions())
             val entity = result.contentAs(typedClass)
-            Either.right(entity)
-        } catch (e : DocumentNotFoundException) {
-            Either.left(EntityNotFound(entityType = type, id = id))
-        } catch (e : Exception) {
-            Either.left(e)
+            entity
         }
     }
 
@@ -163,16 +169,34 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
      * Check exists entity or not without loading full document.
      */
     open fun exists(id: String): Either<Exception, Boolean> {
-       return try {
-            Either.right(collection.exists(id).exists())
-        } catch (e : Exception) {
-            Either.left(e)
+        return safely(id) {
+            collection.exists(id).exists()
         }
     }
 
+    /**
+     * Remove entity from collection.
+     */
+    open fun remove(id: String): Either<Exception, Unit> {
+        return safely(id) {
+           collection.remove(id)
+           Unit
+        }
 
-    protected fun load(filterQueryParts : List<String>, ordering : String, params : JsonObject, pagination: Repository.Pagination) : Either<Exception,List<T>> {
-       return try {
+    }
+
+    /**
+     * Replace object without CAS checking.
+     */
+    open fun replace(entity: T): Either<Exception, T> {
+        return safely(entity.id) {
+            collection.replace(entity.id, entity, replaceOptions())
+            entity
+        }
+    }
+
+    protected fun load(filterQueryParts: List<String>, ordering: String, params: JsonObject, pagination: Repository.Pagination): Either<Exception, List<T>> {
+        return try {
             params
                 .put("offset", pagination.first)
                 .put("limit", pagination.limit)
@@ -192,7 +216,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
             log.trace {"query: [$queryString], params: [$params]"}
 
             Either.right(cluster.query(queryString, options).rowsAs(typedClass))
-        } catch (e :Exception) {
+        } catch (e: Exception) {
             Either.left(e)
         }
     }

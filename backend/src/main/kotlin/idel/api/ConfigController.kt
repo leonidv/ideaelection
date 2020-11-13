@@ -2,6 +2,8 @@ package idel.api
 
 import com.couchbase.client.java.Cluster
 import idel.infrastructure.repositories.CouchbaseProperties
+import mu.KLogger
+import mu.KotlinLogging
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -17,7 +19,7 @@ import javax.annotation.PostConstruct
 @RestController
 @RequestMapping("/configs")
 class ConfigController {
-    private val log = LoggerFactory.getLogger(ConfigController::class.java)
+    private val log = KotlinLogging.logger {}
 
     @Value("\${testmode}")
     private var testMode = false
@@ -55,7 +57,7 @@ class ConfigController {
                DataOrError.ok("Deleted ${deleted} documents")
            } catch (e : Exception) {
                log.error("can't delete entities", e)
-               DataOrError.internal("oops :(", e)
+               DataOrError.internal(e, log)
            }
         } else {
             DataOrError.notFound("not found")

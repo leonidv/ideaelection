@@ -16,10 +16,6 @@ class JoinRequestCouchbaseRepository(
 
     override val log = KotlinLogging.logger {}
 
-    override fun replace(invite: JoinRequest) {
-        TODO("Not yet implemented")
-    }
-
     override fun loadByUser(userId: UserId, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination): Either<Exception, List<JoinRequest>> {
         val params = JsonObject.create()
 
