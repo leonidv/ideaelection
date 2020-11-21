@@ -16,7 +16,7 @@ import java.net.http.HttpResponse
 import java.time.Duration
 
 
-class GroupsApi(val username: String, val idelUrl: String = Idel.URL) {
+class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi(username, idelUrl, "groups") {
     val log = KotlinLogging.logger {}
 
     companion object {
@@ -25,36 +25,30 @@ class GroupsApi(val username: String, val idelUrl: String = Idel.URL) {
         val PRIVATE = "PRIVATE"
     }
 
-    private val client = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(1))
-        .authenticator(IdelHttpAuthenticator(username))
-        .build()
-
-    val resourceUri = URI.create("$idelUrl/groups")
-
 
     fun create(title: String,
                entryMode: String,
                description: String = "$title, $entryMode",
-               admins: Set<String> = setOf("$username@httpbasic")): HttpResponse<JsonNode> {
+               admins: Set<String> = setOf("$username@httpbasic"),
+               members: Set<String> = setOf()
+               ): HttpResponse<JsonNode> {
         val body = """
             {
                 "title": "$title",
                 "description": "$description",
+                "logo": "data:image/png;base64,dGVzdA==",
                 "entryMode" : "$entryMode",
-                "administrators": ${admins.map {""" "$it" """}. joinToString(prefix = "[", postfix = "]")}
+                "administrators": ${asJson(admins)},
+                "members": ${asJson(members)}
             }
         """.trimIndent()
 
         log.trace {"GroupsApi.add body = $body"}
 
-        val request = HttpRequest
-            .newBuilder(resourceUri)
-            .timeout(Duration.ofSeconds(1))
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(body))
-            .build()
+        return post(body)!!
+    }
 
-        return client.send(request, ofJson())!!
+    fun loadAvailable() : {
+        va
     }
 }

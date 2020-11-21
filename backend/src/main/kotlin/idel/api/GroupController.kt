@@ -17,7 +17,8 @@ import kotlin.IllegalArgumentException
 @RequestMapping("/groups")
 class GroupController(
         private val groupRepository: GroupRepository,
-        private val userRepository: UserRepository
+        private val userRepository: UserRepository,
+        private val securityService: SecurityService
 ) {
     val log = KotlinLogging.logger {}
 
@@ -29,9 +30,10 @@ class GroupController(
             override val description: String,
             override val logo: String,
             override val entryMode: GroupEntryMode,
-            val administrators: List<UserId>,
-            val members: List<UserId>
+            val administrators: List<UserId>
     ) : IGroupEditableProperties
+
+
 
     @PostMapping
     fun create(
@@ -40,10 +42,9 @@ class GroupController(
     ): EntityOrError<Group> {
         val y: Either<Exception, Either<Invalid<IGroupEditableProperties>, Group>> = Either.fx {
             val (adminsUserInfo) = userRepository.loadUserInfo(properties.administrators)
-            val (membersUserInfo) = userRepository.loadUserInfo(properties.members)
             val (creatorUserInfo) = userRepository.loadUserInfo(listOf(user.id))
 
-            val eGroup = factory.createGroup(creatorUserInfo.first(), properties, adminsUserInfo, membersUserInfo)
+            val eGroup = factory.createGroup(creatorUserInfo.first(), properties, adminsUserInfo)
             eGroup
         }
 
@@ -54,6 +55,13 @@ class GroupController(
                 is Either.Right -> DataOrError.fromEither(groupRepository.add(eGroup.b), log)
             }
         }
+    }
+
+
+    @GetMapping("/{groupId}")
+    fun load(@AuthenticationPrincipal user: IdelOAuth2User,
+             @PathVariable groupId: String) : EntityOrError<Group> {
+        return DataOrError.fromEither( groupRepository.load(groupId), log)
     }
 
 
@@ -71,13 +79,6 @@ class GroupController(
         } else {
             DataOrError.ok(emptyList())
         }
-    }
-
-    @DeleteMapping("{groupId}/members/{userId}")
-    fun kick(@PathVariable groupId: String, @PathVariable userId: String
-    ): EntityOrError<String> {
-        val result = groupRepository.removeMember(groupId, userId).map {"ok"}
-        return DataOrError.fromEither(result, log)
     }
 
 }

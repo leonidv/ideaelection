@@ -1,0 +1,78 @@
+=== Security model
+
+Security model describes which operations can do user.
+
+==== Super user
+Super user is an IdeaElection _installation_ privileged role.
+This user is defined in initial setup of an application.
+
+Super user has next rights:
+
+* it is a group admin for any group in installation
+* it has access to administration panel of installation (not implemented yet)
+
+IMPORTANT: Super user in IdeaElection is like root (super) user in *nix OS.
+
+==== Group actions
+Access levels:
+
+* Not a member - user is not member of a group.
+* Group member - user which a member of a group.
+* Group admin - user which an administrator of a group.
+
+
+IMPORTANT: Administrator can do all that can do member.
+
+User can be a member and administrator at the same time.
+
+
+[cols="1,2a" options="header"]
+|===
+|Operation              | Access level
+| See group properties  | Not member, Group admin, Group member
+| See members           | Group admin, Group member,
+| Create join request   | Not member
+| Send invite           | Group admin
+| See join requests     | Group admin
+| Resolve join request  | Group admin
+| Kick user             | Group admin
+| Change properties     | Group admin
+| See ideas             | Group admin, Group member
+| Archive group         | Group admin
+
+|===
+
+==== Idea actions
+
+Access levels:
+
+* Denied - user can't see and work with an idea.
+* Group member - inherited from access level group, which idea is belong to
+* Group admin - inherited from access level group, which idea is belong to
+* Author - user who offered the idea
+* Assignee - user who assigned to the idea
+
+Author and assignee is supplementary access levels for a member.
+
+IMPORTANT: Administrator can do all that can do member, author and assignee.
+
+[cols="1,2a" options="header"]
+|===
+|Operation               | Access level
+| Edit idea properties   | Group admin, Assignee, Author
+| Comment idea           | Group admin, Group member, Author, Assignee
+| Vote for idea          | Group admin, Group member, Assignee
+
+| Take to implement an idea without assignee
+| Group admin, Group member, Author
+
+| Remove assignee        | Group admin, Assignee
+| Change assignee        | Group admin
+| Mark as done           | Group admin, Author, Assignee
+
+| Delete idea without votes
+| Group admin, Author
+
+| Delete idea with votes | Group admin
+| Delete idea with comments | Group admin
+|===

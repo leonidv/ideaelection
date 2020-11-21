@@ -84,6 +84,8 @@ object ResponseMatchers {
  */
 fun <T> HttpResponse<T>.statusIs(code: Int) = this should ResponseMatchers.hasStatus(code)
 
+fun <T> HttpResponse<T>.isOk() = this should ResponseMatchers.hasStatus(200)
+
 /**
  * Check that body contains data section.
  */

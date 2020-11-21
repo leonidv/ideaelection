@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import idel.tests.Idel
 import idel.tests.infrastructure.IdelHttpAuthenticator
+import mu.KotlinLogging
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.http.HttpClient
@@ -14,6 +15,8 @@ import java.time.Duration
 
 
 class Couchbase(val idelUrl  : String = Idel.URL) {
+
+    val log = KotlinLogging.logger {}
 
     private val client = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(1))
@@ -31,14 +34,20 @@ class Couchbase(val idelUrl  : String = Idel.URL) {
         val json = jacksonObjectMapper().readValue(response.body()) as JsonNode
 
         if (response.statusCode() == HttpURLConnection.HTTP_OK) {
-            println("Clear $entityType. ${json["data"]}")
+            log.info("Clear $entityType. ${json["data"]}")
         } else {
-            println("Something is wrong, ${json["error"]}")
+            log.warn("Something is wrong, ${json["error"]}")
             throw RuntimeException("Can't clear $entityType. ${response.body()}")
         }
 
     }
 
+    fun clear() {
+        clearIdeas()
+        clearUsers()
+        clearGroups()
+        clearJoinRequests()
+    }
     /**
      * Remove all ideas from bucket.
      *
@@ -46,5 +55,17 @@ class Couchbase(val idelUrl  : String = Idel.URL) {
      */
     fun clearIdeas() {
         this.deleteEntity("idea")
+    }
+
+    fun clearUsers() {
+        this.deleteEntity("user")
+    }
+
+    fun clearJoinRequests() {
+        this.deleteEntity("joinrequest")
+    }
+
+    fun clearGroups() {
+        this.deleteEntity("group")
     }
 }

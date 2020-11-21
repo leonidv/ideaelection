@@ -56,10 +56,10 @@ dependencies {
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.21")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion") // for kotest framework
-    //testImplementation("io.kotest:kotest-runner-console-jvm:4.2.3") // for kotest framework
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion") // for kotest core jvm assertions
     testImplementation("io.kotest:kotest-assertions-arrow-jvm:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-konform-jvm:$kotestVersion")
+    testImplementation("io.mockk:mockk:1.10.2")
 
 }
 

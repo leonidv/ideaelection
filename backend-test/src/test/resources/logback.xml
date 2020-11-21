@@ -11,6 +11,7 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="idel" level="TRACE"/>
+    <logger name="idel" level="DEBUG"/>
+    <logger name="idel.tests.infrastructure" level="TRACE"/>
 
 </configuration>

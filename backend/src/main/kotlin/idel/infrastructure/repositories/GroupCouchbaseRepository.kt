@@ -19,6 +19,10 @@ class GroupCouchbaseRepository(
 
     override val log = KotlinLogging.logger {}
 
+    override fun load(id: String): Either<Exception, Group> {
+        return super.load(id)
+    }
+
     override fun load(first: Int, last: Int, sorting: GroupSorting, filtering: GroupFiltering): Either<Exception, List<Group>> {
         TODO("not yet implemented")
     }
@@ -59,7 +63,7 @@ class GroupCouchbaseRepository(
         return super.load(filterQueryParts, ordering, params, pagination)
     }
 
-    override fun addMember(groupId: String, member: GroupMember): Either<Exception, Unit> {
+    fun addMember(groupId: String, member: GroupMember): Either<Exception, Unit> {
         return try {
             val pMember = "\$member"
             val query = """
@@ -96,7 +100,7 @@ class GroupCouchbaseRepository(
         }
     }
 
-    override fun removeMember(groupId: String, userId: String): Either<Exception, Unit> {
+    fun removeMember(groupId: String, userId: String): Either<Exception, Unit> {
         return try {
             val pGroupId = "\$groupId"
             val pUserId = "\$userId"
@@ -111,18 +115,14 @@ class GroupCouchbaseRepository(
                         AND ANY member IN members SATISFIES member.id = $pUserId END
                     RETURNING *""".trimIndent()
 
-//            val mapper = initMapper()
-//            val jsonStrMember = mapper.writeValueAsString(userId)
-//            val jsonMember = JsonObject.fromJson(jsonStrMember) // ugly hack :(
 
             val params = JsonObject.create();
             params.put("groupId", groupId)
             params.put("userId", userId)
 
-//            val serializer = JacksonJsonSerializer.create(mapper)
+
             val options = QueryOptions
                 .queryOptions()
-//                .serializer(serializer)
                 .parameters(params)
 
             log.trace {"query: [$query], params: [$params]"}
