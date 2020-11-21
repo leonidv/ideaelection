@@ -95,33 +95,8 @@ class Group(
          */
         val administrators: List<UserInfo>,
 
-        /**
-         * Group's members
-         */
-        val members: List<GroupMember>
-
 ) : IGroupEditableProperties, Identifiable
 
-
-data class GroupMember(
-        override val id: String,
-        val ctime: LocalDateTime,
-        override val email: String,
-        override val displayName: String,
-        override val avatar: String,
-) : IUserInfo {
-    companion object {
-        fun of(userInfo: IUserInfo): GroupMember {
-            return GroupMember(
-                    id = userInfo.id,
-                    ctime = LocalDateTime.now(),
-                    email = userInfo.email,
-                    displayName = userInfo.displayName,
-                    avatar = userInfo.avatar
-            )
-        }
-    }
-}
 
 class GroupValidation {
     companion object {
@@ -154,8 +129,7 @@ class GroupFactory {
     fun createGroup(
             creator: UserInfo,
             properties: IGroupEditableProperties,
-            administrators: List<UserInfo>,
-            members: List<UserInfo>
+            administrators: List<UserInfo>
     ): Either<Invalid<IGroupEditableProperties>, Group> {
         val validationResult = GroupValidation.propertiesValidation(properties)
 
@@ -170,8 +144,7 @@ class GroupFactory {
                         description = properties.description,
                         logo = properties.logo,
                         entryMode = properties.entryMode,
-                        administrators = administrators + creator,
-                        members = members.map {GroupMember.of(it)}
+                        administrators = administrators + creator
                 )
                 Either.right(group)
             }
@@ -212,13 +185,4 @@ interface GroupRepository {
      */
     fun loadOnlyAvailable(pagination: Repository.Pagination, sorting: GroupSorting): Either<Exception, List<Group>>
 
-    /**
-     * Add a member to a group. Granular operation for performance.
-     */
-    fun addMember(groupId: String, member: GroupMember): Either<Exception, Unit>;
-
-    /**
-     * Add a member to a group. Granular operation for performance.
-     */
-    fun removeMember(groupId: String, userId: String): Either<Exception, Unit>;
 }

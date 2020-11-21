@@ -144,6 +144,8 @@ class GroupMembershipService(
         private val userRepository: UserRepository,
         private val joinRequestRepository: JoinRequestRepository,
         private val inviteRepository: InviteRepository,
+        private val groupMemberRepository: GroupMemberRepository
+
 ) {
 
     data class Entities(val groupEntryMode: GroupEntryMode, val user: User)
@@ -178,8 +180,9 @@ class GroupMembershipService(
                 when (entryMode) {
                     GroupEntryMode.PUBLIC -> {
                         val request = JoinRequest.createApproved(groupId, userId)
-                        val newMember = GroupMember.of(user)
-                        groupRepository.addMember(groupId, newMember).map {request}
+                        val newMember = GroupMember.of(groupId, user)
+                        //groupRepository.addMember(groupId, newMember).map {request}
+                        groupMemberRepository.add(newMember).map {request}
 
                     }
                     GroupEntryMode.CLOSED,
@@ -201,7 +204,7 @@ class GroupMembershipService(
                 AcceptStatus.APPROVED -> {
                     Either.fx {
                         val (user) = userRepository.load(joinRequest.userId)
-                        groupRepository.addMember(joinRequest.groupId, GroupMember.of(user)).bind()
+                        groupMemberRepository.add(GroupMember.of(joinRequest.groupId, user)).bind()
                         joinRequest.resolve(AcceptStatus.APPROVED) // for future notification and event-based perstence
                         joinRequestRepository.remove(joinRequest.id).bind()
                         joinRequest

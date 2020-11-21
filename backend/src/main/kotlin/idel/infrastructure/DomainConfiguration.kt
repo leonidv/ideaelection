@@ -43,6 +43,11 @@ class DomainConfiguration {
         return InviteCouchbaseRepository(couchbaseCluster, couchbaseCollection)
     }
 
+    @Bean
+    fun groupMemberRepository() : GroupMemberRepository {
+        return GroupMemberCouchbaseRepository(couchbaseCluster, couchbaseCollection)
+    }
+
 //    @Bean
 //    fun groupMembershipRepository() : GroupMembershipRepository {
 //        return GroupMembershipCouchbaseRepository(couchbaseCluster, couchbaseCollection)
@@ -54,15 +59,21 @@ class DomainConfiguration {
             userRepository: UserRepository,
             joinRequestRepository: JoinRequestRepository,
             inviteRepository: InviteRepository,
-//            membershipRepository: GroupMembershipRepository
+            groupMemberRepository: GroupMemberRepository
+
     ): GroupMembershipService {
         return GroupMembershipService(
                 groupRepository = groupRepository,
                 userRepository = userRepository,
                 joinRequestRepository = joinRequestRepository,
                 inviteRepository = inviteRepository,
-//                membershipRepository = membershipRepository
+                groupMemberRepository = groupMemberRepository
         )
+    }
+
+    @Bean
+    fun securityService(groupMemberRepository: GroupMemberRepository) : SecurityService {
+        return SecurityService(groupMemberRepository)
     }
 
 }

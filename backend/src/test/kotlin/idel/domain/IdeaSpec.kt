@@ -7,10 +7,11 @@ import io.kotest.core.spec.style.DescribeSpec
 import java.time.LocalDateTime
 
 data class IdeaInfoValues(
-    override val title: String,
-    override val description: String,
-    override val link: String
-) : IdeaInfo
+        override val groupId: String,
+        override val title: String,
+        override val description: String,
+        override val link: String,
+) : IIdeaEditableProperties
 
 class TestUser(
                override val id : String,
@@ -33,8 +34,13 @@ class TestUser(
 
 }
 
-fun ideaInfo(title: String = "t", description: String = "d", link: String = "l"): IdeaInfo {
-    return IdeaInfoValues(title, description, link)
+fun ideaInfo(title: String = "t", groupId: String = "g", description: String = "d", link: String = "l"): IIdeaEditableProperties {
+    return IdeaInfoValues(
+            groupId = groupId,
+            title = title,
+            description = description,
+            link = link
+    )
 }
 
 class IdeaSpec : DescribeSpec({
@@ -80,6 +86,7 @@ class IdeaSpec : DescribeSpec({
         describe("copy") {
             val originIdea = Idea(
                 id = "1",
+                groupId = "g",
                 title = "t",
                 description = "d",
                 link = "l",
@@ -91,7 +98,7 @@ class IdeaSpec : DescribeSpec({
             )
 
             describe("copy with changes") {
-                val newIdea = originIdea.copy(
+                val newIdea = originIdea.update(
                     title = "new title",
                     description = "new description",
                     link = "new link",
@@ -144,7 +151,7 @@ class IdeaSpec : DescribeSpec({
             }
 
             describe("copy without any changes") {
-                val newIdea = originIdea.copy()
+                val newIdea = originIdea.update()
 
                 it("new idea is equals to origin idea") {
                     assertThat(newIdea).isEqualTo(originIdea)

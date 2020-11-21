@@ -3,9 +3,11 @@ package idel.api
 import arrow.core.Either
 import idel.domain.*
 import idel.infrastructure.security.IdelOAuth2User
+import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 import java.lang.IllegalArgumentException
@@ -16,15 +18,13 @@ typealias IdeaListResponse = ResponseEntity<DataOrError<List<Idea>>>
 
 @RestController
 @RequestMapping("/ideas")
-class IdeasController(val ideaRepository: IdeaRepository) {
+class IdeasController(val ideaRepository: IdeaRepository, securityService: SecurityService) {
+
+    private val log = KotlinLogging.logger {}
 
     private val factory = IdeaFactory()
 
-    class IdeaInfo(
-        override var title: String,
-        override var description: String,
-        override var link: String
-    ) : idel.domain.IdeaInfo
+//    private val secure = ApiSecurity(securityService, log)
 
 
     private fun currentUser(): User {
@@ -32,34 +32,34 @@ class IdeasController(val ideaRepository: IdeaRepository) {
         return auth.principal as IdelOAuth2User
     }
 
-    @PostMapping(produces = ["application/json"])
-    @ResponseBody
-    fun create(@RequestBody info: IdeaInfo): IdeaResponse {
-        val voter = currentUser()
-        val newIdea = factory.createIdea(info, voter.id)
-        ideaRepository.add(newIdea)
-        return DataOrError.data(newIdea, HttpStatus.CREATED)
+    @PostMapping
+    fun create(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody properties: IdeaEditableProperties): EntityOrError<Idea> {
+//        return secure.asMember(properties.groupId, user) {
+//            val idea = factory.createIdea(properties, user.id)
+//            ideaRepository.add(idea)
+//        }
+        return DataOrError.notImplemented()
     }
 
-    @GetMapping(
-        path = ["/{id}"],
-        produces = ["application/json"]
-    )
-    @ResponseBody
-    fun load(@PathVariable id: String): IdeaResponse {
-        val maybeIdea: Optional<IdeaWithVersion> = ideaRepository.loadWithVersion(id)
-        return if (maybeIdea.isPresent) {
-            DataOrError.data(maybeIdea.get().idea)
-        } else {
-            DataOrError.notFound(id)
-        }
+
+    @GetMapping("/{id}")
+    fun load(@AuthenticationPrincipal user: IdelOAuth2User, @PathVariable id: String): EntityOrError<Idea> {
+//        return secure.asMember()
+//
+//        val maybeIdea: Optional<IdeaWithVersion> = ideaRepository.loadWithVersion(id)
+//        return if (maybeIdea.isPresent) {
+//            DataOrError.data(maybeIdea.get().idea)
+//        } else {
+//            DataOrError.notFound(id)
+//        }
+        return DataOrError.notImplemented()
     }
 
     @PutMapping(
         path = ["/{id}"],
         produces = ["application/json"]
     )
-    fun updateInfo(@PathVariable id: String, @RequestBody ideaInfo: IdeaInfo): IdeaResponse {
+    fun updateInfo(@PathVariable id: String, @RequestBody ideaInfo: IdeaEditableProperties): IdeaResponse {
         val maybeIdeaWithCas = ideaRepository.loadWithVersion(id)
         if (maybeIdeaWithCas.isEmpty) {
             return DataOrError.notFound(id)
@@ -155,7 +155,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
     )
     fun markAsImplemented(@PathVariable id: String): IdeaResponse {
         return changeOnlyIfAssignedToUser(id, currentUser().id) {
-            this.updateIdea(id) { it.copy(implemented = true) }
+            this.updateIdea(id) { it.update(implemented = true) }
         }
     }
 
@@ -164,7 +164,7 @@ class IdeasController(val ideaRepository: IdeaRepository) {
     )
     fun markAsUnimplemented(@PathVariable id: String): IdeaResponse {
         return changeOnlyIfAssignedToUser(id, currentUser().id) {
-            this.updateIdea(id) { it.copy(implemented = false) }
+            this.updateIdea(id) { it.update(implemented = false) }
         }
     }
 

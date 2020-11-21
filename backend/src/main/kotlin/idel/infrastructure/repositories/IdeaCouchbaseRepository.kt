@@ -13,7 +13,6 @@ import com.couchbase.client.java.kv.ReplaceOptions
 import com.couchbase.client.java.query.QueryOptions
 import idel.domain.*
 import mu.KotlinLogging
-import org.springframework.stereotype.Repository
 import java.time.Duration
 import java.util.*
 
@@ -38,9 +37,9 @@ class IdeaCouchbaseRepository(
      *
      * Return Left(Nothing) if 3 attempts of updating is not working.
      */
-    override fun updateInfo(id: String, info: IdeaInfo): Either<Exception, Idea> {
+    override fun updateInfo(id: String, info: IIdeaEditableProperties): Either<Exception, Idea> {
         return safelyReplace(id) {
-            it.copy(
+            it.update(
                     title = info.title,
                     description = info.description,
                     link = info.link

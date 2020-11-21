@@ -7,11 +7,19 @@ import java.util.*
 /**
  * Summary information about Idea
  */
-interface IdeaInfo {
+interface IIdeaEditableProperties {
+    val groupId: String
     val title: String
     val description: String
     val link: String
 }
+
+class IdeaEditableProperties(
+        override val groupId: String,
+        override var title: String,
+        override var description: String,
+        override var link: String
+) : IIdeaEditableProperties
 
 /**
  * Identifier of not assigned user.
@@ -28,6 +36,8 @@ class Idea(
      * Generated identifier
      */
     override val id: String,
+
+    override val groupId: String,
 
     /**
      * Time of creation.
@@ -67,7 +77,7 @@ class Idea(
      */
     val voters: Set<UserId>,
 
-) : IdeaInfo, Identifiable {
+) : IIdeaEditableProperties, Identifiable {
 
     init {
         require(id.isNotBlank()) { "id can't be blank" }
@@ -107,13 +117,25 @@ class Idea(
 
     private fun clone(
         title: String = this.title,
+        groupId: String = this.groupId,
         description: String = this.description,
         link: String = this.link,
         assigned: UserId = this.assignee,
         implemented: Boolean = this.implemented,
         offeredBy: UserId = this.offeredBy,
         voters: Set<UserId> = this.voters
-    ): Idea = Idea(id, ctime,  title, description, link, assigned, implemented, offeredBy, voters)
+    ): Idea = Idea(
+            id = id,
+            groupId = groupId,
+            ctime = ctime,
+            title = title,
+            description = description,
+            link = link,
+            assignee = assigned,
+            implemented = implemented,
+            offeredBy = offeredBy,
+            voters = voters
+    )
 
     fun assign(userId: UserId): Idea {
         return if (this.assignee == userId) {
@@ -127,12 +149,19 @@ class Idea(
         return this.clone(assigned = NOT_ASSIGNED)
     }
 
-    fun copy(
+    fun update(
+        groupId: String = this.groupId,
         title: String = this.title,
         description: String = this.description,
         link: String = this.link,
         implemented: Boolean = this.implemented
-    ): Idea = Idea(this.id, this.ctime, title, description, link, assignee, implemented, this.offeredBy, this.voters)
+    ): Idea = this.clone(
+            title = title,
+            groupId = groupId,
+            description = description,
+            link = link,
+            implemented = implemented
+    )
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -170,12 +199,13 @@ class Idea(
 }
 
 class IdeaFactory {
-    fun createIdea(info: IdeaInfo, userId: UserId): Idea {
+    fun createIdea(properties: IIdeaEditableProperties, userId: UserId): Idea {
         return Idea(
-            id = UUID.randomUUID().toString().replace("-", ""),
-            title = info.title,
-            description = info.description,
-            link = info.link,
+            id = generateId(),
+            groupId = properties.groupId,
+            title = properties.title,
+            description = properties.description,
+            link = properties.link,
             implemented = false,
             assignee = NOT_ASSIGNED,
             offeredBy = userId,
@@ -224,6 +254,11 @@ data class IdeaWithVersion(val idea: Idea, val version: Long)
 
 interface IdeaRepository {
     /**
+     * Load idea by id.
+     */
+    fun load(id : String) : Either<Exception, Idea>
+
+    /**
      * Add new idea.
      */
     fun add(idea: Idea) : Either<Exception, Idea>
@@ -236,7 +271,7 @@ interface IdeaRepository {
      *  [Left] with an Idea from storage with current storage version. Left means, that operation is failed!
      *
      */
-    fun updateInfo(id: String, info: IdeaInfo): Either<Exception, Idea>
+    fun updateInfo(id: String, info: IIdeaEditableProperties): Either<Exception, Idea>
 
     /**
      * Update idea.
