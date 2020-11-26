@@ -1,28 +1,18 @@
 package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.jayway.jsonpath.Configuration
-import com.jayway.jsonpath.JsonPath
-import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider
 import idel.tests.Idel
-import idel.tests.infrastructure.IdelHttpAuthenticator
-import idel.tests.infrastructure.ofJson
 import mu.KotlinLogging
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.time.Duration
 
 
 class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi(username, idelUrl, "groups") {
-    val log = KotlinLogging.logger {}
+    private val log = KotlinLogging.logger {}
 
     companion object {
-        val PUBLIC = "PUBLIC"
-        val CLOSED = "CLOSED"
-        val PRIVATE = "PRIVATE"
+        const val PUBLIC = "PUBLIC"
+        const val CLOSED = "CLOSED"
+        const val PRIVATE = "PRIVATE"
     }
 
 
@@ -45,10 +35,10 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
 
         log.trace {"GroupsApi.add body = $body"}
 
-        return post(body)!!
+        return post(body)
     }
 
-    fun loadAvailable() : {
-        va
-    }
+//    fun loadAvailable() : {
+//        va
+//    }
 }

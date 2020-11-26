@@ -80,18 +80,21 @@ class SecurityServiceSpec : DescribeSpec({
             describe("group has idea created by [userB] and assigned to himself ([userB])") {
                 val idea = idea(userB, group, Option.just(userB))
                 val requiredLevels = setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.AUTHOR, IdeaAccessLevel.ASSIGNEE)
-                it("[${userB.id}] has levels [$requiredLevels]") {
+                it("[${userB.id}] has levels $requiredLevels") {
                     val actualLevels = securityService.ideaAccessLevels(group, idea, userB)
                     actualLevels.shouldBeRight(requiredLevels)
                 }
             }
+
+            describe("author [userD] is not member of idea's group (was kicked or idea was moved") {
+                val idea = idea(userD, group, Option.empty())
+                val requiredLevels = setOf(IdeaAccessLevel.DENIED)
+                it("[${userD.id}] has level ${requiredLevels}") {
+                    val actualLevels = securityService.ideaAccessLevels(group, idea, userD);
+                    actualLevels.shouldBeRight(requiredLevels)
+                }
+            }
         }
-
-
-
-        // TODO добавить тесты на комбинацию Author, Assignee. Добавить тест, когда автор не входит в группу (доступа нет)
-
-
     }
 
 
