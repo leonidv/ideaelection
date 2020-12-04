@@ -19,17 +19,14 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
     fun create(title: String,
                entryMode: String,
                description: String = "$title, $entryMode",
-               admins: Set<String> = setOf("$username@httpbasic"),
-               members: Set<String> = setOf()
-               ): HttpResponse<JsonNode> {
+               admins: Set<String> = setOf("$username@httpbasic")): HttpResponse<JsonNode> {
         val body = """
             {
                 "title": "$title",
                 "description": "$description",
                 "logo": "data:image/png;base64,dGVzdA==",
                 "entryMode" : "$entryMode",
-                "administrators": ${asJson(admins)},
-                "members": ${asJson(members)}
+                "administrators": ${asJson(admins)}
             }
         """.trimIndent()
 
@@ -38,7 +35,8 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
         return post(body)
     }
 
-//    fun loadAvailable() : {
-//        va
-//    }
+    /**
+     * Return available groups
+     */
+    fun loadAvailable() = get("?onlyAvailable")
 }

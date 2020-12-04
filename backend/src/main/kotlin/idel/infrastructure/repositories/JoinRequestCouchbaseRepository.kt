@@ -12,7 +12,7 @@ import mu.KotlinLogging
 class JoinRequestCouchbaseRepository(
         cluster: Cluster,
         collection: Collection
-) : AbstractTypedCouchbaseRepository<JoinRequest>(cluster, collection, type = "joinrequest", JoinRequest::class.java), JoinRequestRepository {
+) : AbstractTypedCouchbaseRepository<JoinRequest>(cluster, collection, type = "joinRequest", JoinRequest::class.java), JoinRequestRepository {
 
     override val log = KotlinLogging.logger {}
 

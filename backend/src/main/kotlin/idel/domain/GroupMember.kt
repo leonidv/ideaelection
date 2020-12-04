@@ -44,7 +44,6 @@ interface GroupMemberRepository {
      * Load group member by group and user id.
      */
     fun load(groupId: String, userId: String) : Either<Exception, GroupMember>
-
     /**
      * Add group member.
      */

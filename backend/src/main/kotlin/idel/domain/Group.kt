@@ -95,7 +95,30 @@ class Group(
          */
         val administrators: List<UserInfo>,
 
-) : IGroupEditableProperties, Identifiable
+        ) : IGroupEditableProperties, Identifiable {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Group
+
+        if (id != other.id) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
+
+    override fun toString(): String {
+        return "Group(id='" + id +
+                "', ctime=" + ctime + ", creator=" + creator + ", title='" + title + "', description='" + description +
+                "', logo='" + logo + "', entryMode=" + entryMode + ", administrators=" + administrators + ")"
+    }
+
+
+}
 
 
 class GroupValidation {
@@ -152,9 +175,11 @@ class GroupFactory {
     }
 }
 
-enum class GroupSorting {
+enum class GroupOrdering {
     CTIME_ASC,
-    CTIME_DESC
+    CTIME_DESC,
+    TITLE_ASC,
+    TITLE_DESC
 }
 
 data class GroupFiltering(
@@ -176,13 +201,13 @@ interface GroupRepository {
      */
     fun loadEntryMode(id: String): Either<Exception, GroupEntryMode>
 
-    fun replace(entity: Group) : Either<Exception, Group>
+    fun replace(entity: Group): Either<Exception, Group>
 
-    fun load(first: Int, last: Int, sorting: GroupSorting, filtering: GroupFiltering): Either<Exception, List<Group>>
+    fun loadByUser(userId: String, pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>>
 
     /**
      * Loads only available and visible groups.
      */
-    fun loadOnlyAvailable(pagination: Repository.Pagination, sorting: GroupSorting): Either<Exception, List<Group>>
+    fun loadOnlyAvailable(pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>>
 
 }

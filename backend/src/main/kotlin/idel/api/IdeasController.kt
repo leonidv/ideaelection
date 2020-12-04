@@ -18,13 +18,13 @@ typealias IdeaListResponse = ResponseEntity<DataOrError<List<Idea>>>
 
 @RestController
 @RequestMapping("/ideas")
-class IdeasController(val ideaRepository: IdeaRepository, securityService: SecurityService) {
+class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: ApiSecurityFactory) {
 
     private val log = KotlinLogging.logger {}
 
     private val factory = IdeaFactory()
 
-//    private val secure = ApiSecurity(securityService, log)
+    private val secure = apiSecurityFactory.create(log)
 
 
     private fun currentUser(): User {
@@ -34,11 +34,10 @@ class IdeasController(val ideaRepository: IdeaRepository, securityService: Secur
 
     @PostMapping
     fun create(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody properties: IdeaEditableProperties): EntityOrError<Idea> {
-//        return secure.asMember(properties.groupId, user) {
-//            val idea = factory.createIdea(properties, user.id)
-//            ideaRepository.add(idea)
-//        }
-        return DataOrError.notImplemented()
+          return secure.group.asMember(properties.groupId, user) {
+              val idea = factory.createIdea(properties, user.id)
+              ideaRepository.add(idea)
+          }
     }
 
 
@@ -68,7 +67,7 @@ class IdeasController(val ideaRepository: IdeaRepository, securityService: Secur
         val currentVoter = currentUser()
         val originIdea = maybeIdeaWithCas.get().idea
 
-        if (originIdea.offeredBy != currentVoter.id) {
+        if (originIdea.author != currentVoter.id) {
             return DataOrError.forbidden("Only user which offered Idea can change it")
         }
 

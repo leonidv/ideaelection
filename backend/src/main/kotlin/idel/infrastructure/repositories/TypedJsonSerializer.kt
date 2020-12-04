@@ -61,8 +61,11 @@ class TypedJsonSerializer<T>(
             return input
         }
 
-        val json = mapperForUnwrappedJson.valueToTree<ObjectNode>(input)
+
+        val json = ObjectNode(mapperForUnwrappedJson.nodeFactory)
+        val jsonEntity = mapperForUnwrappedJson.valueToTree<ObjectNode>(input)
         json.put("_type", type)
+        json.setAll<ObjectNode>(jsonEntity)
         val x = mapperForUnwrappedJson.writeValueAsBytes(json) // for debug
         return x;
     }

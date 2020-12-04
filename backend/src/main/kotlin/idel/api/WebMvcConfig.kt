@@ -16,8 +16,6 @@ import java.lang.Exception
 @Configuration
 class WebMvcConfig : WebMvcConfigurer {
 
-
-
     override fun addFormatters(registry: FormatterRegistry) {
         registry.addConverter(StringToIdeaSortingConverter())
         registry.addConverter(StringToGroupSortingConverter())

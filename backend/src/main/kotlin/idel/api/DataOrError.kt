@@ -134,7 +134,7 @@ data class ErrorDescription(val code: Int,
  */
 typealias EntityOrError<T> = ResponseEntity<DataOrError<T>>
 
-class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription>) {
+data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription>) {
     companion object {
         fun <T> error(description: ErrorDescription): DataOrError<T> {
             return DataOrError<T>(Optional.empty(), Optional.of(description))
@@ -272,6 +272,8 @@ class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription
         assert(data.isPresent && error.isEmpty)
         assert(data.isEmpty && error.isPresent)
     }
+
+
 
 }
 

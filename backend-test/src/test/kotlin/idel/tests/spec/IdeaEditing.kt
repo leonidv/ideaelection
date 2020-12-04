@@ -25,8 +25,8 @@ class IdeaEditing : DescribeSpec({
               assertThat(data["title"]).isEqualTo("new title")
         }
 
-        it("offeredBy [userA]") {
-            assertThat(data["offeredBy"]).isUser("userA")
+        it("author [userA]") {
+            assertThat(data["author"]).isUser("userA")
         }
 
         it("description is [new description]") {
@@ -66,8 +66,8 @@ class IdeaEditing : DescribeSpec({
                 assertThat(data["link"]).isEqualTo("link 2")
             }
 
-            it("offeredBy [userB]") {
-                assertThat(data.get("offeredBy")).isUser("userB")
+            it("author [userB]") {
+                assertThat(data.get("author")).isUser("userB")
             }
         }
 
@@ -94,8 +94,8 @@ class IdeaEditing : DescribeSpec({
                 assertThat(data.get("description")).isEqualTo("description 2")
             }
 
-            it("offeredBy [userB]") {
-                assertThat(data.get("offeredBy")).isUser("userB")
+            it("author [userB]") {
+                assertThat(data.get("author")).isUser("userB")
             }
         }
     }
@@ -128,7 +128,7 @@ class IdeaEditing : DescribeSpec({
 
             }
 
-            describe("user which is not offered try to changes Idea") {
+            describe("user which is not author try to changes Idea") {
                 val r = sendUpdate("userB", originIdeaId)
                 checkError(this, r, 103, HttpStatus.SC_FORBIDDEN)
             }
@@ -184,7 +184,7 @@ class IdeaEditing : DescribeSpec({
         }
 
         describe("positive scenarios") {
-            describe("userB votes for an idea offered userA") {
+            describe("userB votes for an idea which is offered by userA") {
 
                 val ideaId = addIdea("userA", "some idea title", "some description", "some link")
                 val r = Given {

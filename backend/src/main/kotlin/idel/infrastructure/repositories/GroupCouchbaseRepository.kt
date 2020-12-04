@@ -19,12 +19,22 @@ class GroupCouchbaseRepository(
 
     override val log = KotlinLogging.logger {}
 
-    override fun load(id: String): Either<Exception, Group> {
-        return super.load(id)
-    }
+    override fun loadByUser(userId: String, pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>> {
+            val selectPart = """
+                SELECT ie  from `$bucketName` gm JOIN `$bucketName` ie  ON KEYS gm.groupId
+                WHERE gm._type = "groupMember" and ie._type ="$type"  
+            """.trimIndent()
 
-    override fun load(first: Int, last: Int, sorting: GroupSorting, filtering: GroupFiltering): Either<Exception, List<Group>> {
-        TODO("not yet implemented")
+            val filterParts = listOf("gm.userId = \$userId")
+            val params = JsonObject.create();
+            params.put("userId", userId)
+
+            return load(
+                    basePart = selectPart,
+                    filterQueryParts = filterParts,
+                    ordering = Repository.enumAsOrdering(ordering),
+                    params, pagination
+            )
     }
 
     class EntryModeRow(val entryMode: GroupEntryMode)
@@ -48,13 +58,10 @@ class GroupCouchbaseRepository(
     }
 
 
-    override fun loadOnlyAvailable(pagination: Repository.Pagination, sorting: GroupSorting): Either<Exception, List<Group>> {
+    override fun loadOnlyAvailable(pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>> {
         val params = JsonObject.create()
 
-        val ordering = when (sorting) {
-            GroupSorting.CTIME_ASC -> "ctime asc"
-            GroupSorting.CTIME_DESC -> "ctime desc"
-        }
+        val ordering = Repository.enumAsOrdering(ordering)
 
         var filterQueryParts = listOf(
                 """entryMode IN ["${GroupEntryMode.PUBLIC}","${GroupEntryMode.CLOSED}"]"""

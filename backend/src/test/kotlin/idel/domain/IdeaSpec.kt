@@ -59,7 +59,7 @@ class IdeaSpec : DescribeSpec({
             }
 
             it("has voterId = [v]") {
-                assertThat(idea.offeredBy).isEqualTo("v")
+                assertThat(idea.author).isEqualTo("v")
             }
 
 
@@ -92,7 +92,7 @@ class IdeaSpec : DescribeSpec({
                 link = "l",
                 assignee = "userA",
                 implemented = false,
-                offeredBy = "userA",
+                author = "userA",
                 voters = setOf("userB"),
                 ctime = LocalDateTime.of(1984,7,1,20,18)
             )
@@ -138,7 +138,7 @@ class IdeaSpec : DescribeSpec({
                 }
 
                 it("new idea offeredBy is equals to origin idea offeredBy (offeredBy=[userA])") {
-                    assertThat(newIdea.offeredBy).isEqualTo("userA")
+                    assertThat(newIdea.author).isEqualTo("userA")
                 }
 
                 it("new idea voters is equals to origin idea voters (voters=[{userB}]") {
@@ -206,7 +206,7 @@ class IdeaSpec : DescribeSpec({
             }
 
             describe("user, which has offered idea, can't vote for him") {
-                val offeredById = originIdea.offeredBy
+                val offeredById = originIdea.author
                 val idea = originIdea.addVote(offeredById)
 
                 it("idea is not changed") {

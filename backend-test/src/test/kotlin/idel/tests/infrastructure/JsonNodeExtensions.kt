@@ -75,6 +75,13 @@ object JsonNodeExtensions {
             Option.empty()
         }
     }
+
+    /**
+     * extract id of entity. Is always has same path in response.
+     */
+    fun JsonNode.dataId() : Option<String> {
+        return this.queryString("$.data.id")
+    }
 }
 
 

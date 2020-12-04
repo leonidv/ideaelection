@@ -20,6 +20,21 @@ enum class IdeaAccessLevel {
     ASSIGNEE
 }
 
+enum class GroupMemberAccessLevel {
+    DENIED,
+    GROUP_ADMIN,
+    GROUP_MEMBER,
+    HIM_SELF
+}
+
+/**
+ * Security levels is how a user is aligned to a entity. Some operations are permitted only for some levels.
+ *
+ * For example, only a group member can add a new Idea to the group. A member has an access level {member}.
+ * On another hand, a group admin is also a group member, so the admin has access levels {admin, member}.
+ * As a result, when we check user access, we should only check that a user is a member of the group and
+ * we should not check that a user is an admin every time. But if action can do only admin, {admin} level is checked.
+ */
 class SecurityService(
         private val groupMemberRepository: GroupMemberRepository
 ) {
@@ -56,7 +71,27 @@ class SecurityService(
          */
         val IDEA_LEVELS_FOR_NOT_GROUP_MEMBER = setOf(IdeaAccessLevel.DENIED)
 
+        /**
+         * Group member level of a group admin.
+         */
+        val GROUP_MEMBER_LEVELS_FOR_ADMIN = setOf(GroupMemberAccessLevel.GROUP_ADMIN, GroupMemberAccessLevel.GROUP_MEMBER, GroupMemberAccessLevel.HIM_SELF)
+
+        /**
+         * Group member level of a group member.
+         */
+        val GROUP_MEMBER_LEVELS_FOR_MEMBER = setOf(GroupMemberAccessLevel.GROUP_MEMBER)
+
+        /**
+         * Group member user is user.
+         */
+        val GROUP_MEMBER_HIM_SELF = setOf(GroupMemberAccessLevel.GROUP_MEMBER, GroupMemberAccessLevel.HIM_SELF)
+
+        /**
+         * User can't work with group member.
+         */
+        val GROUP_MEMBER_ACCESS_DENIED = setOf(GroupMemberAccessLevel.DENIED)
     }
+
 
     private fun containsEntity(collection: Collection<out Identifiable>, entityId: String): Boolean {
         return collection.find {it.id == entityId} != null
@@ -113,7 +148,7 @@ class SecurityService(
                             levels.add(IdeaAccessLevel.ASSIGNEE)
                         }
 
-                        if (idea.offeredBy == user.id) {
+                        if (idea.author == user.id) {
                             levels.add(IdeaAccessLevel.AUTHOR)
                         }
 
@@ -125,5 +160,22 @@ class SecurityService(
             }
         }
     }
+
+    fun groupMemberAccessLevels(groupMember: GroupMember, group: Group, user: User): Either<Exception, Set<GroupMemberAccessLevel>> {
+        return if (groupMember.userId == user.id) {
+            Either.right(GROUP_MEMBER_HIM_SELF)
+        } else {
+            Either.fx {
+                // it has a second call to a repository, but the operation is rarely so we don't optimize it
+                val (groupAccessLevel) = groupAccessLevel(group, user)
+                when {
+                    groupAccessLevel.contains(GroupAccessLevel.ADMIN) -> GROUP_MEMBER_LEVELS_FOR_ADMIN
+                    groupAccessLevel.contains(GroupAccessLevel.MEMBER) -> GROUP_MEMBER_LEVELS_FOR_MEMBER
+                    else -> GROUP_MEMBER_ACCESS_DENIED
+                }
+            }
+        }
+    }
+
 }
 

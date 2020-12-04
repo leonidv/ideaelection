@@ -35,7 +35,6 @@ User can be a member and administrator at the same time.
 | Send invite           | Group admin
 | See join requests     | Group admin
 | Resolve join request  | Group admin
-| Kick user             | Group admin
 | Change properties     | Group admin
 | See ideas             | Group admin, Group member
 | Archive group         | Group admin
@@ -56,9 +55,14 @@ Author and assignee is supplementary access levels for a member.
 
 IMPORTANT: Administrator can do all that can do member, author and assignee.
 
+Only a user himself can remove his vote for an idea. It is not a security logic, so no special access level for it.
+
+
 [cols="1,2a" options="header"]
 |===
 |Operation               | Access level
+| Add idea               | Group admin, Group member
+| View idea              | Group admin, Group member
 | Edit idea properties   | Group admin, Assignee, Author
 | Comment idea           | Group admin, Group member, Author, Assignee
 | Vote for idea          | Group admin, Group member, Assignee
@@ -75,4 +79,23 @@ IMPORTANT: Administrator can do all that can do member, author and assignee.
 
 | Delete idea with votes | Group admin
 | Delete idea with comments | Group admin
+|===
+
+==== Group members actions
+
+Access levels:
+
+* Group admin - user is admin of a group
+* Group member - user is member of a group
+* Him self - group membership belongs to user
+* Denied - user can't see and work with group members.
+
+Admin and him self is supplementary access levels for a member.
+
+|===
+|Operation               | Access level
+| Add                    | Any, but see <<groups.adoc#_joining_to_a_group>>
+| View                   | Group admin, Group member, Him self
+| Kick member (delete)   | Group admin, Him self
+
 |===

@@ -12,6 +12,6 @@
     </root>
 
     <logger name="idel" level="DEBUG"/>
-    <logger name="idel.tests.infrastructure" level="TRACE"/>
+    <logger name="idel.tests" level="TRACE"/>
 
 </configuration>
