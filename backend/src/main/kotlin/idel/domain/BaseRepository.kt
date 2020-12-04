@@ -5,7 +5,7 @@ package idel.domain
  * Commons abstractions for repositories
  */
 object Repository {
-    data class Pagination(val first : Int, val last : Int) {
+    data class Pagination(val first : Int = 0, val last : Int = 10) {
         val limit = last - first
     }
 

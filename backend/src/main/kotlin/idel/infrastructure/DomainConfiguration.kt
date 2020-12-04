@@ -48,11 +48,6 @@ class DomainConfiguration {
         return GroupMemberCouchbaseRepository(couchbaseCluster, couchbaseCollection)
     }
 
-//    @Bean
-//    fun groupMembershipRepository() : GroupMembershipRepository {
-//        return GroupMembershipCouchbaseRepository(couchbaseCluster, couchbaseCollection)
-//    }
-
     @Bean
     fun groupMembershipService(
             groupRepository: GroupRepository,
@@ -75,5 +70,7 @@ class DomainConfiguration {
     fun securityService(groupMemberRepository: GroupMemberRepository) : SecurityService {
         return SecurityService(groupMemberRepository)
     }
+
+
 
 }

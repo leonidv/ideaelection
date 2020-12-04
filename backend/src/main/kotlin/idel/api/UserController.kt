@@ -2,6 +2,7 @@ package idel.api
 
 import arrow.core.*
 import com.couchbase.client.core.error.DocumentExistsException
+import idel.domain.OperationNotPermitted
 import idel.domain.Roles
 import idel.domain.User
 import idel.domain.UserRepository
@@ -121,5 +122,21 @@ class UserController(val userRepository: UserRepository) {
         val eUser = userRepository.load(userId)
         return DataOrError.fromEither(eUser, log)
 
+    }
+}
+
+class UserSecurity(private val controllerLog : KLogger) {
+
+    /**
+     * Check that user is owner of resource.
+     */
+    fun <T> asHimSelf(userId : String, user: IdelOAuth2User, action : () -> Either<Exception,T>) : EntityOrError<T>  {
+       val result = if (userId == user.id) {
+            action()
+        } else {
+            Either.left(OperationNotPermitted())
+        }
+
+        return DataOrError.fromEither(result, controllerLog)
     }
 }

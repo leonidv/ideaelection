@@ -42,11 +42,12 @@ class Couchbase(val idelUrl  : String = Idel.URL) {
 
     }
 
-    fun clear() {
+    fun clearAll() {
         clearIdeas()
         clearUsers()
         clearGroups()
         clearJoinRequests()
+        clearGroupMembers()
     }
     /**
      * Remove all ideas from bucket.
@@ -62,10 +63,23 @@ class Couchbase(val idelUrl  : String = Idel.URL) {
     }
 
     fun clearJoinRequests() {
-        this.deleteEntity("joinrequest")
+        this.deleteEntity("joinRequest")
     }
 
     fun clearGroups() {
         this.deleteEntity("group")
+    }
+
+    fun clearGroupMembers() {
+        this.deleteEntity("groupMember")
+    }
+
+    /**
+     * Wait until couchbase make document ready for searching.
+     *
+     * It's just sleep :)
+     */
+    fun waitFlush() {
+        Thread.sleep(500)
     }
 }

@@ -18,12 +18,13 @@ import kotlin.IllegalArgumentException
 class GroupController(
         private val groupRepository: GroupRepository,
         private val userRepository: UserRepository,
-        private val securityService: SecurityService
+        apiSecurityFactory: ApiSecurityFactory
 ) {
     val log = KotlinLogging.logger {}
 
     val factory = GroupFactory()
 
+    val security = apiSecurityFactory.create(log)
 
     data class GroupInitInfo(
             override val title: String,
@@ -65,33 +66,39 @@ class GroupController(
     }
 
 
-    @GetMapping
-    fun load(@AuthenticationPrincipal user: IdelOAuth2User,
-             @RequestParam(required = false, defaultValue = "0") first: Int,
-             @RequestParam(required = false, defaultValue = "10") last: Int,
-             @RequestParam(required = false, defaultValue = "") sorting: GroupSorting,
-             @RequestParam(required = false, defaultValue = "false") onlyAvailable: Boolean,
-             @RequestParam("userId") userId: Optional<String>
-    ): ResponseEntity<DataOrError<List<Group>>> {
-        val pagination = Repository.Pagination(first, last)
-        return if (onlyAvailable) {
-            DataOrError.fromEither(groupRepository.loadOnlyAvailable(pagination, sorting), log)
-        } else {
-            DataOrError.ok(emptyList())
+    @GetMapping(params = ["userId"])
+    fun loadByUser(
+            @AuthenticationPrincipal user: IdelOAuth2User,
+            @RequestParam userId : String,
+            @RequestParam(required = false, defaultValue = "") order: GroupOrdering,
+            pagination: Repository.Pagination
+    ) : EntityOrError<List<Group>> {
+        return security.user.asHimSelf(userId, user) {
+            groupRepository.loadByUser(userId,pagination, order)
         }
     }
 
+    @GetMapping(params = ["onlyAvailable"])
+    fun loadAvailableForUser(
+            @AuthenticationPrincipal user : IdelOAuth2User,
+            @RequestParam(defaultValue = "true") onlyAvailable: Boolean,
+            @RequestParam(defaultValue = "") ordering: GroupOrdering,
+            pagination: Repository.Pagination
+    ) : EntityOrError<List<Group>> {
+        val result = groupRepository.loadOnlyAvailable(pagination, ordering)
+        return DataOrError.fromEither(result, log)
+    }
 }
 
-class StringToGroupSortingConverter : Converter<String, GroupSorting> {
-    val DEFAULT = GroupSorting.CTIME_DESC
+class StringToGroupSortingConverter : Converter<String, GroupOrdering> {
+    val DEFAULT = GroupOrdering.CTIME_DESC
 
-    override fun convert(source: String): GroupSorting {
+    override fun convert(source: String): GroupOrdering {
         return if (source.isNullOrBlank()) {
             DEFAULT
         } else {
             try {
-                GroupSorting.valueOf(source.toUpperCase())
+                GroupOrdering.valueOf(source.toUpperCase())
             } catch (ex: IllegalArgumentException) {
                 DEFAULT
             }

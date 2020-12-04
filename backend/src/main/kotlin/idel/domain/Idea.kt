@@ -32,58 +32,58 @@ const val NOT_ASSIGNED: UserId = ""
  *  Don't use this constructor directly, instead call [IdeaFactory.createIdea]
  */
 class Idea(
-    /**
+        /**
      * Generated identifier
      */
     override val id: String,
 
-    override val groupId: String,
+        override val groupId: String,
 
-    /**
+        /**
      * Time of creation.
      */
     val ctime: LocalDateTime,
 
-    /**
+        /**
      * Title of idea
      */
     override val title: String,
-    /**
+        /**
      * Description of idea
      */
     override val description: String,
-    /**
+        /**
      * Link to external resource, like Confluence page or Google Doc
      */
     override val link: String,
 
-    /**
+        /**
      * User which is assigned to implement this Idea.
      */
     val assignee: UserId,
 
-    /**
+        /**
      * Idea is implemented. And it is very cool!
      */
     val implemented: Boolean,
 
-    /**
-     * Voter which have added this idea.
+        /**
+     * Voter which have offered this idea.
      */
-    val offeredBy: UserId,
+    val author: UserId,
 
-    /**
+        /**
      * Voters which give their voice for this idea.
      */
     val voters: Set<UserId>,
 
-) : IIdeaEditableProperties, Identifiable {
+        ) : IIdeaEditableProperties, Identifiable {
 
     init {
         require(id.isNotBlank()) { "id can't be blank" }
         require(title.isNotBlank()) { "title can't be blank" }
-        require(!voters.contains(offeredBy)) { "user can't vote his idea" }
-        require(!offeredBy.isBlank()) { "offeredBy can't be blank" }
+        require(!voters.contains(author)) { "user can't vote his idea" }
+        require(!author.isBlank()) { "offeredBy can't be blank" }
     }
 
 
@@ -93,7 +93,7 @@ class Idea(
      * User, which offered an idea, can't vote for it. In this case the method returns an Idea without any changes)
      */
     fun addVote(userId: UserId): Idea {
-        if (this.offeredBy == userId) {
+        if (this.author == userId) {
             return this
         }
         val newVoters = this.voters.plus(userId)
@@ -116,14 +116,14 @@ class Idea(
     }
 
     private fun clone(
-        title: String = this.title,
-        groupId: String = this.groupId,
-        description: String = this.description,
-        link: String = this.link,
-        assigned: UserId = this.assignee,
-        implemented: Boolean = this.implemented,
-        offeredBy: UserId = this.offeredBy,
-        voters: Set<UserId> = this.voters
+            title: String = this.title,
+            groupId: String = this.groupId,
+            description: String = this.description,
+            link: String = this.link,
+            assigned: UserId = this.assignee,
+            implemented: Boolean = this.implemented,
+            offeredBy: UserId = this.author,
+            voters: Set<UserId> = this.voters
     ): Idea = Idea(
             id = id,
             groupId = groupId,
@@ -133,7 +133,7 @@ class Idea(
             link = link,
             assignee = assigned,
             implemented = implemented,
-            offeredBy = offeredBy,
+            author = offeredBy,
             voters = voters
     )
 
@@ -175,7 +175,7 @@ class Idea(
         if (link != other.link) return false
         if (assignee != other.assignee) return false
         if (implemented != other.implemented) return false
-        if (offeredBy != other.offeredBy) return false
+        if (author != other.author) return false
         if (voters != other.voters) return false
         if (ctime != other.ctime) return false
 
@@ -189,7 +189,7 @@ class Idea(
         result = 31 * result + link.hashCode()
         result = 31 * result + assignee.hashCode()
         result = 31 * result + implemented.hashCode()
-        result = 31 * result + offeredBy.hashCode()
+        result = 31 * result + author.hashCode()
         result = 31 * result + voters.hashCode()
         result = 31 * result + ctime.hashCode()
         return result
@@ -208,7 +208,7 @@ class IdeaFactory {
             link = properties.link,
             implemented = false,
             assignee = NOT_ASSIGNED,
-            offeredBy = userId,
+            author = userId,
             voters = emptySet(),
             ctime = LocalDateTime.now()
         )

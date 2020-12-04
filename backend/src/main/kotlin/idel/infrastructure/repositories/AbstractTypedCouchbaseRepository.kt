@@ -4,15 +4,16 @@ import arrow.core.Either
 import com.couchbase.client.core.error.CasMismatchException
 import com.couchbase.client.core.error.DocumentExistsException
 import com.couchbase.client.core.error.DocumentNotFoundException
+import com.couchbase.client.core.msg.kv.DurabilityLevel
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.codec.JsonTranscoder
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.kv.GetOptions
 import com.couchbase.client.java.kv.InsertOptions
-import com.couchbase.client.java.kv.MutationResult
 import com.couchbase.client.java.kv.ReplaceOptions
 import com.couchbase.client.java.query.QueryOptions
+import com.couchbase.client.java.query.QueryScanConsistency
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -30,6 +31,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 
+fun Repository.Pagination.queryPart(): String {
+    return """offset ${this.first} limit ${this.limit}"""
+}
+
 /**
  * Contains support function for using [TypedJsonSerializer]
  */
@@ -38,7 +43,6 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         protected val collection: Collection,
         protected val type: String,
         protected val typedClass: Class<T>
-
 ) {
 
     abstract val log: KLogger
@@ -77,13 +81,21 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
 
     }
 
-    protected fun <T> safely(id: String, action: () -> T): Either<Exception, T> {
+    protected fun <T> safelyLoad(id: String, action: () -> T): Either<Exception, T> {
         return try {
             Either.right(action())
         } catch (e: DocumentNotFoundException) {
             Either.left(EntityNotFound(type, id))
         } catch (e: DocumentExistsException) {
             Either.left(EntityAlreadyExists(type, id))
+        } catch (e: Exception) {
+            Either.left(e)
+        }
+    }
+
+    protected fun <T> safely(action: () -> Either<Exception,T>): Either<Exception, T> {
+        return try {
+            return action();
         } catch (e: Exception) {
             Either.left(e)
         }
@@ -102,12 +114,16 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
                 .queryOptions()
                 .parameters(params)
                 .timeout(Duration.ofSeconds(2))
+                .scanConsistency(QueryScanConsistency.REQUEST_PLUS)
                 .serializer(jsonSerializer)
 
     /**
      * Return [InsertOptions] with [transcoder]
      */
-    protected fun insertOptions(): InsertOptions = InsertOptions.insertOptions().transcoder(transcoder)
+    protected fun insertOptions(): InsertOptions =
+            InsertOptions
+                .insertOptions()
+                .transcoder(transcoder)
 
     /**
      * Return [ReplaceOptions] with [transcoder]
@@ -148,7 +164,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
      * Add entity to collection
      */
     open fun add(entity: T): Either<Exception, T> {
-        return safely(entity.id) {
+        return safelyLoad(entity.id) {
             collection.insert(entity.id, entity, insertOptions())
             entity
         }
@@ -158,7 +174,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
      * Load entity by id.
      */
     open fun load(id: String): Either<Exception, T> {
-        return safely(id) {
+        return safelyLoad(id) {
             val result = collection.get(id, getOptions())
             val entity = result.contentAs(typedClass)
             entity
@@ -169,7 +185,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
      * Check exists entity or not without loading full document.
      */
     open fun exists(id: String): Either<Exception, Boolean> {
-        return safely(id) {
+        return safelyLoad(id) {
             collection.exists(id).exists()
         }
     }
@@ -178,9 +194,9 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
      * Remove entity from collection.
      */
     open fun remove(id: String): Either<Exception, Unit> {
-        return safely(id) {
-           collection.remove(id)
-           Unit
+        return safelyLoad(id) {
+            collection.remove(id)
+            Unit
         }
 
     }
@@ -189,29 +205,46 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
      * Replace object without CAS checking.
      */
     open fun replace(entity: T): Either<Exception, T> {
-        return safely(entity.id) {
+        return safelyLoad(entity.id) {
             collection.replace(entity.id, entity, replaceOptions())
             entity
         }
     }
 
-    protected fun load(filterQueryParts: List<String>, ordering: String, params: JsonObject, pagination: Repository.Pagination): Either<Exception, List<T>> {
-        return try {
-            params
-                .put("offset", pagination.first)
-                .put("limit", pagination.limit)
+    protected fun load(filterQueryParts: List<String>,
+                       ordering: String, params: JsonObject,
+                       pagination: Repository.Pagination): Either<Exception, List<T>> {
+        return load(
+                basePart = """select * from `$bucketName` as ie where _type="${this.type}" """,
+                filterQueryParts = filterQueryParts,
+                ordering = ordering,
+                params = params,
+                pagination = pagination,
+        )
+    }
 
+
+    /**
+     * Low level form of [load] function. Use this if you need customize ```select * from ... where _type = ...```.
+     */
+    protected fun load(
+            basePart: String,
+            filterQueryParts: List<String>,
+            ordering: String,
+            params: JsonObject,
+            pagination: Repository.Pagination,
+    ): Either<Exception, List<T>> {
+        return try {
             val filterQuery =
                     if (filterQueryParts.isNotEmpty()) {
-                        filterQueryParts.joinToString(prefix = " and ", separator = " and ")
+                        filterQueryParts.joinToString(prefix = " and ", separator = " and ", postfix = " ")
                     } else {
-                        ""
+                        " "
                     }
 
             val options = queryOptions(params).readonly(true)
-            val queryString = "select * from `$bucketName` as ie " +
-                    "where _type = \"${this.type}\" $filterQuery " +
-                    "order by $ordering offset \$offset limit \$limit"
+            val queryString = basePart + filterQuery +
+                    "order by ie.$ordering " + pagination.queryPart()
 
             log.trace {"query: [$queryString], params: [$params]"}
 
@@ -220,4 +253,5 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
             Either.left(e)
         }
     }
+
 }

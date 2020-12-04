@@ -3,7 +3,6 @@ package idel.domain
 import arrow.core.Either
 import arrow.core.Option
 import arrow.core.getOrElse
-import idel.infrastructure.repositories.PersistsUser
 import io.kotest.assertions.arrow.either.shouldBeRight
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.data.forAll
@@ -62,13 +61,13 @@ class SecurityServiceSpec : DescribeSpec({
                 val idea = idea(userB, group, Option.just(userC))
 
                 table(
-                        headers("user","idea access levels"),
+                        headers("user", "idea access levels"),
                         row(userA, setOf(IdeaAccessLevel.GROUP_ADMIN, IdeaAccessLevel.GROUP_MEMBER,
                                 IdeaAccessLevel.ASSIGNEE, IdeaAccessLevel.AUTHOR)),
                         row(userB, setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.AUTHOR)),
                         row(userC, setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.ASSIGNEE)),
                         row(userD, setOf(IdeaAccessLevel.DENIED))
-                ).forAll{user, requiredLevels ->
+                ).forAll {user, requiredLevels ->
                     it("[${user.id}] has levels ${requiredLevels}") {
                         val actualLevels = securityService.ideaAccessLevels(group, idea, user)
                         actualLevels.shouldBeRight(requiredLevels)
@@ -95,6 +94,24 @@ class SecurityServiceSpec : DescribeSpec({
                 }
             }
         }
+
+        describe("groupmember security level, groupmember belongs to [userB]") {
+            val groupMember = GroupMember.of(group.id, userB)
+
+            table(
+                    headers("user", "accessLevels"),
+                    row(userA, setOf(GroupMemberAccessLevel.GROUP_MEMBER, GroupMemberAccessLevel.GROUP_ADMIN, GroupMemberAccessLevel.HIM_SELF)),
+                    row(userB, setOf(GroupMemberAccessLevel.GROUP_MEMBER, GroupMemberAccessLevel.HIM_SELF)),
+                    row(userC, setOf(GroupMemberAccessLevel.GROUP_MEMBER)),
+                    row(userD, setOf(GroupMemberAccessLevel.DENIED))
+            ).forAll {user, requiredLevels ->
+                it("${user.displayName} has levels $requiredLevels") {
+                    val actualLevels = securityService.groupMemberAccessLevels(groupMember, group, user)
+                    actualLevels.shouldBeRight(requiredLevels)
+                }
+
+            }
+        }
     }
 
 
@@ -118,7 +135,7 @@ fun idea(creator: User, group: Group, assignee: Option<User>, voters: Set<User> 
             link = "",
             assignee = assignee.map {it.id}.getOrElse {""},
             implemented = false,
-            offeredBy = creator.id,
+            author = creator.id,
             voters = voters.map {it.id}.toSet()
     )
 }
