@@ -46,8 +46,8 @@ User can be a member and administrator at the same time.
 Access levels:
 
 * Denied - user can't see and work with an idea.
-* Group member - inherited from access level group, which idea is belong to
-* Group admin - inherited from access level group, which idea is belong to
+* Group member - inherited from access level group, which a idea is belong to
+* Group admin - inherited from access level group, which a idea is belong to
 * Author - user who offered the idea
 * Assignee - user who assigned to the idea
 
@@ -63,7 +63,9 @@ Only a user himself can remove his vote for an idea. It is not a security logic,
 |Operation               | Access level
 | Add idea               | Group admin, Group member
 | View idea              | Group admin, Group member
-| Edit idea properties   | Group admin, Assignee, Author
+| Edit assigned idea     | Group admin, Assignee
+| Edit unassigned idea   | Group admin, Author
+| Edit implemented idea  | Group admin
 | Comment idea           | Group admin, Group member, Author, Assignee
 | Vote for idea          | Group admin, Group member, Assignee
 
@@ -72,7 +74,7 @@ Only a user himself can remove his vote for an idea. It is not a security logic,
 
 | Remove assignee        | Group admin, Assignee
 | Change assignee        | Group admin
-| Mark as done           | Group admin, Author, Assignee
+| Mark as done           | Group admin, Assignee
 
 | Delete idea without votes
 | Group admin, Author

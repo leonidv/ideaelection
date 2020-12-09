@@ -10,17 +10,51 @@ class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi
      * Add new idea.
      */
     fun add(groupId : String,
-            title : String = "Idea from test",
-            description : String = "description of $title"): HttpResponse<JsonNode> {
+            summary : String = "Idea from test",
+            description : String = "description of $summary"): HttpResponse<JsonNode> {
         val body = """
             {
                 "groupId" : "$groupId",
-                "title" : "$title",
+                "summary" : "$summary",
                 "description": "$description",
-                "link": "http://somelink.io/$title"
+                "descriptionPlainText": "$description",
+                "link": "http://somelink.io/$summary"
             }
         """.trimIndent()
 
-        return post(body)
+        return post("",body)
+    }
+
+    fun update(ideaId : String,
+               summary : String = "Edited title",
+               description: String = "edited description") : HttpResponse<JsonNode> {
+        val body = """{
+                "summary" : "$summary",
+                "description": "$description",
+                "descriptionPlainText": "$description",
+                "link": "http://somelink.io/$summary"
+            }""".trimMargin()
+
+        return patch("/$ideaId", body)
+    }
+
+    fun load(ideaId: String): HttpResponse<JsonNode> {
+        return get("/$ideaId")
+    }
+
+    fun assignee(ideaId: String, assignee: User): HttpResponse<JsonNode> {
+        val body = """{
+            "userId":"${assignee.id}"
+        }""".trimIndent()
+
+        return patch("/$ideaId/assignee", body)
+    }
+
+    fun removeAssignee(ideaId : String) : HttpResponse<JsonNode > {
+        val body = """{
+          "userId": ""   
+        }""".trimIndent()
+
+        return patch("/$ideaId/assignee", body)
     }
 }

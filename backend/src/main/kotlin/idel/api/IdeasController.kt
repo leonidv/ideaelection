@@ -6,15 +6,11 @@ import idel.infrastructure.security.IdelOAuth2User
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 import java.lang.IllegalArgumentException
 import java.util.*
 
-typealias IdeaResponse = ResponseEntity<DataOrError<Idea>>
-typealias IdeaListResponse = ResponseEntity<DataOrError<List<Idea>>>
 
 @RestController
 @RequestMapping("/ideas")
@@ -27,200 +23,140 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     private val secure = apiSecurityFactory.create(log)
 
 
-    private fun currentUser(): User {
-        val auth = SecurityContextHolder.getContext().authentication
-        return auth.principal as IdelOAuth2User
-    }
+    class InitialProperties(
+            val groupId: String,
+            override val summary: String,
+            override val description: String,
+            override val descriptionPlainText: String,
+            override val link: String,
+    ) : IIdeaEditableProperties
 
     @PostMapping
-    fun create(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody properties: IdeaEditableProperties): EntityOrError<Idea> {
-          return secure.group.asMember(properties.groupId, user) {
-              val idea = factory.createIdea(properties, user.id)
-              ideaRepository.add(idea)
-          }
-    }
-
-
-    @GetMapping("/{id}")
-    fun load(@AuthenticationPrincipal user: IdelOAuth2User, @PathVariable id: String): EntityOrError<Idea> {
-//        return secure.asMember()
-//
-//        val maybeIdea: Optional<IdeaWithVersion> = ideaRepository.loadWithVersion(id)
-//        return if (maybeIdea.isPresent) {
-//            DataOrError.data(maybeIdea.get().idea)
-//        } else {
-//            DataOrError.notFound(id)
-//        }
-        return DataOrError.notImplemented()
-    }
-
-    @PutMapping(
-        path = ["/{id}"],
-        produces = ["application/json"]
-    )
-    fun updateInfo(@PathVariable id: String, @RequestBody ideaInfo: IdeaEditableProperties): IdeaResponse {
-        val maybeIdeaWithCas = ideaRepository.loadWithVersion(id)
-        if (maybeIdeaWithCas.isEmpty) {
-            return DataOrError.notFound(id)
-        }
-
-        val currentVoter = currentUser()
-        val originIdea = maybeIdeaWithCas.get().idea
-
-        if (originIdea.author != currentVoter.id) {
-            return DataOrError.forbidden("Only user which offered Idea can change it")
-        }
-
-        var updateResult = ideaRepository.updateInfo(id, ideaInfo)
-
-        return when (updateResult) {
-            is Either.Left -> DataOrError.internal("Can't update idea. CAS mismatching. You can retry")
-            is Either.Right -> DataOrError.data(updateResult.b)
+    fun create(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody properties: InitialProperties): EntityOrError<Idea> {
+        return secure.group.asMember(properties.groupId, user) {
+            val idea = factory.createIdea(properties, properties.groupId, user.id)
+            ideaRepository.add(idea)
         }
     }
 
-    /**
-     * Wrapper for updating Idea with optimistic locking.
-     */
-    private fun updateIdea(
-        ideaId: String,
-        mutation: (idea: Idea) -> Idea
-    ): IdeaResponse {
-        var canReplace: Boolean
-        var attempt = 1
-        lateinit var newIdea: Idea
-        do {
-            var maybeIdea = ideaRepository.loadWithVersion(ideaId)
-            if (maybeIdea.isEmpty) {
-                return DataOrError.notFound(ideaId)
+
+    @GetMapping("/{ideaId}")
+    fun load(@AuthenticationPrincipal user: IdelOAuth2User, @PathVariable ideaId: String): EntityOrError<Idea> {
+        return secure.idea.asMember(ideaId, user) {_, idea ->
+            Either.right(idea)
+        }
+    }
+
+    @PatchMapping("/{ideaId}")
+    fun updateInfo(
+            @AuthenticationPrincipal user: IdelOAuth2User,
+            @PathVariable ideaId: String,
+            @RequestBody properties: IdeaEditableProperties): EntityOrError<Idea> {
+        return secure.idea.withLevels(ideaId, user) {_, _, levels ->
+            ideaRepository.possibleMutate(ideaId) {idea ->
+                idea.updateInformation(properties, levels)
             }
-
-            var (originIdea, version) = maybeIdea.get()
-
-            newIdea = mutation(originIdea)
-            val replaceResult = ideaRepository.replace(IdeaWithVersion(newIdea, version))
-            canReplace = replaceResult.isRight()
-            attempt++
-        } while (!canReplace && attempt <= 3)
-
-        return if (canReplace) {
-            DataOrError.data(newIdea)
-        } else {
-            DataOrError.internal("Can't update idea. CAS mismatching. You can retry")
         }
     }
 
-    @PostMapping(
-        path = ["/{id}/voters"]
-    )
+
+    @PostMapping("/{ideaId}/voters")
     @ResponseStatus(HttpStatus.CREATED)
-    fun vote(@PathVariable id: String): IdeaResponse {
-        val voterId = currentUser().id
-        return updateIdea(id) { it.addVote(voterId) }
-    }
-
-    @DeleteMapping(
-        path = ["/{id}/voters"]
-    )
-    fun devote(@PathVariable id: String): IdeaResponse {
-        val voterId = currentUser().id
-        return updateIdea(id) { it.removeVote(voterId) }
-    }
-
-    @PostMapping(
-        path = ["/{id}/assignee/{userId}"]
-    )
-    fun assign(@PathVariable id: String, @PathVariable userId: UserId): IdeaResponse {
-        val callerId = currentUser().id
-        if (userId != callerId) {
-            return DataOrError.forbidden("User can take idea for implementation only by self")
-        }
-
-        return updateIdea(id) { it.assign(userId) }
-    }
-
-
-    @DeleteMapping(
-        path = ["/{id}/assignee"]
-    )
-    fun removeAssign(@PathVariable id: String): IdeaResponse {
-        return changeOnlyIfAssignedToUser(id, currentUser().id) {
-            this.updateIdea(id) { it.removeAssign() }
+    fun vote(@AuthenticationPrincipal user: IdelOAuth2User,
+             @PathVariable ideaId: String): EntityOrError<Idea> {
+        return secure.idea.asMember(ideaId, user) {_, _ ->
+            ideaRepository.mutate(ideaId) {idea ->
+                idea.addVote(user.id)
+            }
         }
     }
 
-    @PostMapping(
-        path = ["/{id}/implemented"]
-    )
-    fun markAsImplemented(@PathVariable id: String): IdeaResponse {
-        return changeOnlyIfAssignedToUser(id, currentUser().id) {
-            this.updateIdea(id) { it.update(implemented = true) }
+    @DeleteMapping("/{ideaId}/voters")
+    fun devote(@AuthenticationPrincipal user: IdelOAuth2User,
+               @PathVariable ideaId: String): EntityOrError<Idea> {
+        return secure.idea.asMember(ideaId, user) {_, _ ->
+            ideaRepository.mutate(ideaId) {idea ->
+                idea.removeVote(user.id)
+            }
         }
     }
 
-    @DeleteMapping(
-        path = ["/{id}/implemented"]
-    )
-    fun markAsUnimplemented(@PathVariable id: String): IdeaResponse {
-        return changeOnlyIfAssignedToUser(id, currentUser().id) {
-            this.updateIdea(id) { it.update(implemented = false) }
+    data class Assignee(val userId : String)
+
+    @PatchMapping("/{ideaId}/assignee")
+    fun assign(@AuthenticationPrincipal user: IdelOAuth2User,
+               @PathVariable ideaId: String,
+               @RequestBody assignee: Assignee): EntityOrError<Idea> {
+        return secure.idea.withLevels(ideaId,user) {_, _, levels ->
+            ideaRepository.possibleMutate(ideaId) {idea ->
+                if (assignee.userId != NOT_ASSIGNED) {
+                    idea.assign(assignee.userId, levels)
+                } else {
+                    idea.removeAssign(levels)
+                }
+            }
         }
     }
 
-    /**
-     * Make mutation of Idea only if it assigned to callerId
-     *
-     * @return [Optional.empty] if user can change Idea or Some with Error response.
+    data class Implemented(val implemented : Boolean)
 
-     */
-    private fun changeOnlyIfAssignedToUser(id: String, callerId: UserId, mutation: () -> IdeaResponse): IdeaResponse {
-        val maybeIdea = this.ideaRepository.loadWithVersion(id)
-        if (maybeIdea.isEmpty) {
-            return DataOrError.notFound(id)
+    @PatchMapping("/{ideaId}/implemented")
+    fun markAsDone(
+            @AuthenticationPrincipal user: IdelOAuth2User,
+            @PathVariable ideaId: String,
+            @RequestBody implemented: Implemented
+    ): EntityOrError<Idea> {
+        return secure.idea.withLevels(ideaId, user) {_, _, levels ->
+            ideaRepository.possibleMutate(ideaId) { idea ->
+                idea.markAsDone(levels)
+            }
         }
+    }
 
-        val currentAssignee = maybeIdea.get().idea.assignee
-        return if (currentAssignee != callerId) {
-            DataOrError.forbidden("Only assignee can make remove his from idea implementation")
-        } else {
-            mutation()
+    @DeleteMapping("/{ideaId}/implemented")
+    fun markAsUnimplemented(
+            @AuthenticationPrincipal user: IdelOAuth2User,
+            @PathVariable ideaId: String): EntityOrError<Idea> {
+        return secure.idea.withLevels(ideaId, user) {_, _, levels ->
+            ideaRepository.possibleMutate(ideaId) {idea ->
+                idea.markAsNotDone(levels)
+            }
         }
-
     }
 
 
     @GetMapping(
-        path = [""],
-        produces = ["application/json"]
+            path = [""],
+            produces = ["application/json"]
     )
     @ResponseBody
     fun load(
-        @RequestParam(required = false, defaultValue = "0") first: Int,
-        @RequestParam(required = false, defaultValue = "10") last: Int,
-        @RequestParam(required = false, defaultValue = "") sorting: IdeaSorting,
-        @RequestParam("offeredBy") offeredBy: Optional<String>,
-        @RequestParam("assignee") assignee: Optional<String>,
-        @RequestParam("implemented") implemented: Optional<Boolean>,
-        @RequestParam("text") text : Optional<String>
+            @RequestParam(required = false, defaultValue = "0") first: Int,
+            @RequestParam(required = false, defaultValue = "10") last: Int,
+            @RequestParam(required = false, defaultValue = "") sorting: IdeaSorting,
+            @RequestParam("offeredBy") offeredBy: Optional<String>,
+            @RequestParam("assignee") assignee: Optional<String>,
+            @RequestParam("implemented") implemented: Optional<Boolean>,
+            @RequestParam("text") text: Optional<String>
     )
-            : IdeaListResponse {
-        val size = last - first;
+            : EntityOrError<List<Idea>> {
+        val size = last - first
 
         if (size <= 0) {
-            return DataOrError.incorrectArgument("last: $last, first: $first","first should be less then first")
+            return DataOrError.incorrectArgument("last: $last, first: $first", "first should be less then first")
         }
 
         if (size > 100) {
-            val error = ErrorDescription.tooManyItems(size, 100);
+            val error = ErrorDescription.tooManyItems(size, 100)
             return DataOrError.errorResponse(error)
         }
 
 
         val filtering = IdeaFiltering(
-            offeredBy = offeredBy,
-            implemented = implemented,
-            assignee = assignee,
-            text = text
+                offeredBy = offeredBy,
+                implemented = implemented,
+                assignee = assignee,
+                text = text
         )
 
         val data = ideaRepository.loadWithVersion(first, last, sorting, filtering)

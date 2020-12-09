@@ -7,6 +7,7 @@ import arrow.core.Some
 import com.couchbase.client.core.error.CouchbaseException
 import idel.domain.EntityAlreadyExists
 import idel.domain.EntityNotFound
+import idel.domain.OperationNotPermitted
 import idel.domain.generateId
 import io.konform.validation.Invalid
 import io.konform.validation.ValidationError
@@ -209,6 +210,7 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
                 is Either.Left -> when (val ex = operationResult.a) {
                     is EntityNotFound -> notFound(ex)
                     is EntityAlreadyExists -> conflict(ex)
+                    is OperationNotPermitted -> forbidden("operation is not permitted")
                     else -> internal(operationResult.a, log)
                 }
             }

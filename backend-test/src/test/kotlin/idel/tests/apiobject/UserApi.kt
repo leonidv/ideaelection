@@ -28,6 +28,6 @@ class UserApi (userName : String, idelUrl: String = Idel.URL) : AbstractObjectAp
 
         log.trace {"UsersApi.register body = $body"}
 
-        return post(body)
+        return post("",body)
     }
 }

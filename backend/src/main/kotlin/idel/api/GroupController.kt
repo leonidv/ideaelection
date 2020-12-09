@@ -27,7 +27,7 @@ class GroupController(
     val security = apiSecurityFactory.create(log)
 
     data class GroupInitInfo(
-            override val title: String,
+            override val name: String,
             override val description: String,
             override val logo: String,
             override val entryMode: GroupEntryMode,

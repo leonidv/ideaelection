@@ -1,17 +1,23 @@
 package idel.tests.scenario
 
 import arrow.core.Some
+import com.fasterxml.jackson.databind.JsonNode
+import idel.tests.*
 import idel.tests.apiobject.Couchbase
 import idel.tests.apiobject.GroupsApi
 import idel.tests.apiobject.JoinRequestsApi
 import idel.tests.apiobject.User
-import idel.tests.containsString
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
-import idel.tests.isData
-import idel.tests.isOk
+import idel.tests.infrastructure.checkAssignee
+import idel.tests.infrastructure.checkIsForbidden
+import idel.tests.infrastructure.checkIsOk
+import idel.tests.infrastructure.checkNotAssigned
 import io.kotest.assertions.arrow.option.shouldNotBeNone
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.scopes.DescribeScope
+import java.net.HttpURLConnection
+import java.net.http.HttpResponse
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -31,18 +37,16 @@ class JoinToGroupScenarios : DescribeSpec({
         describe("register users") {
             listOf(userA, userB, userC, userD).forEach {user ->
                 it("register user [${user.name}]") {
-                    userAdmin.users.register(user.name).isOk()
+                    userAdmin.users.register(user.name).shouldBeOk()
                 }
             }
         }
 
-        describe("join to public group") {
-            describe("[${userA.name}] adds new PUBLIC group without admins and members") {
+        describe("basic scenario with public group") {
+            describe("$userA adds new PUBLIC group without admins and members") {
                 val createGroupResponse = userA.groups.create("public group", GroupsApi.PUBLIC)
 
-                it("200 OK") {
-                    createGroupResponse.isOk()
-                }
+                checkIsOk(createGroupResponse)
 
                 val oGroupId = createGroupResponse.body().dataId()
                 it("has group id") {
@@ -52,62 +56,100 @@ class JoinToGroupScenarios : DescribeSpec({
                 if (oGroupId is Some) {
                     val groupId = oGroupId.t
 
-                    describe("[${userB.name}] see group is list of available") {
+                    describe("$userB see group is list of available") {
 
                         val availableResponse = userB.groups.loadAvailable()
 
-                        it("response is 200 OK with data") {
-                            availableResponse.isOk()
-                            availableResponse.isData()
-                        }
+                        checkIsOk(availableResponse)
 
                         it("group is in the list") {
                             val body = availableResponse.body()
                             body.toPrettyString().asClue {
-                                body.containsString("$.data[0].id", groupId)
+                                body.shouldContains("$.data[0].id", groupId)
                             }
                         }
                     }
 
-                    describe("[${userB.name}] joins to group") {
+                    describe("$userB can't add an idea to the group") {
+                        val ideaResponse = userB.ideas.add(groupId)
+
+                        it("can't do it 403 and error [OperationNotPermitted]") {
+                            ideaResponse.shouldHasStatus(HttpURLConnection.HTTP_FORBIDDEN)
+                            ideaResponse.shouldBeError(103)
+                        }
+                    }
+
+                    describe("$userB joins to the group") {
                         val joinRequestResponse = userB.joinRequests.create(groupId)
 
-                        it("response is 200 OK with data") {
-                            joinRequestResponse.isOk()
-                            joinRequestResponse.isData()
-                        }
+                        checkIsOk(joinRequestResponse)
 
                         it("join request is approved") {
-                            joinRequestResponse.isOk()
+                            joinRequestResponse.shouldBeOk()
                             val body = joinRequestResponse.body()
                             body.toPrettyString().asClue {
-                                body.containsString("$.data.status", JoinRequestsApi.APPROVED)
+                                body.shouldContains("$.data.status", JoinRequestsApi.APPROVED)
                             }
                         }
                     }
 
-                    describe("[${userB.name}] adds an idea to group") {
+                    describe("$userC joins to the group") {
+                        val joinRequestResponse = userC.joinRequests.create(groupId)
+
+                        checkIsOk(joinRequestResponse)
+
+                        it("join request is approved") {
+                            joinRequestResponse.shouldBeOk()
+                            val body = joinRequestResponse.body()
+                            body.toPrettyString().asClue {
+                                body.shouldContains("$.data.status", JoinRequestsApi.APPROVED)
+                            }
+                        }
+                    }
+
+                    describe("$userB adds an idea to the group") {
                         val addIdeaResponse = userB.ideas.add(groupId)
 
-                        it("response idea is 200 OK with data") {
-                            addIdeaResponse.isOk()
-                            addIdeaResponse.isData()
-                        }
+                        checkIsOk(addIdeaResponse)
 
                         val oIdeaId = addIdeaResponse.body().dataId()
 
-                        it("has idea id") {
+                        it("has an idea id") {
                             oIdeaId.shouldNotBeNone()
                         }
 
                         if (oIdeaId is Some) {
-                            // add assignee, votes and another cases
+                            val ideaId = oIdeaId.t
+
+                            context("load idea") {
+                                describe("$userB (author) can load idea") {
+                                    checkIsOk(userB.ideas.load(ideaId))
+                                }
+
+                                describe("$userC (member) can load idea") {
+                                    checkIsOk(userC.ideas.load(ideaId))
+                                }
+
+                                describe("$userA (admin) can load idea") {
+                                    checkIsOk(userA.ideas.load(ideaId))
+                                }
+
+                                describe("$userD (non member) can't load idea") {
+                                    checkIsForbidden(userD.ideas.load(ideaId))
+                                }
+                            }
+
+
+                            context("assignee and update") {
+
+                            }
                         }
                     }
+
                 }
-
             }
-        }
 
+        }
     }
 })
+

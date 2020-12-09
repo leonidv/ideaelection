@@ -5,7 +5,6 @@ import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import idel.domain.GroupMember
 import idel.domain.GroupMemberRepository
-import idel.domain.Repository
 import mu.KotlinLogging
 
 class GroupMemberCouchbaseRepository(cluster: Cluster, collection: Collection) :
@@ -18,7 +17,7 @@ class GroupMemberCouchbaseRepository(cluster: Cluster, collection: Collection) :
      * Very effective performance based on key calculation and [Collection.exists].
      */
     override fun isMember(groupId: String, userId: String): Either<Exception, Boolean> {
-        return safelyLoad("[groupId = $groupId  userId =$userId]") {
+        return safelyKeyOperation("[groupId = $groupId  userId =$userId]") {
             val groupMemberId = GroupMember.calculateId(groupId, userId)
             collection.exists(groupMemberId).exists()
         }
@@ -28,7 +27,7 @@ class GroupMemberCouchbaseRepository(cluster: Cluster, collection: Collection) :
      * Very effective performance based on key calculation and [Collection.get].
      */
     override fun load(groupId: String, userId: String): Either<Exception, GroupMember> {
-        return safelyLoad("[groupId = $groupId, userId = $userId]") {
+        return safelyKeyOperation("[groupId = $groupId, userId = $userId]") {
             val groupMemberId = GroupMember.calculateId(groupId, userId)
             val result = collection.get(groupMemberId, getOptions())
             result.contentAs(typedClass)
@@ -36,7 +35,7 @@ class GroupMemberCouchbaseRepository(cluster: Cluster, collection: Collection) :
     }
 
     override fun removeFromGroup(groupId: String, userId: String): Either<Exception, Unit> {
-        return safelyLoad("[groupId = $groupId, userId = $userId") {
+        return safelyKeyOperation("[groupId = $groupId, userId = $userId") {
             val groupMemberId = GroupMember.calculateId(groupId, userId)
             collection.remove(groupMemberId)
         }

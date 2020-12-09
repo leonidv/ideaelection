@@ -1,10 +1,11 @@
 package idel.infrastructure.repositories
 
 import arrow.core.Either
+import arrow.core.extensions.either.monad.flatten
+import arrow.core.flatMap
 import com.couchbase.client.core.error.CasMismatchException
 import com.couchbase.client.core.error.DocumentExistsException
 import com.couchbase.client.core.error.DocumentNotFoundException
-import com.couchbase.client.core.msg.kv.DurabilityLevel
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.codec.JsonTranscoder
@@ -21,10 +22,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
-import idel.domain.EntityAlreadyExists
-import idel.domain.Repository
-import idel.domain.EntityNotFound
-import idel.domain.Identifiable
+import idel.domain.*
 import mu.KLogger
 import java.time.Duration
 import java.time.LocalDateTime
@@ -43,7 +41,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         protected val collection: Collection,
         protected val type: String,
         protected val typedClass: Class<T>
-) {
+) : BaseRepository<T> {
 
     abstract val log: KLogger
 
@@ -81,7 +79,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
 
     }
 
-    protected fun <T> safelyLoad(id: String, action: () -> T): Either<Exception, T> {
+    protected fun <T> safelyKeyOperation(id: String, action: () -> T): Either<Exception, T> {
         return try {
             Either.right(action())
         } catch (e: DocumentNotFoundException) {
@@ -93,9 +91,10 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         }
     }
 
-    protected fun <T> safely(action: () -> Either<Exception,T>): Either<Exception, T> {
+    protected fun <T> safely(action: () -> Either<Exception, T>): Either<Exception, T> {
         return try {
             return action();
+
         } catch (e: Exception) {
             Either.left(e)
         }
@@ -134,7 +133,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     /**
      * Replace entity by id with mutation.
      */
-    protected fun safelyReplace(id: String, maxAttempts: Int = 3, mutation: (entity: T) -> T): Either<Exception, T> {
+    override fun mutate(id: String, maxAttempts: Int, mutation: (entity: T) -> T): Either<Exception, T> {
         lateinit var canUpdate: Either<Exception, T>
         var attempts = 0
 
@@ -160,11 +159,37 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         return canUpdate
     }
 
+    override fun possibleMutate(id: String, maxAttempts: Int, mutation: (entity: T) -> Either<Exception, T>): Either<Exception, T> {
+        lateinit var eUpdatedEntity: Either<Exception, T>
+        var attempts = 0
+
+        do {
+            eUpdatedEntity = safelyKeyOperation(id) {
+                val getResult = collection.get(id, getOptions())
+                val originEntity = getResult.contentAs(typedClass)
+                val replaceOptions = replaceOptions().cas(getResult.cas())
+
+                mutation(originEntity).flatMap {newEntity: T ->
+                    try {
+                        collection.replace(id, newEntity, replaceOptions)
+                        Either.right(newEntity)
+                    } catch (e: CasMismatchException) {
+                        Either.left(e)
+                    }
+                }
+            }.flatten()
+
+            val casError = (eUpdatedEntity is Either.Left) && (eUpdatedEntity.a is CasMismatchException)
+
+        } while (attempts >= maxAttempts && casError)
+        return eUpdatedEntity
+    }
+
     /**
      * Add entity to collection
      */
-    open fun add(entity: T): Either<Exception, T> {
-        return safelyLoad(entity.id) {
+    override fun add(entity: T): Either<Exception, T> {
+        return safelyKeyOperation(entity.id) {
             collection.insert(entity.id, entity, insertOptions())
             entity
         }
@@ -173,8 +198,8 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     /**
      * Load entity by id.
      */
-    open fun load(id: String): Either<Exception, T> {
-        return safelyLoad(id) {
+    override fun load(id: String): Either<Exception, T> {
+        return safelyKeyOperation(id) {
             val result = collection.get(id, getOptions())
             val entity = result.contentAs(typedClass)
             entity
@@ -184,8 +209,8 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     /**
      * Check exists entity or not without loading full document.
      */
-    open fun exists(id: String): Either<Exception, Boolean> {
-        return safelyLoad(id) {
+    override fun exists(id: String): Either<Exception, Boolean> {
+        return safelyKeyOperation(id) {
             collection.exists(id).exists()
         }
     }
@@ -194,7 +219,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
      * Remove entity from collection.
      */
     open fun remove(id: String): Either<Exception, Unit> {
-        return safelyLoad(id) {
+        return safelyKeyOperation(id) {
             collection.remove(id)
             Unit
         }
@@ -205,7 +230,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
      * Replace object without CAS checking.
      */
     open fun replace(entity: T): Either<Exception, T> {
-        return safelyLoad(entity.id) {
+        return safelyKeyOperation(entity.id) {
             collection.replace(entity.id, entity, replaceOptions())
             entity
         }

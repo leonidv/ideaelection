@@ -77,6 +77,7 @@ class GroupSecurity(
 }
 
 typealias IdeaAction<T> = (group: Group, idea: Idea) -> Either<Exception, T>
+typealias IdeaActionWithLevels<T> = (group: Group, idea: Idea, levels : Set<IdeaAccessLevel>) -> Either<Exception, T>
 
 class IdeaSecurity(private val securityService: SecurityService,
                    private val groupRepository: GroupRepository,
@@ -85,15 +86,14 @@ class IdeaSecurity(private val securityService: SecurityService,
 
 
     fun <T> secure(
-            groupId: String,
             ideaId: String,
             user: IdelOAuth2User,
             requiredLevels: Set<IdeaAccessLevel>,
             action: IdeaAction<T>
     ): EntityOrError<T> {
         val result: Either<Exception, Either<Exception, T>> = Either.fx {
-            val (group) = groupRepository.load(groupId)
             val (idea) = ideaRepository.load(ideaId)
+            val (group) = groupRepository.load(idea.groupId)
             val (levels) = securityService.ideaAccessLevels(group, idea, user)
             if (levels.intersect(requiredLevels).isNotEmpty()) {
                 action(group, idea)
@@ -104,5 +104,25 @@ class IdeaSecurity(private val securityService: SecurityService,
 
         return DataOrError.fromEither(result.flatten(), controllerLog)
     }
+
+    fun <T> withLevels(ideaId: String, user: IdelOAuth2User, action: IdeaActionWithLevels<T>) : EntityOrError<T> {
+        val result: Either<Exception, Either<Exception, T>> = Either.fx {
+            val (idea) = ideaRepository.load(ideaId)
+            val (group) = groupRepository.load(idea.groupId)
+            val (levels) = securityService.ideaAccessLevels(group, idea, user)
+            action(group, idea, levels)
+        }
+
+        return DataOrError.fromEither(result.flatten(), controllerLog)
+    }
+
+    fun <T> asMember(ideaId: String, user: IdelOAuth2User, action: IdeaAction<T>): EntityOrError<T> {
+        return secure(ideaId, user, setOf(IdeaAccessLevel.GROUP_MEMBER), action)
+    }
+
+    fun <T> asEditor(ideaId: String, user: IdelOAuth2User, action: IdeaAction<T>): EntityOrError<T> {
+        return secure(ideaId, user, setOf(IdeaAccessLevel.ASSIGNEE, IdeaAccessLevel.AUTHOR), action)
+    }
+
 }
 

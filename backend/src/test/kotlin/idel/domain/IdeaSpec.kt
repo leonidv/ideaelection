@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 
 data class IdeaInfoValues(
         override val groupId: String,
-        override val title: String,
+        override val summary: String,
         override val description: String,
         override val link: String,
 ) : IIdeaEditableProperties
@@ -37,7 +37,7 @@ class TestUser(
 fun ideaInfo(title: String = "t", groupId: String = "g", description: String = "d", link: String = "l"): IIdeaEditableProperties {
     return IdeaInfoValues(
             groupId = groupId,
-            title = title,
+            summary = title,
             description = description,
             link = link
     )
@@ -51,7 +51,7 @@ class IdeaSpec : DescribeSpec({
             val idea = factory.createIdea(ideaInfo(),"v")
 
             it("has title [t]") {
-                assertThat(idea.title).isEqualTo("t")
+                assertThat(idea.summary).isEqualTo("t")
             }
 
             it("has description [d]") {
@@ -87,7 +87,7 @@ class IdeaSpec : DescribeSpec({
             val originIdea = Idea(
                 id = "1",
                 groupId = "g",
-                title = "t",
+                summary = "t",
                 description = "d",
                 link = "l",
                 assignee = "userA",
@@ -110,7 +110,7 @@ class IdeaSpec : DescribeSpec({
                 }
 
                 it("origin idea title is not changed (title is [t])") {
-                    assertThat(originIdea.title).isEqualTo("t")
+                    assertThat(originIdea.summary).isEqualTo("t")
                 }
 
                 it("new idea description is [new description]") {
