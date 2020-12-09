@@ -22,7 +22,7 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
                admins: Set<String> = setOf("$username@httpbasic")): HttpResponse<JsonNode> {
         val body = """
             {
-                "title": "$title",
+                "name": "$title",
                 "description": "$description",
                 "logo": "data:image/png;base64,dGVzdA==",
                 "entryMode" : "$entryMode",
@@ -32,7 +32,7 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
 
         log.trace {"GroupsApi.add body = $body"}
 
-        return post(body)
+        return post("",body)
     }
 
     /**

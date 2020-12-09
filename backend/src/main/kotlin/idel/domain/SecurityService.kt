@@ -138,9 +138,7 @@ class SecurityService(
                 when {
                     groupAccessLevels.contains(GroupAccessLevel.NOT_MEMBER) -> IDEA_LEVELS_FOR_NOT_GROUP_MEMBER
 
-                    // group admin can do anything in group
                     groupAccessLevels.contains(GroupAccessLevel.ADMIN) -> IDEA_LEVELS_FOR_GROUP_ADMIN
-
 
                     groupAccessLevels.contains(GroupAccessLevel.MEMBER) -> {
                         val levels = IDEA_LEVELS_FOR_MEMBER.toMutableSet()
@@ -160,6 +158,7 @@ class SecurityService(
             }
         }
     }
+
 
     fun groupMemberAccessLevels(groupMember: GroupMember, group: Group, user: User): Either<Exception, Set<GroupMemberAccessLevel>> {
         return if (groupMember.userId == user.id) {

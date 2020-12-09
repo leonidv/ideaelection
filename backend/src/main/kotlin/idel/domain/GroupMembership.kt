@@ -152,9 +152,9 @@ class GroupMembershipService(
 
     private fun loadEntities(groupId: String, userId: UserId): Either<Exception, Entities> {
         return Either.fx {
-            val (entryMode) = groupRepository.loadEntryMode(groupId)
+            val (group) = groupRepository.load(groupId)
             val (user) = userRepository.load(userId)
-            Entities(entryMode, user)
+            Entities(group.entryMode, user)
         }
     }
 

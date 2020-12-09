@@ -1,8 +1,6 @@
 package idel.infrastructure.repositories
 
 import arrow.core.Either
-import arrow.core.Left
-import arrow.core.Some
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.json.JsonObject
@@ -45,7 +43,7 @@ class UserCouchbaseRepository(
 
 
     override fun update(user: User): Either<Exception, User> {
-        return safelyReplace(user.id) {PersistsUser.of(user)}
+        return mutate(user.id) {PersistsUser.of(user)}
     }
 
     override fun load(first: Int, last: Int): List<User> {

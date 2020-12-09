@@ -1,17 +1,16 @@
 package idel.tests.infrastructure
 
 import com.fasterxml.jackson.databind.JsonNode
-import idel.tests.infrastructure.JsonNodeExtensions.queryString
-import idel.tests.isData
-import idel.tests.statusIs
+import idel.tests.shouldBeData
+import idel.tests.shouldHasStatus
 import io.kotest.assertions.asClue
 import java.net.http.HttpResponse
 
 suspend fun extractData(response: HttpResponse<JsonNode>): JsonNode {
 
     "basic checks failed, tests are skipped".asClue {
-        response.statusIs(200)
-        response.isData()
+        response.shouldHasStatus(200)
+        response.shouldBeData()
     }
 
     return response.body().get("data")

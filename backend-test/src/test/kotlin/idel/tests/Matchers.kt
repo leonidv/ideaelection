@@ -82,34 +82,34 @@ object ResponseMatchers {
 /**
  * Check code status.
  */
-fun <T> HttpResponse<T>.statusIs(code: Int) = this should ResponseMatchers.hasStatus(code)
+fun <T> HttpResponse<T>.shouldHasStatus(code: Int) = this should ResponseMatchers.hasStatus(code)
 
-fun <T> HttpResponse<T>.isOk() = this should ResponseMatchers.hasStatus(200)
+fun <T> HttpResponse<T>.shouldBeOk() = this should ResponseMatchers.hasStatus(200)
 
 /**
  * Check that body contains data section.
  */
-fun HttpResponse<JsonNode>.isData() = this should ResponseMatchers.hasDataPayload()
+fun HttpResponse<JsonNode>.shouldBeData() = this should ResponseMatchers.hasDataPayload()
 
 /**
  * Check that body contains error section with specific code.
  */
-fun HttpResponse<JsonNode>.isError(code: Int) = this should ResponseMatchers.hasError(code)
+fun HttpResponse<JsonNode>.shouldBeError(code: Int) = this should ResponseMatchers.hasError(code)
 
 /*
  * Check that json contains specific value.
  */
-fun JsonNode.containsPath(jsonPath: String) = this should ResponseMatchers.hasJsonPath(jsonPath)
+fun JsonNode.shouldHasPath(jsonPath: String) = this should ResponseMatchers.hasJsonPath(jsonPath)
 
 /**
  * Check that json contains path.
  */
-fun JsonNode.containsString(jsonPath: String, value : String) = this should ResponseMatchers.hasStringValue(jsonPath, value)
+fun JsonNode.shouldContains(jsonPath: String, value : String) = this should ResponseMatchers.hasStringValue(jsonPath, value)
 
 /**
  * Check that json contains int.
  */
-fun JsonNode.containsInt(jsonPath: String, value : Int) = this should ResponseMatchers.hasIntValue(jsonPath, value)
+fun JsonNode.shouldContains(jsonPath: String, value : Int) = this should ResponseMatchers.hasIntValue(jsonPath, value)
 
 
 

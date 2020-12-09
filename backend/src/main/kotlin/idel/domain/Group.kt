@@ -17,14 +17,14 @@ import java.time.LocalDateTime
  * See properties documentation in the [Group] class.
  */
 interface IGroupEditableProperties {
-    val title: String
+    val name: String
     val description: String
     val entryMode: GroupEntryMode
     val logo: String
 }
 
 class GroupEditableProperties(
-        override val title: String,
+        override val name: String,
         override val description: String,
         override val entryMode: GroupEntryMode,
         override val logo: String
@@ -73,7 +73,7 @@ class Group(
         /**
          * Name of group.
          */
-        override val title: String,
+        override val name: String,
 
         /**
          * Short description of group.
@@ -96,6 +96,7 @@ class Group(
         val administrators: List<UserInfo>,
 
         ) : IGroupEditableProperties, Identifiable {
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -113,7 +114,7 @@ class Group(
 
     override fun toString(): String {
         return "Group(id='" + id +
-                "', ctime=" + ctime + ", creator=" + creator + ", title='" + title + "', description='" + description +
+                "', ctime=" + ctime + ", creator=" + creator + ", name='" + name + "', description='" + description +
                 "', logo='" + logo + "', entryMode=" + entryMode + ", administrators=" + administrators + ")"
     }
 
@@ -130,7 +131,7 @@ class GroupValidation {
 
 
         val propertiesValidation = Validation<IGroupEditableProperties> {
-            IGroupEditableProperties::title {
+            IGroupEditableProperties::name {
                 minLength(3)
                 maxLength(255)
             }
@@ -163,7 +164,7 @@ class GroupFactory {
                         id = generateId(),
                         ctime = LocalDateTime.now(),
                         creator = creator,
-                        title = properties.title,
+                        name = properties.name,
                         description = properties.description,
                         logo = properties.logo,
                         entryMode = properties.entryMode,
@@ -194,12 +195,6 @@ interface GroupRepository {
     fun add(entity: Group): Either<Exception, Group>
 
     fun load(id: String): Either<Exception, Group>
-
-    /**
-     *  Case-specific function. Used for adding members to group. It allows dont' load full group with all members from
-     *  database.
-     */
-    fun loadEntryMode(id: String): Either<Exception, GroupEntryMode>
 
     fun replace(entity: Group): Either<Exception, Group>
 

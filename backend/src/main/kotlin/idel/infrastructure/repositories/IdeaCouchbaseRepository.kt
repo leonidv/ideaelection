@@ -1,6 +1,7 @@
 package idel.infrastructure.repositories
 
 import arrow.core.Either
+import arrow.core.flatMap
 import com.couchbase.client.core.error.CasMismatchException
 import com.couchbase.client.core.error.DecodingFailureException
 import com.couchbase.client.core.error.DocumentNotFoundException
@@ -9,7 +10,6 @@ import com.couchbase.client.java.Collection
 import com.couchbase.client.java.codec.*
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.kv.GetOptions
-import com.couchbase.client.java.kv.ReplaceOptions
 import com.couchbase.client.java.query.QueryOptions
 import idel.domain.*
 import mu.KotlinLogging
@@ -32,37 +32,7 @@ class IdeaCouchbaseRepository(
 ) : AbstractTypedCouchbaseRepository<Idea>(cluster, collection, "idea", Idea::class.java), IdeaRepository {
 
     override val log = KotlinLogging.logger {}
-    /**
-     * Update idea's information.
-     *
-     * Return Left(Nothing) if 3 attempts of updating is not working.
-     */
-    override fun updateInfo(id: String, info: IIdeaEditableProperties): Either<Exception, Idea> {
-        return safelyReplace(id) {
-            it.update(
-                    title = info.title,
-                    description = info.description,
-                    link = info.link
-            )
-        }
-    }
 
-    override fun replace(ideaWithVersion: IdeaWithVersion): Either<IdeaWithVersion, Unit> {
-        val (idea, version) = ideaWithVersion
-
-        val options =
-                ReplaceOptions
-                    .replaceOptions()
-                    .transcoder(transcoder)
-                    .cas(version)
-        return try {
-            collection.replace(idea.id, idea, options)
-            Either.right(Unit)
-        } catch (ex: CasMismatchException) {
-            val currentIdeaWithVersion = loadWithVersion(idea.id)
-            Either.left(currentIdeaWithVersion.get())
-        }
-    }
 
     override fun loadWithVersion(
             first: Int,

@@ -3,11 +3,11 @@ package idel.tests.spec
 import idel.tests.apiobject.GroupsApi
 import idel.tests.apiobject.JoinRequestsApi
 import idel.tests.apiobject.User
-import idel.tests.containsPath
-import idel.tests.containsString
+import idel.tests.shouldHasPath
+import idel.tests.shouldContains
 import idel.tests.infrastructure.extractData
 import idel.tests.infrastructure.extractId
-import idel.tests.isError
+import idel.tests.shouldBeError
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.data.forAll
@@ -24,7 +24,7 @@ class JoinRequestsSpec : DescribeSpec({
             val response = userA.joinRequests.create(UUID.randomUUID().toString())
 
             it("should be 105 error") {
-                response.isError(105)
+                response.shouldBeError(105)
             }
         }
     }
@@ -41,23 +41,23 @@ class JoinRequestsSpec : DescribeSpec({
 
                 data.toPrettyString().asClue {
                     it("has id") {
-                        data.containsPath("$.id")
+                        data.shouldHasPath("$.id")
                     }
 
                     it("has group from request") {
-                        data.containsString("$.groupId", groupId)
+                        data.shouldContains("$.groupId", groupId)
                     }
 
                     it("has user from request") {
-                        data.containsString("$.userId", userA.id)
+                        data.shouldContains("$.userId", userA.id)
                     }
 
                     it("has creation time") {
-                        data.containsPath("$.ctime")
+                        data.shouldHasPath("$.ctime")
                     }
 
                     it("is approved") {
-                        data.containsString("$.status", JoinRequestsApi.APPROVED)
+                        data.shouldContains("$.status", JoinRequestsApi.APPROVED)
                     }
 
                 }
@@ -79,7 +79,7 @@ class JoinRequestsSpec : DescribeSpec({
                         val data = extractData(createJoinRequestsResponse)
 
                         it("status is $status") {
-                            data.containsString("$.status",status)
+                            data.shouldContains("$.status",status)
                         }
                     }
                 }

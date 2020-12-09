@@ -31,19 +31,19 @@ class GroupsSpec : DescribeSpec({
                 val data = extractData(response)
                 data.toPrettyString().asClue {
                     it("has id") {
-                        data.containsPath("$.id")
+                        data.shouldHasPath("$.id")
                     }
 
                     it("has title from request") {
-                        data.containsString("$.title", "123")
+                        data.shouldContains("$.title", "123")
                     }
 
                     it("has description from request") {
-                        data.containsString("$.description", "234")
+                        data.shouldContains("$.description", "234")
                     }
 
                     it("has entry mode from request") {
-                        data.containsString("$.entryMode", GroupsApi.PUBLIC)
+                        data.shouldContains("$.entryMode", GroupsApi.PUBLIC)
                     }
 
                     it("has admins from request and creator") {
@@ -69,7 +69,7 @@ class GroupsSpec : DescribeSpec({
 
                     data.toPrettyString().asClue {
                         it("has entry mode $entryMode") {
-                            data.containsString("$.entryMode", entryMode)
+                            data.shouldContains("$.entryMode", entryMode)
                         }
                     }
                 }

@@ -9,4 +9,9 @@ class User(val name : String, val idelUrl : String = Idel.URL) {
     val joinRequests = JoinRequestsApi(name, idelUrl)
     val ideas = IdeasApi(name, idelUrl)
     val users = UserApi(name, idelUrl)
+    override fun toString(): String {
+        return "[$name]"
+    }
+
+
 }
