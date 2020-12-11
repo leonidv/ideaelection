@@ -12,6 +12,7 @@ import com.jayway.jsonpath.TypeRef
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider
+import com.jayway.jsonpath.spi.mapper.MappingException
 import idel.tests.infrastructure.JsonNodeExtensions.queryInt
 import java.lang.IllegalArgumentException
 import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
@@ -40,6 +41,8 @@ object JsonNodeExtensions {
         return try {
             val parsed = JsonPath.parse(this, conf)
             Option.fromNullable(parsed.read(jsonPath, stringTypeRef))
+        } catch (e: MappingException) {
+            Option.empty()
         } catch (e: PathNotFoundException) {
             Option.empty()
         }
@@ -51,6 +54,8 @@ object JsonNodeExtensions {
             val parsed = JsonPath.parse(this, conf)
             val list = parsed.read(jsonPath, listStringTypeRef)
             Option.fromNullable(list)
+        } catch (e: MappingException) {
+            Option.empty()
         } catch (e: PathNotFoundException) {
             Option.empty()
         }

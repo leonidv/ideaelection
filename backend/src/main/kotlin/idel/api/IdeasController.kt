@@ -1,6 +1,8 @@
 package idel.api
 
 import arrow.core.Either
+import arrow.core.extensions.either.monad.flatten
+import arrow.core.extensions.fx
 import idel.domain.*
 import idel.infrastructure.security.IdelOAuth2User
 import mu.KotlinLogging
@@ -20,7 +22,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
 
     private val factory = IdeaFactory()
 
-    private val secure = apiSecurityFactory.create(log)
+    private val secure: ApiSecurity = apiSecurityFactory.create(log)
 
 
     class InitialProperties(
@@ -81,24 +83,34 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
         }
     }
 
-    data class Assignee(val userId : String)
+    data class Assignee(val userId: String)
 
     @PatchMapping("/{ideaId}/assignee")
     fun assign(@AuthenticationPrincipal user: IdelOAuth2User,
                @PathVariable ideaId: String,
                @RequestBody assignee: Assignee): EntityOrError<Idea> {
-        return secure.idea.withLevels(ideaId,user) {_, _, levels ->
-            ideaRepository.possibleMutate(ideaId) {idea ->
-                if (assignee.userId != NOT_ASSIGNED) {
-                    idea.assign(assignee.userId, levels)
+        return secure.idea.withLevels(ideaId, user) {group, _, levels ->
+            Either.fx<Exception, Either<Exception, Idea>> {
+                val removeAssignee = (assignee.userId == NOT_ASSIGNED)
+                if (removeAssignee) {
+                    ideaRepository.possibleMutate(ideaId) {idea ->
+                        idea.removeAssign(levels)
+                    }
                 } else {
-                    idea.removeAssign(levels)
+                    val (assigneeIsMember) = secure.group.isMember(group, assignee.userId)
+                    if (assigneeIsMember) {
+                        ideaRepository.possibleMutate(ideaId) {idea ->
+                            idea.assign(assignee.userId, levels)
+                        }
+                    } else {
+                        Either.left(OperationNotPermitted())
+                    }
                 }
-            }
+            }.flatten()
         }
     }
 
-    data class Implemented(val implemented : Boolean)
+    data class Implemented(val implemented: Boolean)
 
     @PatchMapping("/{ideaId}/implemented")
     fun markAsDone(
@@ -107,7 +119,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
             @RequestBody implemented: Implemented
     ): EntityOrError<Idea> {
         return secure.idea.withLevels(ideaId, user) {_, _, levels ->
-            ideaRepository.possibleMutate(ideaId) { idea ->
+            ideaRepository.possibleMutate(ideaId) {idea ->
                 idea.markAsDone(levels)
             }
         }

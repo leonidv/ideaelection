@@ -15,22 +15,12 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/groupmembers")
 class GroupMemberController(
         val groupMemberRepository: GroupMemberRepository,
-        groupRepository: GroupRepository,
-        securityService: SecurityService
+        val apiSecurityFactory: ApiSecurityFactory
 ) {
     private val log = KotlinLogging.logger {}
 
-    private val security = GroupMemberSecurity(
-            securityService,
-            groupRepository,
-            groupMemberRepository,
-            log)
+    private val security = apiSecurityFactory.create(log)
 
-    private val groupSecurity = GroupSecurity(
-            securityService,
-            groupRepository,
-            log
-    )
 
     private val userSecurity = UserSecurity(log)
 
@@ -38,7 +28,7 @@ class GroupMemberController(
 
     @DeleteMapping
     fun remove(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody request: KickRequest) : EntityOrError<String> {
-        return security.asAdminOrHimSelf(request.groupId, request.userId, user) {_, _ ->
+        return security.groupMember.asAdminOrHimSelf(request.groupId, request.userId, user) {_, _ ->
             val result = groupMemberRepository.removeFromGroup(request.groupId, request.userId)
             result.map {"ok"}
         }
