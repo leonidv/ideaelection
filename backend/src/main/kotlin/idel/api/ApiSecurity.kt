@@ -12,24 +12,27 @@ typealias GroupAction<T> = (group: Group) -> Either<Exception, T>
 
 class ApiSecurity(
         securityService: SecurityService,
+        userRepository: UserRepository,
         groupRepository: GroupRepository,
         ideaRepository: IdeaRepository,
         groupMemberRepository: GroupMemberRepository,
         controllerLog: KLogger
 ) {
     val user = UserSecurity(controllerLog)
-    val group = GroupSecurity(securityService, groupRepository, controllerLog)
+    val group = GroupSecurity(userRepository, securityService, groupRepository, controllerLog)
     val idea = IdeaSecurity(securityService, groupRepository, ideaRepository, controllerLog)
     val groupMember = GroupMemberSecurity(securityService, groupRepository, groupMemberRepository, controllerLog)
 }
 
 @Service
 class ApiSecurityFactory(private val securityService: SecurityService,
+                         private val userRepository: UserRepository,
                          private val groupRepository: GroupRepository,
                          private val ideaRepository: IdeaRepository,
                          private val groupMemberRepository: GroupMemberRepository) {
     fun create(controllerLog: KLogger) = ApiSecurity(
             securityService,
+            userRepository,
             groupRepository,
             ideaRepository,
             groupMemberRepository,
@@ -38,6 +41,7 @@ class ApiSecurityFactory(private val securityService: SecurityService,
 }
 
 class GroupSecurity(
+        private val userRepository: UserRepository,
         private val securityService: SecurityService,
         private val groupRepository: GroupRepository,
         private val controllerLog: KLogger
@@ -74,10 +78,21 @@ class GroupSecurity(
         return secure(groupId, user, adminLevel, action)
     }
 
+    /**
+     * Check that user is member of group.
+     */
+    fun isMember(group: Group, userId: String): Either<Exception, Boolean> {
+        return Either.fx<Exception, Boolean> {
+            val (user) = userRepository.load(userId)
+            val (levels) = securityService.groupAccessLevel(group, user)
+            levels.contains(GroupAccessLevel.MEMBER)
+        }
+    }
+
 }
 
 typealias IdeaAction<T> = (group: Group, idea: Idea) -> Either<Exception, T>
-typealias IdeaActionWithLevels<T> = (group: Group, idea: Idea, levels : Set<IdeaAccessLevel>) -> Either<Exception, T>
+typealias IdeaActionWithLevels<T> = (group: Group, idea: Idea, levels: Set<IdeaAccessLevel>) -> Either<Exception, T>
 
 class IdeaSecurity(private val securityService: SecurityService,
                    private val groupRepository: GroupRepository,
@@ -105,7 +120,7 @@ class IdeaSecurity(private val securityService: SecurityService,
         return DataOrError.fromEither(result.flatten(), controllerLog)
     }
 
-    fun <T> withLevels(ideaId: String, user: IdelOAuth2User, action: IdeaActionWithLevels<T>) : EntityOrError<T> {
+    fun <T> withLevels(ideaId: String, user: IdelOAuth2User, action: IdeaActionWithLevels<T>): EntityOrError<T> {
         val result: Either<Exception, Either<Exception, T>> = Either.fx {
             val (idea) = ideaRepository.load(ideaId)
             val (group) = groupRepository.load(idea.groupId)

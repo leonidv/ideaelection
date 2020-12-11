@@ -106,7 +106,6 @@ class SecurityService(
     fun isSuperUser(user: User): Boolean {
         return user.roles.contains(Roles.SUPER_USER)
     }
-
     /**
      * Calculate group access level.
      */
