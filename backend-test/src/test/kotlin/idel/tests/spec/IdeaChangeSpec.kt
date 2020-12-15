@@ -1,9 +1,7 @@
 package idel.tests.spec
 
 import arrow.core.Some
-import idel.tests.apiobject.Couchbase
-import idel.tests.apiobject.GroupsApi
-import idel.tests.apiobject.User
+import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
 import idel.tests.shouldBeOk
@@ -78,7 +76,7 @@ class IdeaChangeSpec : DescribeSpec({
         describe("$userC assign idea himself (idea is yet not assigned)") {
             checkIsOk(
                     userC.ideas.assign(ideaId, userC),
-                    checkAssignee(userC))
+                    ideaAssigneeIs(userC))
         }
 
         context("idea is assigned to $userC") {
@@ -100,7 +98,7 @@ class IdeaChangeSpec : DescribeSpec({
         describe("$userA (group admin) can change assignee to $userB") {
             checkIsOk(
                     userA.ideas.assign(ideaId, userB),
-                    checkAssignee(userB))
+                    ideaAssigneeIs(userB))
         }
 
 
@@ -118,7 +116,7 @@ class IdeaChangeSpec : DescribeSpec({
         describe("$userA (group admin) can remove assignee") {
             checkIsOk(
                     userA.ideas.removeAssignee(ideaId),
-                    checkNotAssigned())
+                    ideaNotAssigned())
         }
 
     }

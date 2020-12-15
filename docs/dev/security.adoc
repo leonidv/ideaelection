@@ -75,6 +75,7 @@ Only a user himself can remove his vote for an idea. It is not a security logic,
 | Remove assignee        | Group admin, Assignee
 | Change assignee        | Group admin
 | Mark as done           | Group admin, Assignee
+| Mark as unimplemented  | Group admin, Assignee
 
 | Delete idea without votes
 | Group admin, Author

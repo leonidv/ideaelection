@@ -1,23 +1,18 @@
 package idel.tests.scenario
 
 import arrow.core.Some
-import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.*
 import idel.tests.apiobject.Couchbase
 import idel.tests.apiobject.GroupsApi
 import idel.tests.apiobject.JoinRequestsApi
 import idel.tests.apiobject.User
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
-import idel.tests.infrastructure.checkAssignee
 import idel.tests.infrastructure.checkIsForbidden
 import idel.tests.infrastructure.checkIsOk
-import idel.tests.infrastructure.checkNotAssigned
 import io.kotest.assertions.arrow.option.shouldNotBeNone
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.DescribeSpec
-import io.kotest.core.spec.style.scopes.DescribeScope
 import java.net.HttpURLConnection
-import java.net.http.HttpResponse
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
