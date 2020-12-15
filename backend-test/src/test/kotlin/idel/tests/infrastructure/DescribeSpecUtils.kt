@@ -2,20 +2,12 @@ package idel.tests.infrastructure
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.*
-import idel.tests.apiobject.JoinRequestsApi
-import idel.tests.apiobject.User
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.scopes.DescribeScope
 import java.net.HttpURLConnection
 import java.net.http.HttpResponse
 
 class BodyFieldCheck(val testName: String, val jsonPath: String, val expectedValue: String)
-
-fun checkAssignee(user: User) = BodyFieldCheck("assignee is $user", "$.data.assignee", user.id)
-
-fun checkNotAssigned() = BodyFieldCheck("idea is not assigned", "$.data.assignee", "")
-
-fun checkJoinRequestIsApproved() = BodyFieldCheck("join request is approved", "$.data.status", JoinRequestsApi.APPROVED)
 
 suspend fun DescribeScope.checkIsOk(response: HttpResponse<JsonNode>, vararg fieldChecks: BodyFieldCheck) {
     it("response is 200 OK with data") {

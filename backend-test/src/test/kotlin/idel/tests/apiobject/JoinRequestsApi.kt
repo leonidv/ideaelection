@@ -2,6 +2,7 @@ package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
+import idel.tests.infrastructure.BodyFieldCheck
 import idel.tests.infrastructure.IdelHttpAuthenticator
 import idel.tests.infrastructure.ofJson
 import mu.KotlinLogging
@@ -49,3 +50,5 @@ class JoinRequestsApi(val username : String, val idelUrl : String = Idel.URL) {
         return client.send(request, ofJson())!!
     }
 }
+
+fun checkJoinRequestIsApproved() = BodyFieldCheck("join request is approved", "$.data.status", JoinRequestsApi.APPROVED)

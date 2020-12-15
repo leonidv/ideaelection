@@ -1,16 +1,11 @@
 package idel.tests.spec
 
 import arrow.core.Some
-import idel.tests.apiobject.Couchbase
-import idel.tests.apiobject.GroupsApi
-import idel.tests.apiobject.User
+import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
 import idel.tests.shouldBeOk
 import io.kotest.core.spec.style.DescribeSpec
-import io.kotest.data.headers
-import io.kotest.data.row
-import io.kotest.data.table
 
 class IdeaAssigneeSpec : DescribeSpec({
     val couchbase = Couchbase()
@@ -73,7 +68,7 @@ class IdeaAssigneeSpec : DescribeSpec({
         describe("$userC assign idea himself (idea is yet not assigned)") {
             checkIsOk(
                     userC.ideas.assign(ideaId, userC),
-                    checkAssignee(userC))
+                    ideaAssigneeIs(userC))
         }
 
         context("idea is assigned to $userC") {
@@ -100,7 +95,7 @@ class IdeaAssigneeSpec : DescribeSpec({
         describe("$userA (group admin) change assignee to $userB") {
             checkIsOk(
                     userA.ideas.assign(ideaId, userB),
-                    checkAssignee(userB))
+                    ideaAssigneeIs(userB))
         }
 
 
@@ -112,7 +107,7 @@ class IdeaAssigneeSpec : DescribeSpec({
             describe("$userB can deny to implement idea (remove himself as assignee)") {
                 checkIsOk(
                         userB.ideas.removeAssignee(ideaId),
-                        checkNotAssigned()
+                        ideaNotAssigned()
                 )
             }
         }
@@ -120,21 +115,21 @@ class IdeaAssigneeSpec : DescribeSpec({
         describe("$userA (admin) assign idea to $userB") {
             checkIsOk(
                     userA.ideas.assign(ideaId, userB),
-                    checkAssignee(userB)
+                    ideaAssigneeIs(userB)
             )
         }
 
         describe("$userA (admin) change assignee to $userC") {
             checkIsOk(
                     userA.ideas.assign(ideaId, userC),
-                    checkAssignee(userC)
+                    ideaAssigneeIs(userC)
             )
         }
 
         describe("$userA (admin) can remove assignee") {
             checkIsOk(
                     userA.ideas.removeAssignee(ideaId),
-                    checkNotAssigned())
+                    ideaNotAssigned())
         }
 
     }

@@ -71,7 +71,7 @@ class Idea(
         val assignee: String,
 
         /**
-         * Idea is implemented. And it is very cool!
+         * Idea is done. And it is very cool!
          */
         val implemented: Boolean,
 
@@ -178,7 +178,7 @@ class Idea(
         return this.assignee != NOT_ASSIGNED
     }
 
-    fun markAsDone(changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
+    fun implement(changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
         return if (isAdmin(changerLevels) || isAssignee(changerLevels)) {
             Either.right(this.clone(implemented = true))
         } else {
@@ -186,8 +186,8 @@ class Idea(
         }
     }
 
-    fun markAsNotDone(changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
-        return if (isAdmin(changerLevels)) {
+    fun notImplement(changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
+        return if (isAdmin(changerLevels) || isAssignee(changerLevels)) {
             Either.right(this.clone(implemented = false))
         } else {
             Either.left(OperationNotPermitted())

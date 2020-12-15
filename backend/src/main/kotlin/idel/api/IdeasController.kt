@@ -113,29 +113,21 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     data class Implemented(val implemented: Boolean)
 
     @PatchMapping("/{ideaId}/implemented")
-    fun markAsDone(
+    fun implemented(
             @AuthenticationPrincipal user: IdelOAuth2User,
             @PathVariable ideaId: String,
-            @RequestBody implemented: Implemented
+            @RequestBody body: Implemented
     ): EntityOrError<Idea> {
         return secure.idea.withLevels(ideaId, user) {_, _, levels ->
             ideaRepository.possibleMutate(ideaId) {idea ->
-                idea.markAsDone(levels)
+                if (body.implemented) {
+                    idea.implement(levels)
+                } else {
+                    idea.notImplement(levels)
+                }
             }
         }
     }
-
-    @DeleteMapping("/{ideaId}/implemented")
-    fun markAsUnimplemented(
-            @AuthenticationPrincipal user: IdelOAuth2User,
-            @PathVariable ideaId: String): EntityOrError<Idea> {
-        return secure.idea.withLevels(ideaId, user) {_, _, levels ->
-            ideaRepository.possibleMutate(ideaId) {idea ->
-                idea.markAsNotDone(levels)
-            }
-        }
-    }
-
 
     @GetMapping(
             path = [""],
