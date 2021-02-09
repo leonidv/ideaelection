@@ -155,7 +155,7 @@ class GroupFactory {
             properties: IGroupEditableProperties,
             administrators: List<UserInfo>
     ): Either<Invalid<IGroupEditableProperties>, Group> {
-        val validationResult = GroupValidation.propertiesValidation(properties)
+        val validationResult: ValidationResult<IGroupEditableProperties> = GroupValidation.propertiesValidation(properties)
 
         return when (validationResult) {
             is Invalid -> Either.left(validationResult)

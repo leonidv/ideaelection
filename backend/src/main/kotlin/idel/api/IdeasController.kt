@@ -36,8 +36,11 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     @PostMapping
     fun create(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody properties: InitialProperties): EntityOrError<Idea> {
         return secure.group.asMember(properties.groupId, user) {
-            val idea = factory.createIdea(properties, properties.groupId, user.id)
-            ideaRepository.add(idea)
+            Either.fx {
+                val (idea) = factory.createIdea(properties, properties.groupId, user.id)
+                ideaRepository.add(idea)
+                idea
+            }
         }
     }
 

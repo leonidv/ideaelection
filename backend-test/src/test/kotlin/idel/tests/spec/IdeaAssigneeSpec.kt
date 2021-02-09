@@ -14,7 +14,7 @@ class IdeaAssigneeSpec : DescribeSpec({
     }
 
     context("userA is admin, userB is author, userC is member, userD is not member") {
-        val userAdmin = User("userAdmin")
+
         val userA = User("userA")
         val userB = User("userB")
         val userC = User("userC")
@@ -24,29 +24,9 @@ class IdeaAssigneeSpec : DescribeSpec({
         lateinit var ideaId: String
 
         describe("init") {
-            describe("register users") {
-                listOf(userA, userB, userC, userD).forEach {user ->
-                    it("register user [${user.name}]") {
-                        userAdmin.users.register(user.name).shouldBeOk()
-                    }
-                }
-            }
+            registryUsers(userA, userB, userC, userD)
 
-            describe("create public group and add userB, userC to it") {
-                val response = userA.groups.create("assignee spec group", GroupsApi.PUBLIC)
-
-                checkIsOk(response)
-
-                groupId = (response.body().dataId() as Some).t
-            }
-
-            describe("$userB join to group") {
-                checkIsOk(userB.joinRequests.create(groupId), checkJoinRequestIsApproved())
-            }
-
-            describe("$userC join to group") {
-                checkIsOk(userC.joinRequests.create(groupId), checkJoinRequestIsApproved())
-            }
+            groupId = initGroup(groupAdmin = userA, members = setOf(userB, userC))
 
             describe("$userB create an idea") {
                 val response = userB.ideas.add(groupId, summary = "idea for assignee spec")
@@ -67,8 +47,9 @@ class IdeaAssigneeSpec : DescribeSpec({
 
         describe("$userC assign idea himself (idea is yet not assigned)") {
             checkIsOk(
-                    userC.ideas.assign(ideaId, userC),
-                    ideaAssigneeIs(userC))
+                userC.ideas.assign(ideaId, userC),
+                ideaAssigneeIs(userC)
+            )
         }
 
         context("idea is assigned to $userC") {
@@ -94,8 +75,9 @@ class IdeaAssigneeSpec : DescribeSpec({
 
         describe("$userA (group admin) change assignee to $userB") {
             checkIsOk(
-                    userA.ideas.assign(ideaId, userB),
-                    ideaAssigneeIs(userB))
+                userA.ideas.assign(ideaId, userB),
+                ideaAssigneeIs(userB)
+            )
         }
 
 
@@ -106,30 +88,31 @@ class IdeaAssigneeSpec : DescribeSpec({
 
             describe("$userB can deny to implement idea (remove himself as assignee)") {
                 checkIsOk(
-                        userB.ideas.removeAssignee(ideaId),
-                        ideaNotAssigned()
+                    userB.ideas.removeAssignee(ideaId),
+                    ideaNotAssigned()
                 )
             }
         }
 
         describe("$userA (admin) assign idea to $userB") {
             checkIsOk(
-                    userA.ideas.assign(ideaId, userB),
-                    ideaAssigneeIs(userB)
+                userA.ideas.assign(ideaId, userB),
+                ideaAssigneeIs(userB)
             )
         }
 
         describe("$userA (admin) change assignee to $userC") {
             checkIsOk(
-                    userA.ideas.assign(ideaId, userC),
-                    ideaAssigneeIs(userC)
+                userA.ideas.assign(ideaId, userC),
+                ideaAssigneeIs(userC)
             )
         }
 
         describe("$userA (admin) can remove assignee") {
             checkIsOk(
-                    userA.ideas.removeAssignee(ideaId),
-                    ideaNotAssigned())
+                userA.ideas.removeAssignee(ideaId),
+                ideaNotAssigned()
+            )
         }
 
     }
