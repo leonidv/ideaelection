@@ -5,10 +5,7 @@ import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
 import com.couchbase.client.core.error.CouchbaseException
-import idel.domain.EntityAlreadyExists
-import idel.domain.EntityNotFound
-import idel.domain.OperationNotPermitted
-import idel.domain.generateId
+import idel.domain.*
 import io.konform.validation.Invalid
 import io.konform.validation.ValidationError
 import io.konform.validation.ValidationErrors
@@ -181,21 +178,15 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
          * Make [errorResponse] with collection of [ValidationError].
          */
         fun <T> invalid(errors: ValidationErrors): ResponseEntity<DataOrError<T>> {
-            return errorResponse(ErrorDescription.validationFailed("Properties is not valid", errors), HttpStatus.BAD_REQUEST)
+            return errorResponse(ErrorDescription.validationFailed("request has validation errors", errors), HttpStatus.BAD_REQUEST)
+        }
+
+        fun <T> invalid(errors: Collection<ValidationError>) : ResponseEntity<DataOrError<T>> {
+            return errorResponse(ErrorDescription.validationFailed("request has validation errors", errors), HttpStatus.BAD_REQUEST)
         }
 
         fun <T> conflict(ex : EntityAlreadyExists) : ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.conflict(ex), HttpStatus.CONFLICT)
-        }
-
-        /**
-         * Make response from ValidationErrors ([invalid]) of from Data ([ok]).
-         */
-        fun <T> fromValidation(operationResult: Either<Invalid<*>, T>): ResponseEntity<DataOrError<T>> {
-            return when (operationResult) {
-                is Either.Right -> ok(operationResult.b)
-                is Either.Left -> invalid(operationResult.a.errors)
-            }
         }
 
         /**
@@ -211,6 +202,7 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
                     is EntityNotFound -> notFound(ex)
                     is EntityAlreadyExists -> conflict(ex)
                     is OperationNotPermitted -> forbidden("operation is not permitted")
+                    is ValidationException -> invalid(ex.errors)
                     else -> internal(operationResult.a, log)
                 }
             }

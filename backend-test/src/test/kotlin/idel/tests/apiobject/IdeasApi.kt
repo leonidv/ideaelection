@@ -10,33 +10,59 @@ class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi
     /**
      * Add new idea.
      */
-    fun add(groupId: String,
-            summary: String = "Idea from test",
-            description: String = "description of $summary"): HttpResponse<JsonNode> {
+    fun add(
+        groupId: String,
+        summary: String = "Idea from test",
+        description: String = "description of $summary",
+        descriptionPlainText: String = description,
+        link: String = "http://somelink.io/$summary"
+    ): HttpResponse<JsonNode> {
         val body = """
             {
                 "groupId" : "$groupId",
                 "summary" : "$summary",
                 "description": "$description",
-                "descriptionPlainText": "$description",
-                "link": "http://somelink.io/$summary"
+                "descriptionPlainText": "$descriptionPlainText",
+                "link": "$link"
             }
         """.trimIndent()
 
         return post("", body)
     }
 
-    fun update(ideaId: String,
-               summary: String = "Edited title",
-               description: String = "edited description"): HttpResponse<JsonNode> {
+    /**
+     * Update idea by template. All field contains version. Use it for quick tests,
+     * when values of field are not important.
+     */
+    fun edit(
+        ideaId: String,
+        version: CharSequence
+    ): HttpResponse<JsonNode> {
+        return edit(
+            ideaId,
+            summary = "summary $version",
+            description = "description [b]$version[/b]",
+            descriptionPlainText = "description $version",
+            link = "http://somelink.io/$version"
+        )
+    }
+
+    fun edit(
+        ideaId: String,
+        summary: String,
+        description: String,
+        descriptionPlainText: String,
+        link: String
+    ): HttpResponse<JsonNode> {
         val body = """{
                 "summary" : "$summary",
                 "description": "$description",
-                "descriptionPlainText": "$description",
-                "link": "http://somelink.io/$summary"
+                "descriptionPlainText": "$descriptionPlainText",
+                "link": "$link"
             }""".trimMargin()
 
         return patch("/$ideaId", body)
+
     }
 
     fun load(ideaId: String): HttpResponse<JsonNode> {
@@ -76,7 +102,19 @@ class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi
     }
 }
 
+/**
+ * Fields checks
+ */
 fun ideaAssigneeIs(user: User) = BodyFieldCheck("assignee is $user", "$.data.assignee", user.id)
 fun ideaNotAssigned() = BodyFieldCheck("idea is not assigned", "$.data.assignee", "")
-val ideaIsImplemented = BodyFieldCheck("idea is implemented", "$.data.implemented","true")
+val ideaIsImplemented = BodyFieldCheck("idea is implemented", "$.data.implemented", "true")
 val ideaIsNotImplemented = BodyFieldCheck("idea is not implemented", "$.data.implemented", "false")
+fun ideaHasSummary(summary: String) = BodyFieldCheck("summary is [$summary]", "$.data.summary", summary)
+fun ideaHasDescription(description: String) =
+    BodyFieldCheck("description is [$description]", "$.data.description", description)
+
+fun ideaHasDescriptionPlainText(description: String) =
+    BodyFieldCheck("descriptionPlainText is [$description]", "$.data.descriptionPlainText", description)
+
+fun ideaHasLink(link: String) = BodyFieldCheck("link is [$link]", "$.data.link", link)
+

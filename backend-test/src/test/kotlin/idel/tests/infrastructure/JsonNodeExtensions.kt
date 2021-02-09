@@ -25,16 +25,30 @@ object JsonNodeExtensions {
         .mappingProvider(mappingProvider)
         .build()
 
+    private val listOfAny = object : TypeRef<List<Any>>() {}
     private val listStringTypeRef = object : TypeRef<List<String>>() {}
     private val setStringTypeRef = object : TypeRef<Set<String>>() {}
     private val stringTypeRef = object : TypeRef<String>(){}
     private val intTypeRef = object : TypeRef<Int>(){}
+    private val objectTypeRef = object : TypeRef<Object>(){}
 
     fun JsonNode.hasPath(jsonPath: String): Boolean {
         return this
             .queryString(jsonPath)
             .map {!it.isNullOrBlank()}
             .getOrElse {false}
+    }
+
+    fun JsonNode.hasArrayElement(arrayPath: String, elementKey : String, elementValue : String) : Boolean {
+        val jsonPath = """$arrayPath[?(@.$elementKey == "$elementValue")]"""
+        return try {
+            val parsed = JsonPath.parse(this, conf)
+            val data = parsed.read(jsonPath, listOfAny) as List<Any>
+            data.isNotEmpty()
+        } catch (e: PathNotFoundException) {
+            false
+        }
+
     }
 
     fun JsonNode.queryString(jsonPath: String): Option<String> {
@@ -59,8 +73,8 @@ object JsonNodeExtensions {
         } catch (e: PathNotFoundException) {
             Option.empty()
         }
-
     }
+
 
     fun JsonNode.querySet(jsonPath: String): Option<Set<String>> {
         return try {

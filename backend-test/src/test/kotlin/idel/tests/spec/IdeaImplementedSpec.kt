@@ -5,6 +5,8 @@ import idel.tests.apiobject.*
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
 import idel.tests.infrastructure.checkIsForbidden
 import idel.tests.infrastructure.checkIsOk
+import idel.tests.infrastructure.initGroup
+import idel.tests.infrastructure.registryUsers
 import idel.tests.shouldBeOk
 import io.kotest.core.spec.style.DescribeSpec
 
@@ -25,29 +27,11 @@ class IdeaImplementedSpec : DescribeSpec({
         lateinit var ideaId: String
 
         describe("init") {
-            describe("register users") {
-                listOf(userA, userB, userC, userD, userE).forEach {user ->
-                    it("register user [${user.name}]") {
-                        userAdmin.users.register(user.name).shouldBeOk()
-                    }
-                }
-            }
+            registryUsers(userA, userB, userC, userD, userE)
 
-            describe("$userA creates the public group and $userB, $userC, $userE join to it") {
-                val response = userA.groups.create("assignee spec group", GroupsApi.PUBLIC)
+            groupId = initGroup(userA, setOf(userB, userC, userE))
 
-                checkIsOk(response)
-
-                groupId = (response.body().dataId() as Some).t
-            }
-
-            listOf(userB, userC, userE).forEach {user ->
-                describe("$user join to group") {
-                    checkIsOk(user.joinRequests.create(groupId), checkJoinRequestIsApproved())
-                }
-            }
-
-            describe("$userB create an idea, by default idea is not done") {
+            describe("$userB create an idea, by default idea is not implemented") {
                 val response = userB.ideas.add(groupId, summary = "idea for assignee spec")
                 checkIsOk(response, ideaIsNotImplemented)
                 ideaId = (response.body().dataId() as Some).t
@@ -60,36 +44,36 @@ class IdeaImplementedSpec : DescribeSpec({
 
 
         listOf(userB, userC, userD).forEach {user ->
-            describe("$user can't mark as done idea, which is assigned to another user") {
+            describe("$user can't mark as implemented idea, which is assigned to another user") {
                 checkIsForbidden(user.ideas.implemented(ideaId))
             }
         }
 
-        describe("$userE (assignee) mark as done") {
+        describe("$userE (assignee) mark as implemented") {
             checkIsOk(
-                    userE.ideas.implementedg(ideaId),
+                    userE.ideas.implemented(ideaId),
                     ideaIsImplemented)
         }
 
         listOf(userB, userC, userD).forEach {user ->
-            describe("$user can't mark as not done") {
+            describe("$user can't mark as not implemented") {
                 checkIsForbidden(user.ideas.notImplemented(ideaId))
             }
         }
 
-        describe("$userE (assignee) can mark as not done") {
+        describe("$userE (assignee) can mark as not implemented") {
             checkIsOk(
                     userE.ideas.notImplemented(ideaId),
                     ideaIsNotImplemented)
         }
 
-        describe("$userA (group admin) can mark as done") {
+        describe("$userA (group admin) can mark as implemented") {
             checkIsOk(
                     userA.ideas.implemented(ideaId),
                     ideaIsImplemented)
         }
 
-        describe("$userA (group admin) can mark as not done") {
+        describe("$userA (group admin) can mark as not implemented") {
             checkIsOk(
                     userA.ideas.notImplemented(ideaId),
                     ideaIsNotImplemented

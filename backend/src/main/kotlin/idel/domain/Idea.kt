@@ -1,6 +1,12 @@
 package idel.domain
 
 import arrow.core.*
+import io.konform.validation.Validation
+import io.konform.validation.ValidationResult
+import io.konform.validation.Invalid
+import io.konform.validation.Valid
+import io.konform.validation.jsonschema.maxLength
+import io.konform.validation.jsonschema.minLength
 import java.time.LocalDateTime
 import java.util.*
 
@@ -15,10 +21,10 @@ interface IIdeaEditableProperties {
 }
 
 class IdeaEditableProperties(
-        override var summary: String,
-        override var description: String,
-        override val descriptionPlainText: String,
-        override var link: String
+    override var summary: String,
+    override var description: String,
+    override val descriptionPlainText: String,
+    override var link: String
 ) : IIdeaEditableProperties
 
 /**
@@ -32,66 +38,66 @@ const val NOT_ASSIGNED: String = ""
  *  Don't use this constructor directly, instead call [IdeaFactory.createIdea]
  */
 class Idea(
-        /**
-         * Generated identifier
-         */
-        override val id: String,
+    /**
+     * Generated identifier
+     */
+    override val id: String,
 
-        /**
-         * Idea's group.
-         */
-        val groupId: String,
+    /**
+     * Idea's group.
+     */
+    val groupId: String,
 
-        /**
-         * Time of creation.
-         */
-        val ctime: LocalDateTime,
+    /**
+     * Time of creation.
+     */
+    val ctime: LocalDateTime,
 
-        /**
-         * Title of idea
-         */
-        override val summary: String,
-        /**
-         * Description of a idea in markup language.
-         */
-        override val description: String,
+    /**
+     * Title of idea
+     */
+    override val summary: String,
+    /**
+     * Description of a idea in markup language.
+     */
+    override val description: String,
 
-        /**
-         * Description of a idea in the plain text format. For indexing and searching.
-         */
-        override val descriptionPlainText: String,
-        /**
-         * Link to external resource, like Confluence page or Google Doc
-         */
-        override val link: String,
+    /**
+     * Description of a idea in the plain text format. For indexing and searching.
+     */
+    override val descriptionPlainText: String,
+    /**
+     * Link to external resource, like Confluence page or Google Doc
+     */
+    override val link: String,
 
-        /**
-         * User which is assigned to implement this Idea.
-         */
-        val assignee: String,
+    /**
+     * User which is assigned to implement this Idea.
+     */
+    val assignee: String,
 
-        /**
-         * Idea is done. And it is very cool!
-         */
-        val implemented: Boolean,
+    /**
+     * Idea is done. And it is very cool!
+     */
+    val implemented: Boolean,
 
-        /**
-         * Voter which have offered this idea.
-         */
-        val author: String,
+    /**
+     * User which have offered this idea.
+     */
+    val author: String,
 
-        /**
-         * Voters which give their voice for this idea.
-         */
-        val voters: Set<String>,
+    /**
+     * Voters which give their voice for this idea.
+     */
+    val voters: Set<String>,
 
-        ) : IIdeaEditableProperties, Identifiable {
+    ) : IIdeaEditableProperties, Identifiable {
 
     init {
         require(id.isNotBlank()) {"id can't be blank"}
         require(summary.isNotBlank()) {"title can't be blank"}
         require(!voters.contains(author)) {"user can't vote his idea"}
-        require(!author.isBlank()) {"offeredBy can't be blank"}
+        require(!author.isBlank()) {"author can't be blank"}
     }
 
 
@@ -124,27 +130,27 @@ class Idea(
     }
 
     private fun clone(
-            summary: String = this.summary,
-            groupId: String = this.groupId,
-            description: String = this.description,
-            descriptionPlainText: String = this.descriptionPlainText,
-            link: String = this.link,
-            assignee: String = this.assignee,
-            implemented: Boolean = this.implemented,
-            offeredBy: String = this.author,
-            voters: Set<String> = this.voters
+        summary: String = this.summary,
+        groupId: String = this.groupId,
+        description: String = this.description,
+        descriptionPlainText: String = this.descriptionPlainText,
+        link: String = this.link,
+        assignee: String = this.assignee,
+        implemented: Boolean = this.implemented,
+        offeredBy: String = this.author,
+        voters: Set<String> = this.voters
     ): Idea = Idea(
-            id = id,
-            groupId = groupId,
-            ctime = ctime,
-            summary = summary,
-            description = description,
-            descriptionPlainText = descriptionPlainText,
-            link = link,
-            assignee = assignee,
-            implemented = implemented,
-            author = offeredBy,
-            voters = voters
+        id = id,
+        groupId = groupId,
+        ctime = ctime,
+        summary = summary,
+        description = description,
+        descriptionPlainText = descriptionPlainText,
+        link = link,
+        assignee = assignee,
+        implemented = implemented,
+        author = offeredBy,
+        voters = voters
     )
 
     private fun isAdmin(changerLevels: Set<IdeaAccessLevel>) = changerLevels.contains(IdeaAccessLevel.GROUP_ADMIN)
@@ -194,7 +200,10 @@ class Idea(
         }
     }
 
-    fun updateInformation(properties: IIdeaEditableProperties, changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
+    fun updateInformation(
+        properties: IIdeaEditableProperties,
+        changerLevels: Set<IdeaAccessLevel>
+    ): Either<Exception, Idea> {
         val canUpdate = when {
             isAdmin(changerLevels) -> true
 
@@ -210,19 +219,21 @@ class Idea(
         }
 
         return if (canUpdate) {
-            Either.right(clone(
+            IdeaValidation.ifValid(properties) {
+                this.clone(
                     summary = properties.summary,
                     description = properties.description,
                     descriptionPlainText = properties.descriptionPlainText,
                     link = properties.link
-            ))
+                )
+            }
         } else {
             Either.left(OperationNotPermitted())
         }
     }
 
     private fun isAssignee(changerLevels: Set<IdeaAccessLevel>) =
-            changerLevels.contains(IdeaAccessLevel.ASSIGNEE)
+        changerLevels.contains(IdeaAccessLevel.ASSIGNEE)
 
     /**
      * Moves idea to another group.
@@ -266,9 +277,43 @@ class Idea(
 
 }
 
+class IdeaValidation {
+    companion object {
+        val propertiesValidation = Validation<IIdeaEditableProperties> {
+            IIdeaEditableProperties::summary {
+                minLength(3)
+                maxLength(255)
+            }
+
+            IIdeaEditableProperties::description {
+                minLength(3)
+                maxLength(10000)
+            }
+
+            IIdeaEditableProperties::descriptionPlainText {
+                minLength(3)
+                maxLength(2000)
+            }
+        }
+
+        fun <T> ifValid(properties: IIdeaEditableProperties, action: () -> T): Either<ValidationException, T> {
+            val validationResult = propertiesValidation(properties)
+            return when (validationResult) {
+                is Invalid -> {
+                    val errors = validationResult.errors
+                    Either.left(ValidationException("properties is invalid", errors))
+                }
+                is Valid -> Either.right(action())
+            }
+        }
+    }
+}
+
 class IdeaFactory {
-    fun createIdea(properties: IIdeaEditableProperties, groupId: String, userId: String): Idea {
-        return Idea(
+    fun createIdea(properties: IIdeaEditableProperties, groupId: String, userId: String):
+            Either<ValidationException, Idea> {
+        return IdeaValidation.ifValid(properties) {
+            Idea(
                 id = generateId(),
                 groupId = groupId,
                 summary = properties.summary,
@@ -280,9 +325,11 @@ class IdeaFactory {
                 author = userId,
                 voters = emptySet(),
                 ctime = LocalDateTime.now()
-        )
+            )
+        }
     }
 }
+
 
 /**
  * Possible Idea's sorting
@@ -293,22 +340,22 @@ enum class IdeaSorting {
     VOTES_DESC
 }
 
-fun requireNoneNullValue(opt: Optional<String>, field: String) {
+fun requireNoneOrNotEmptyValue(opt: Optional<String>, field: String) {
     if (opt.isPresent) {
         require(!opt.get().isNullOrBlank()) {"$field is empty string, but should be Optional.empty()"}
     }
 }
 
 data class IdeaFiltering(
-        val offeredBy: Optional<String>,
-        val implemented: Optional<Boolean>,
-        val assignee: Optional<String>,
-        val text: Optional<String>
+    val offeredBy: Optional<String>,
+    val implemented: Optional<Boolean>,
+    val assignee: Optional<String>,
+    val text: Optional<String>
 ) {
     init {
-        requireNoneNullValue(offeredBy, "offeredBy")
-        requireNoneNullValue(assignee, "assigned")
-        requireNoneNullValue(text, "text")
+        requireNoneOrNotEmptyValue(offeredBy, "offeredBy")
+        requireNoneOrNotEmptyValue(assignee, "assigned")
+        requireNoneOrNotEmptyValue(text, "text")
     }
 
 }
