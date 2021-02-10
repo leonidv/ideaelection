@@ -30,7 +30,6 @@ object JsonNodeExtensions {
     private val setStringTypeRef = object : TypeRef<Set<String>>() {}
     private val stringTypeRef = object : TypeRef<String>(){}
     private val intTypeRef = object : TypeRef<Int>(){}
-    private val objectTypeRef = object : TypeRef<Object>(){}
 
     fun JsonNode.hasPath(jsonPath: String): Boolean {
         return this

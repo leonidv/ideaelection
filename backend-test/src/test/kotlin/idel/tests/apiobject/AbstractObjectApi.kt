@@ -38,13 +38,17 @@ abstract class AbstractObjectApi(val username: String, val idelUrl: String = Ide
 
     }
 
+    private fun send(request: HttpRequest, bodyForLog : String) : HttpResponse<JsonNode> {
+        log.trace {"\n ${request.method()} ${request.uri()} $bodyForLog"}
+        return client.send(request, ofJson())!!
+    }
+
     protected fun post(params: String, body: String): HttpResponse<JsonNode> {
         val request = requestBuilder(params)
             .POST(HttpRequest.BodyPublishers.ofString(body))
             .build()
 
-        log.trace {"${request.method()} ${request.uri()} $body"}
-        return client.send(request, ofJson())!!
+        return send(request, body)
     }
 
     protected fun put(params: String, body: String): HttpResponse<JsonNode> {
@@ -52,22 +56,22 @@ abstract class AbstractObjectApi(val username: String, val idelUrl: String = Ide
             .PUT(HttpRequest.BodyPublishers.ofString(body))
             .build()
 
-        log.trace {"${request.method()} ${request.uri()} $body"}
-        return client.send(request, ofJson())
+
+        return send(request, body)
     }
 
     protected fun patch(params: String, body: String): HttpResponse<JsonNode> {
         val request = requestBuilder(params)
             .method("PATCH", HttpRequest.BodyPublishers.ofString(body))
             .build()
-        log.trace {"${request.method()} ${request.uri()} $body"}
-        return client.send(request, ofJson())
+
+        return send(request, body)
     }
 
     protected fun get(params: String): HttpResponse<JsonNode> {
         val request = requestBuilder(params).GET().build()
-        log.trace {"GET ${request.uri()}"}
-        return client.send(request, ofJson())!!
+
+        return send(request, "")
     }
 
 }

@@ -22,7 +22,7 @@ class GroupsSpec : DescribeSpec({
         describe("create a new group") {
             describe("add new group") {
                 val response = groupApi.create(
-                        title = "123",
+                        name = "123",
                         entryMode = GroupsApi.PUBLIC,
                         description = "234",
                         admins = setOf("userB".asUserId(), "userC".asUserId())
@@ -35,7 +35,7 @@ class GroupsSpec : DescribeSpec({
                     }
 
                     it("has title from request") {
-                        data.shouldContains("$.title", "123")
+                        data.shouldContains("$.name", "123")
                     }
 
                     it("has description from request") {
@@ -46,10 +46,15 @@ class GroupsSpec : DescribeSpec({
                         data.shouldContains("$.entryMode", GroupsApi.PUBLIC)
                     }
 
-                    it("has admins from request and creator") {
-                        data.querySet("$.administrators")
-                            .shouldBeSome(setOf("userA".asUserId(), "userB".asUserId(), "userC".asUserId()))
+                    setOf("userA","userB","userC").map{it.asUserId()}.forEach {userId ->
+                        it("has [$userId] as admin") {
+                            val adminsPath = "$.administrators"
+                            data.shouldContainsArrayElement(adminsPath, "id", userId)
+                        }
+
                     }
+
+
                 }
             }
 
@@ -61,7 +66,7 @@ class GroupsSpec : DescribeSpec({
             ).forAll {entryMode ->
                 describe("group with entry mode $entryMode") {
                     val response = groupApi.create(
-                            title = "test $entryMode",
+                            name = "test $entryMode",
                             entryMode = entryMode,
                     )
 
