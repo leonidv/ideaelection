@@ -75,6 +75,15 @@ object JsonNodeExtensions {
         }
     }
 
+    fun JsonNode.queryArraySize(jsonPath: String) : Option<Int> {
+        return try {
+            val parsed = JsonPath.parse(this, conf)
+            val size = parsed.read<Int>("${jsonPath}.length()")
+            Option.just(size)
+        } catch (e : PathNotFoundException) {
+            Option.empty()
+        }
+    }
 
     fun JsonNode.querySet(jsonPath: String): Option<Set<String>> {
         return try {
@@ -94,6 +103,8 @@ object JsonNodeExtensions {
             Option.empty()
         }
     }
+
+
 
     /**
      * extract id of entity. Is always has same path in response.

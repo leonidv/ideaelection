@@ -111,7 +111,7 @@ class IdeaEditSpec : DescribeSpec({
         }
 
         describe("validation checks") {
-            lateinit var ideaId : String
+            lateinit var ideaId: String
             userB.role = "member"
             describe("$userB adds idea") {
                 val response = userB.ideas.add(groupId)
@@ -121,38 +121,51 @@ class IdeaEditSpec : DescribeSpec({
             }
 
 
-            describe("minimal length of field") {
-               val response =  userB.ideas.edit(ideaId,
+            describe("minimal length of field and invalid URL") {
+                val response = userB.ideas.edit(
+                    ideaId,
                     summary = "s",
                     description = "d",
                     descriptionPlainText = "d",
                     link = "u"
                 )
 
-               checkValidationErrors(
-                   response,
-                   ValidationError.leastCharacters(".summary",3),
-                   ValidationError.leastCharacters(".description",3),
-                   ValidationError.leastCharacters(".descriptionPlainText",3),
-               )
+                checkValidationErrors(
+                    response,
+                    ValidationError.leastCharacters(".summary", 3),
+                    ValidationError.leastCharacters(".description", 3),
+                    ValidationError.leastCharacters(".descriptionPlainText", 3),
+                    ValidationError.mustBeUrl(".link")
+                )
             }
 
-            describe("maximal length of field") {
-               val response =  userB.ideas.edit(ideaId,
+            describe("maximal length of field (link is valid URL)") {
+                val response = userB.ideas.edit(
+                    ideaId,
                     summary = "s".repeat(256),
                     description = "d".repeat(10001),
                     descriptionPlainText = "d".repeat(2001),
-                    link = "u"
+                    link = "http://test.io/123"
                 )
 
-               checkValidationErrors(
-                   response,
-                   ValidationError.mostCharacters(".summary",255),
-                   ValidationError.mostCharacters(".description",10000),
-                   ValidationError.mostCharacters(".descriptionPlainText",2000),
-               )
+                checkValidationErrors(
+                    response,
+                    ValidationError.mostCharacters(".summary", 255),
+                    ValidationError.mostCharacters(".description", 10000),
+                    ValidationError.mostCharacters(".descriptionPlainText", 2000),
+                )
             }
 
+            describe("fields has maximum length and link is empty") {
+                val response = userB.ideas.edit(
+                    ideaId,
+                    summary = "s".repeat(255),
+                    description = "d".repeat(10000),
+                    descriptionPlainText = "d".repeat(2000),
+                    link = ""
+                )
+                checkIsOk(response)
+            }
         }
     }
 })

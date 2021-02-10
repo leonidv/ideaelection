@@ -1,16 +1,11 @@
 package idel.api
 
 import arrow.core.Either
-import arrow.core.None
-import arrow.core.Option
-import arrow.core.Some
 import com.couchbase.client.core.error.CouchbaseException
 import idel.domain.*
-import io.konform.validation.Invalid
 import io.konform.validation.ValidationError
 import io.konform.validation.ValidationErrors
 import mu.KLogger
-import org.apache.commons.lang3.exception.ExceptionUtils
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import java.time.LocalDateTime
