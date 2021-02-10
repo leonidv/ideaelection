@@ -7,6 +7,9 @@ import idel.tests.apiobject.GroupsApi
 import idel.tests.apiobject.User
 import idel.tests.apiobject.checkJoinRequestIsApproved
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
+import idel.tests.infrastructure.JsonNodeExtensions.queryArraySize
+import idel.tests.infrastructure.JsonNodeExtensions.queryString
+import io.kotest.assertions.arrow.option.shouldBeSome
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.scopes.DescribeScope
 import java.net.HttpURLConnection
@@ -50,14 +53,14 @@ suspend fun DescribeScope.initGroup(groupAdmin: User, members: Set<User>): Strin
 data class BodyFieldCheck(val testName: String, val jsonPath: String, val expectedValue: String)
 
 suspend fun DescribeScope.checkIsOk(response: HttpResponse<JsonNode>, vararg fieldChecks: BodyFieldCheck) {
-    it("response is 200 OK with data") {
-        response.shouldBeOk()
-        response.shouldBeData()
-    }
-
     val body = response.body()
 
     body.toPrettyString().asClue {
+        it("response is 200 OK with data") {
+            response.shouldBeOk()
+            response.shouldBeData()
+        }
+
         fieldChecks.forEach {
             it(it.testName) {
                 body.shouldContains(it.jsonPath, it.expectedValue)
@@ -82,21 +85,26 @@ class ValidationError(
     val message: String
 ) {
     companion object {
-        fun leastCharacters(field : String, minValue : Int) = ValidationError(
+        fun leastCharacters(field: String, minValue: Int) = ValidationError(
             field = field,
             message = "must have at least $minValue characters"
         )
 
-        fun mostCharacters(field : String, maxValue : Int) = ValidationError(
+        fun mostCharacters(field: String, maxValue: Int) = ValidationError(
             field = field,
             message = "must have at most $maxValue characters"
+        )
+
+        fun mustBeUrl(field: String) = ValidationError(
+            field = field,
+            message = "must be URL"
         )
     }
 }
 
 suspend fun DescribeScope.checkValidationErrors(
     response: HttpResponse<JsonNode>,
-    vararg expectedError: ValidationError
+    vararg expectedErrors: ValidationError
 ) {
     it("response is 400 with code 106") {
         response.shouldHasStatus(HttpURLConnection.HTTP_BAD_REQUEST)
@@ -109,10 +117,14 @@ suspend fun DescribeScope.checkValidationErrors(
     body.toPrettyString().asClue {
         val errorsPath = "$.error.validationErrors"
 
-        expectedError.forEach {expectedError ->
+        it("has ${expectedErrors.size} validation errors") {
+            body.queryArraySize(errorsPath).shouldBeSome(expectedErrors.size)
+        }
+
+        expectedErrors.forEach {expectedError ->
             it("field [${expectedError.field}] has validation error [${expectedError.message}] ") {
-                body.shouldContainsArrayElement(errorsPath,"dataPath",expectedError.field)
-                body.shouldContainsArrayElement(errorsPath,"message",expectedError.message)
+                body.shouldContainsArrayElement(errorsPath, "dataPath", expectedError.field)
+                body.shouldContainsArrayElement(errorsPath, "message", expectedError.message)
             }
         }
     }

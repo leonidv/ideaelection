@@ -15,7 +15,7 @@ class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi
         summary: String = "Idea from test",
         description: String = "description of $summary",
         descriptionPlainText: String = description,
-        link: String = "http://somelink.io/$summary"
+        link: String = "http://somelink.io/"
     ): HttpResponse<JsonNode> {
         val body = """
             {

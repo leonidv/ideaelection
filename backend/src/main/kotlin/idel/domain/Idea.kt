@@ -2,7 +2,6 @@ package idel.domain
 
 import arrow.core.*
 import io.konform.validation.Validation
-import io.konform.validation.ValidationResult
 import io.konform.validation.Invalid
 import io.konform.validation.Valid
 import io.konform.validation.jsonschema.maxLength
@@ -280,19 +279,23 @@ class Idea(
 class IdeaValidation {
     companion object {
         val propertiesValidation = Validation<IIdeaEditableProperties> {
-            IIdeaEditableProperties::summary {
+            IIdeaEditableProperties::summary required  {
                 minLength(3)
                 maxLength(255)
             }
 
-            IIdeaEditableProperties::description {
+            IIdeaEditableProperties::description required  {
                 minLength(3)
                 maxLength(10000)
             }
 
-            IIdeaEditableProperties::descriptionPlainText {
+            IIdeaEditableProperties::descriptionPlainText required  {
                 minLength(3)
                 maxLength(2000)
+            }
+
+            IIdeaEditableProperties::link {
+                isUrl(allowEmptyValue = true)
             }
         }
 
