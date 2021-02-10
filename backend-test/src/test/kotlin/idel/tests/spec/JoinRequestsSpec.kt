@@ -23,8 +23,8 @@ class JoinRequestsSpec : DescribeSpec({
         describe("group id is not exists") {
             val response = userA.joinRequests.create(UUID.randomUUID().toString())
 
-            it("should be 105 error") {
-                response.shouldBeError(105)
+            it("should be 102 error (entity not exists") {
+                response.shouldBeError(102)
             }
         }
     }

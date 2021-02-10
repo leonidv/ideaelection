@@ -12,7 +12,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 
-class JoinRequestsApi(val username : String, val idelUrl : String = Idel.URL) {
+class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : AbstractObjectApi(username, idelUrl, "joinrequests") {
 
     private val log = KotlinLogging.logger {}
 
@@ -22,14 +22,6 @@ class JoinRequestsApi(val username : String, val idelUrl : String = Idel.URL) {
         val UNRESOLVED = "UNRESOLVED"
     }
 
-    private val client = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(1))
-        .authenticator(IdelHttpAuthenticator(username))
-        .build()
-
-
-
-    val resourceUri = URI.create("$idelUrl/joinrequests")
 
     fun create(groupId : String) : HttpResponse<JsonNode> {
         val body = """
@@ -38,16 +30,8 @@ class JoinRequestsApi(val username : String, val idelUrl : String = Idel.URL) {
             }
         """.trimIndent()
 
-        log.trace {"JoinRequestsApi.add body = $body"}
 
-        val request = HttpRequest
-            .newBuilder(resourceUri)
-            .timeout(Duration.ofSeconds(1))
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(body))
-            .build()
-
-        return client.send(request, ofJson())!!
+        return post("",body)
     }
 }
 

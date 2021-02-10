@@ -39,7 +39,7 @@ fun addIdeas(user: String): UsersIdeas {
             user = user,
             title = "idea #$i by $user",
             description = "This genius idea created at $now",
-            link = "link"
+            link = "http://link.io"
         )
         uuid
     }
@@ -111,7 +111,7 @@ class IdeaLoading : DescribeSpec({
 
     }
 
-    describe("Loading Ideas") {
+    xdescribe("Loading Ideas") {
         describe("negative scenarios") {
             describe("request negative count of records [first=10, last=0]") {
                 val r: Response = Given {

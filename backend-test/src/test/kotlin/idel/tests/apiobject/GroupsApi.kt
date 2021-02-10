@@ -16,22 +16,20 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
     }
 
 
-    fun create(title: String,
+    fun create(name: String,
                entryMode: String,
-               description: String = "$title, $entryMode",
+               description: String = "$name, $entryMode",
                admins: Set<String> = setOf("$username@httpbasic")): HttpResponse<JsonNode> {
         val body = """
             {
-                "name": "$title",
+                "name": "$name",
                 "description": "$description",
                 "logo": "data:image/png;base64,dGVzdA==",
                 "entryMode" : "$entryMode",
                 "administrators": ${asJson(admins)}
             }
         """.trimIndent()
-
-        log.trace {"GroupsApi.add body = $body"}
-
+        
         return post("",body)
     }
 
