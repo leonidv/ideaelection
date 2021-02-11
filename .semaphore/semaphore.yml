@@ -24,6 +24,7 @@ blocks:
             - cache store m2 $USER_HOME/.m2
             - cache store gradleCache $USER_HOME/.gradle/caches/modules-2/files-2.1
         on_fail:
+          commands:
           - tar -zcvf build/test-reports.tar.gz build/reports
           - artifact push job build/test-reports.tar.gz
       jobs:
