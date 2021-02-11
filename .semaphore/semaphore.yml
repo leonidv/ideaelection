@@ -23,6 +23,9 @@ blocks:
           commands:
             - cache store m2 $USER_HOME/.m2
             - cache store gradleCache $USER_HOME/.gradle/caches/modules-2/files-2.1
+        on_fail:
+          - tar -zcvf build/test-reports.tar.gz build/reports
+          - artifact push job build/test-reports.tar.gz
       jobs:
         - name: Build backend application
           commands:
@@ -36,3 +39,5 @@ blocks:
             - cat nohup.out
             - cd ../backend-test
             - ./gradlew test
+            - ./gradlew allureReport
+

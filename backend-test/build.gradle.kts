@@ -1,6 +1,19 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath("io.qameta.allure:allure-gradle:2.8.1")
+    }
+}
+
+
 plugins {
     kotlin("jvm") version "1.4.0"
+    id("io.qameta.allure") version("2.8.1")
 }
+
 
 group = "ideaelection"
 version = "1.0"
@@ -39,6 +52,7 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion") // for kotest framework
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion") // for kotest core jvm assertions
     testImplementation("io.kotest:kotest-assertions-arrow-jvm:$kotestVersion")
+    testImplementation("io.kotest:kotest-extensions-allure:$kotestVersion")
 }
 
 
@@ -54,7 +68,6 @@ tasks {
 
     test {
         useJUnitPlatform()
-
 //        addTestListener(object : TestListener {
 //            override fun beforeTest(testDescriptor: TestDescriptor?) {}
 //
@@ -75,4 +88,9 @@ tasks {
 //            }
 //        })
     }
+}
+
+allure {
+    autoconfigure = false
+    version = "2.13.8"
 }
