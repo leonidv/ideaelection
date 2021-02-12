@@ -37,7 +37,6 @@ blocks:
             - cd backend
             - ./gradlew -v
             - ./gradlew bootJar
-            добавить сюда указание logback.xml файла
             - nohup java -Dtestmode=on -jar build/libs/backend-*.jar -Dlogging.config=$SEMAPHORE_GIT_DIR/.semaphore/logback.xml &
             - sleep 10
             - cat nohup.out
