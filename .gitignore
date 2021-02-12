@@ -7,3 +7,6 @@ nohup.out
 *.bak
 *.back
 .*
+*.log
+allure-results
+
