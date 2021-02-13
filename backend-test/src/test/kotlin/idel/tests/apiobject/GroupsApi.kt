@@ -2,6 +2,8 @@ package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
+import idel.tests.infrastructure.BodyArrayElementExists
+import idel.tests.infrastructure.BodyFieldValueChecker
 import mu.KotlinLogging
 import java.net.http.HttpResponse
 
@@ -38,3 +40,10 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
      */
     fun loadAvailable() = get("?onlyAvailable")
 }
+
+fun groupHasName(name: String) = BodyFieldValueChecker.forField("name", name)
+fun groupHasDescription(description: String) = BodyFieldValueChecker.forField("description", description)
+fun groupHasEntryMode(entryMode : String) = BodyFieldValueChecker.forField("entryMode", entryMode)
+fun groupHasAdmin(user : User) = BodyArrayElementExists("has admin $user", "$.data.administrators", "id", user.id)
+
+

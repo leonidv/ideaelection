@@ -2,7 +2,7 @@ package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
-import idel.tests.infrastructure.BodyFieldCheck
+import idel.tests.infrastructure.BodyFieldValueChecker
 import java.net.http.HttpResponse
 
 class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi(username, idelUrl, "ideas") {
@@ -105,16 +105,14 @@ class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi
 /**
  * Fields checks
  */
-fun ideaAssigneeIs(user: User) = BodyFieldCheck("assignee is $user", "$.data.assignee", user.id)
-fun ideaNotAssigned() = BodyFieldCheck("idea is not assigned", "$.data.assignee", "")
-val ideaIsImplemented = BodyFieldCheck("idea is implemented", "$.data.implemented", "true")
-val ideaIsNotImplemented = BodyFieldCheck("idea is not implemented", "$.data.implemented", "false")
-fun ideaHasSummary(summary: String) = BodyFieldCheck("summary is [$summary]", "$.data.summary", summary)
-fun ideaHasDescription(description: String) =
-    BodyFieldCheck("description is [$description]", "$.data.description", description)
+fun ideaAssigneeIs(user: User) = BodyFieldValueChecker.forField("assignee",user.id)
+fun ideaNotAssigned() = BodyFieldValueChecker("idea is not assigned", "$.data.assignee", "")
+val ideaIsImplemented = BodyFieldValueChecker("idea is implemented", "$.data.implemented", "true")
+val ideaIsNotImplemented = BodyFieldValueChecker("idea is not implemented", "$.data.implemented", "false")
+fun ideaHasSummary(summary: String) = BodyFieldValueChecker.forField("summary", summary)
+fun ideaHasDescription(description: String) = BodyFieldValueChecker.forField("description", description)
 
-fun ideaHasDescriptionPlainText(description: String) =
-    BodyFieldCheck("descriptionPlainText is [$description]", "$.data.descriptionPlainText", description)
+fun ideaHasDescriptionPlainText(description: String) = BodyFieldValueChecker.forField("descriptionPlainText", description)
 
-fun ideaHasLink(link: String) = BodyFieldCheck("link is [$link]", "$.data.link", link)
+fun ideaHasLink(link: String) = BodyFieldValueChecker.forField("link", link)
 

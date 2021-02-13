@@ -2,15 +2,9 @@ package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
-import idel.tests.infrastructure.BodyFieldCheck
-import idel.tests.infrastructure.IdelHttpAuthenticator
-import idel.tests.infrastructure.ofJson
+import idel.tests.infrastructure.BodyFieldValueChecker
 import mu.KotlinLogging
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.time.Duration
 
 class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : AbstractObjectApi(username, idelUrl, "joinrequests") {
 
@@ -35,4 +29,4 @@ class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : Abstract
     }
 }
 
-fun checkJoinRequestIsApproved() = BodyFieldCheck("join request is approved", "$.data.status", JoinRequestsApi.APPROVED)
+fun checkJoinRequestIsApproved() = BodyFieldValueChecker("join request is approved", "$.data.status", JoinRequestsApi.APPROVED)
