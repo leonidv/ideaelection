@@ -28,7 +28,7 @@ blocks:
             - cache store gradleCache $USER_HOME/.gradle/caches/modules-2/files-2.1
         on_fail:
           commands:
-            - cd $USER_HOME/$SEMAPHORE_GIT_DIR
+            - cd /home/semaphore/$SEMAPHORE_GIT_DIR
             - ls
             - cp backend/backend.log backend-test/build/reports
             - tar -zcvf test-reports.tar.gz build/reports
@@ -41,7 +41,7 @@ blocks:
             - cd backend
             - ./gradlew -v
             - ./gradlew bootJar
-            - nohup java -Dtestmode=on -jar build/libs/backend-*.jar -Dlogging.config=$SEMAPHORE_GIT_DIR/.semaphore/logback.xml &
+            - nohup java -Dtestmode=on -jar build/libs/backend-*.jar -Dlogging.config=/home/semaphore/$SEMAPHORE_GIT_DIR/.semaphore/logback.xml &
             - sleep 10
             - cat nohup.out
             - cd ../backend-test
