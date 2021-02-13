@@ -1,16 +1,37 @@
 <configuration debug="true">
 
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>backend.log</file>
+    <appender name="FULL_LOG_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_DIR}/backend.log</file>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M %F:%L - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <root level="DEBUG">
-        <appender-ref ref="FILE"/>
-    </root>
 
-    <logger name="idel" level="TRACE"/>
+    <appender name="IDEL_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_DIR}/backend-idel.log</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M %F:%L - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="SPRING_SECURITY_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_DIR}/backend-spring-security.log</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M %F:%L - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.springframework.security" level="DEBUG">
+        <appender-ref ref="SPRING_SECURITY_FILE"/>
+    </logger>
+
+    <logger name="idel" level="TRACE">
+        <appender-ref ref="IDEL_FILE"/>
+    </logger>
+
+    <root level="DEBUG">
+        <appender-ref ref="FULL_LOG_FILE"/>
+    </root>
 
 </configuration>
