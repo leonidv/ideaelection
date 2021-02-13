@@ -30,15 +30,12 @@ blocks:
             - cache store gradleCache /home/semaphore/.gradle/caches/modules-2/files-2.1
         on_fail:
           commands:
-            - cd $BUILD_DIR
-            - ls
-            - cp backend/backend.log backend-test/build/reports
-            - tar -zcvf test-reports.tar.gz build/reports
+            - cp $BUILD_DIR/backend/backend.log $BUILD_DIR/backend-test/build/reports
+            - tar -zcvf test-reports.tar.gz $BUILD_DIR/backend-test/build/reports
             - artifact push job test-reports.tar.gz
       jobs:
         - name: Build backend application
           commands:
-            - echo $BUILD_DIR
             - cd backend
             - ./gradlew -v
             - ./gradlew bootJar
