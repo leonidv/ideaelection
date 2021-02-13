@@ -10,6 +10,8 @@ blocks:
       env_vars:
         - name:  BUILD_DIR
           value: /home/semaphore/ideaelection
+        - name: LOG_DIR
+          value:  /home/semaphore/ideaelection/logs
       prologue:
         commands:
           - echo "BUILD_DIR = $BUILD_DIR"
@@ -30,9 +32,9 @@ blocks:
             - cache store gradleCache /home/semaphore/.gradle/caches/modules-2/files-2.1
         on_fail:
           commands:
-            - cp $BUILD_DIR/backend/backend.log $BUILD_DIR/backend-test/build/reports
-            - tar -zcvf test-reports.tar.gz $BUILD_DIR/backend-test/build/reports
-            - artifact push job test-reports.tar.gz
+            - cp -r $BUILD_DIR/backend-test/build/reports $LOG_DIR
+            - tar -zcvf log-and-reports.tar.gz $LOG_DIR
+            - artifact push job log-and-reports.tar.gz
       jobs:
         - name: Build backend application
           commands:
