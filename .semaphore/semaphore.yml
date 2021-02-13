@@ -9,7 +9,7 @@ blocks:
     task:
       env_vars:
         - name:  BUILD_DIR
-          value: /home/semaphore/$SEMAPHORE_GIT_DIR
+          value: /home/semaphore/ideaelection
       prologue:
         commands:
           - echo "BUILD_DIR = $BUILD_DIR"
@@ -38,7 +38,7 @@ blocks:
       jobs:
         - name: Build backend application
           commands:
-
+            - echo $BUILD_DIR
             - cd backend
             - ./gradlew -v
             - ./gradlew bootJar
