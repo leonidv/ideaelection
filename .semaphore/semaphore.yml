@@ -7,13 +7,14 @@ agent:
 blocks:
   - name: Backend building
     task:
+      env_vars:
+        - name:  BUILD_DIR
+          value: /home/semaphore/$SEMAPHORE_GIT_DIR
       prologue:
         commands:
+          - echo "BUILD_DIR = $BUILD_DIR"
           - checkout
-          - pwd
-          - echo $SEMAPHORE_GIT_DIR
           - cd scripts/
-          - pwd
           - ./couchbase-run.sh
           - sleep 5
           - ./couchbase-init-test.sh
@@ -21,14 +22,15 @@ blocks:
           - cache restore m2
           - cache restore gradleCache
           - sem-version java 11
+          - java -version
       epilogue:
         always:
           commands:
-            - cache store m2 $USER_HOME/.m2
-            - cache store gradleCache $USER_HOME/.gradle/caches/modules-2/files-2.1
+            - cache store m2 /home/semaphore/.m2
+            - cache store gradleCache /home/semaphore/.gradle/caches/modules-2/files-2.1
         on_fail:
           commands:
-            - cd /home/semaphore/$SEMAPHORE_GIT_DIR
+            - cd $BUILD_DIR
             - ls
             - cp backend/backend.log backend-test/build/reports
             - tar -zcvf test-reports.tar.gz build/reports
@@ -36,15 +38,13 @@ blocks:
       jobs:
         - name: Build backend application
           commands:
-            - java -version
-            - pwd
+
             - cd backend
             - ./gradlew -v
             - ./gradlew bootJar
-            - nohup java -Dtestmode=on -jar build/libs/backend-*.jar -Dlogging.config=/home/semaphore/$SEMAPHORE_GIT_DIR/.semaphore/logback.xml &
+            - nohup java -Dtestmode=on -Dlogging.config=$BUILD_DIR/.semaphore/logback.xml -jar build/libs/backend-*.jar &
             - sleep 10
             - cat nohup.out
             - cd ../backend-test
-            - ./gradlew test
-            - ./gradlew allureReport
+            - ./gradlew test allureReport
 
