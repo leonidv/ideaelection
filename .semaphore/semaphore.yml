@@ -9,6 +9,7 @@ blocks:
     task:
       prologue:
         commands:
+          - pwd
           - 'docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase:community-6.5.0'
           - sleep 5
           - checkout
@@ -25,7 +26,7 @@ blocks:
             - cache store gradleCache $USER_HOME/.gradle/caches/modules-2/files-2.1
         on_fail:
           commands:
-            - cd $SEMAPHORE_GIT_DIR
+            - cd $USER_HOME/$SEMAPHORE_GIT_DIR
             - cp backend/backend.log backend-test/build/reports
             - tar -zcvf test-reports.tar.gz build/reports
             - artifact push job test-reports.tar.gz
