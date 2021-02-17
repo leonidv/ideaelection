@@ -4,7 +4,7 @@ import arrow.core.Some
 import idel.tests.*
 import idel.tests.apiobject.GroupsApi
 import idel.tests.apiobject.User
-import idel.tests.apiobject.checkJoinRequestIsApproved
+import idel.tests.apiobject.joinRequestIsApproved
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
 import io.kotest.core.spec.style.scopes.DescribeScope
 
@@ -33,7 +33,7 @@ suspend fun DescribeScope.initGroup(groupAdmin: User, members: Set<User>): Strin
 
     members.forEach {user ->
         describe("$user join to group") {
-            checkIsOk(user.joinRequests.create(groupId), checkJoinRequestIsApproved())
+            checkIsOk(user.joinRequests.create(groupId), joinRequestIsApproved())
         }
     }
 

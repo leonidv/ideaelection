@@ -26,113 +26,12 @@ enum class AcceptStatus {
     REJECTED
 }
 
-/**
- * Common request for membership user in group
- */
-sealed class MembershipRequest(
-        val groupId: String,
-        val userId: UserId,
-        val status: AcceptStatus,
-        val ctime: LocalDateTime,
-        val mtime: LocalDateTime
-) : Identifiable {
-    override val id: String = compositeId(groupId, userId)
-}
-
-
-/**
- * Group admin creates an invite when wants a user to join a group.
- */
-class Invite(
-        groupId: String,
-        userId: UserId,
-        status: AcceptStatus,
-        ctime: LocalDateTime = LocalDateTime.now(),
-        mtime: LocalDateTime = ctime
-) :
-        MembershipRequest(groupId, userId, status, ctime, mtime) {
-    companion object {
-        fun create(groupId: String, userId: UserId) =
-                Invite(groupId = groupId,
-                        userId = userId,
-                        status = AcceptStatus.UNRESOLVED)
-    }
-
-    override fun toString(): String {
-        return "Invite(groupId='$groupId', userId='$userId', accepted=$status)"
-    }
-
-}
-
-/**
- * User creates a join request when want to join the group.
- */
-class JoinRequest(groupId: String,
-                  userId: UserId,
-                  status: AcceptStatus,
-                  ctime: LocalDateTime = LocalDateTime.now(),
-                  mtime: LocalDateTime = ctime
-) : MembershipRequest(groupId, userId, status, ctime, mtime) {
-    companion object {
-        fun createUnresloved(groupId: String, userId: UserId) =
-                JoinRequest(
-                        groupId = groupId,
-                        userId = userId,
-                        status = AcceptStatus.UNRESOLVED
-                )
-
-        fun createApproved(groupId: String, userId: UserId) =
-                JoinRequest(
-                        groupId = groupId,
-                        userId = userId,
-                        AcceptStatus.APPROVED
-                )
-    }
-
-    fun resolve(resolution: AcceptStatus): JoinRequest {
-        require(resolution != AcceptStatus.UNRESOLVED) {"can't resolve to ${AcceptStatus.UNRESOLVED}"}
-
-        return JoinRequest(
-                groupId = this.groupId,
-                userId = this.userId,
-                status = resolution,
-                ctime = this.ctime,
-                mtime = LocalDateTime.now()
-        )
-    }
-
-    override fun toString(): String {
-        return "JoinRequest(groupId='$groupId', userId='$userId', accepted=$status)"
-    }
-}
 
 enum class GroupMembershipRequestOrdering {
     CTIME_ASC,
     CTIME_DESC
 }
 
-interface InviteRepository {
-    fun add(invite: Invite): Either<Exception, Invite>
-
-    fun load(id: String): Either<Exception, Invite>
-
-    fun replace(invite: Invite) : Either<Exception, Invite>
-}
-
-
-interface JoinRequestRepository {
-    fun add(request: JoinRequest): Either<Exception, JoinRequest>
-
-    fun load(id: String): Either<Exception, JoinRequest>
-
-    fun remove(id: String): Either<Exception, Unit>
-
-    fun replace(invite: JoinRequest): Either<Exception, JoinRequest>
-
-    fun loadByUser(userId: UserId, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination): Either<Exception, List<JoinRequest>>
-
-    fun loadByGroup(groupId: String, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination): Either<Exception, List<JoinRequest>>
-}
 
 /**
  * Implement group membership complex scenarios.
@@ -174,12 +73,12 @@ class GroupMembershipService(
      *
      * Check that group and user are exists.
      */
-    fun requestMembership(groupId: String, userId: UserId): Either<Exception, JoinRequest> {
+    fun requestMembership(groupId: String, userId: UserId, message : String): Either<Exception, JoinRequest> {
         return try {
             loadEntities(groupId = groupId, userId = userId).flatMap {(entryMode: GroupEntryMode, user: User) ->
                 when (entryMode) {
                     GroupEntryMode.PUBLIC -> {
-                        val request = JoinRequest.createApproved(groupId, userId)
+                        val request = JoinRequest.createApproved(groupId, userId, message)
                         val newMember = GroupMember.of(groupId, user)
                         //groupRepository.addMember(groupId, newMember).map {request}
                         groupMemberRepository.add(newMember).map {request}
@@ -187,7 +86,7 @@ class GroupMembershipService(
                     }
                     GroupEntryMode.CLOSED,
                     GroupEntryMode.PRIVATE -> {
-                        val request = JoinRequest.createUnresloved(groupId, userId)
+                        val request = JoinRequest.createUnresolved(groupId, userId, message)
                         joinRequestRepository.add(request)
                     }
                 }

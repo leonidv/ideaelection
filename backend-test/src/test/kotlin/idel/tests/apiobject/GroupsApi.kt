@@ -46,4 +46,6 @@ fun groupHasDescription(description: String) = BodyFieldValueChecker.forField("d
 fun groupHasEntryMode(entryMode : String) = BodyFieldValueChecker.forField("entryMode", entryMode)
 fun groupHasAdmin(user : User) = BodyArrayElementExists("has admin $user", "$.data.administrators", "id", user.id)
 
+fun includeGroup(groupId : String) = BodyArrayElementExists("includes groups $groupId", "$.data","id", groupId)
+
 

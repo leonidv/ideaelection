@@ -16,6 +16,7 @@ blocks:
         commands:
           - echo "BUILD_DIR = $BUILD_DIR"
           - checkout
+          - echo $HOME/$SEMAPHORE_GIT_DIR
           - cd scripts/
           - ./couchbase-run.sh
           - sleep 5
