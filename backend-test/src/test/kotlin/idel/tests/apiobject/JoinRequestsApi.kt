@@ -17,10 +17,11 @@ class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : Abstract
     }
 
 
-    fun create(groupId : String) : HttpResponse<JsonNode> {
+    fun create(groupId : String, message : String = "I want to joint into $groupId") : HttpResponse<JsonNode> {
         val body = """
             {
-                "groupId" : "$groupId"
+                "groupId" : "$groupId",
+                "message" : "$message"
             }
         """.trimIndent()
 
@@ -29,4 +30,4 @@ class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : Abstract
     }
 }
 
-fun checkJoinRequestIsApproved() = BodyFieldValueChecker("join request is approved", "$.data.status", JoinRequestsApi.APPROVED)
+fun joinRequestIsApproved() = BodyFieldValueChecker("join request is approved", "$.data.status", JoinRequestsApi.APPROVED)

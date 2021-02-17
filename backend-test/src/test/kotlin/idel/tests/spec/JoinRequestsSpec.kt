@@ -36,7 +36,11 @@ class JoinRequestsSpec : DescribeSpec({
                 val createGroupsResponse = userA.groups.create("userA public group", entryMode = GroupsApi.PUBLIC)
                 val groupId = extractId(createGroupsResponse)
 
-                val createJoinRequestsResponse = userA.joinRequests.create(groupId)
+                val createJoinRequestsResponse =
+                    userA.joinRequests.create(
+                        groupId = groupId,
+                        message = "Please add me to the group"
+                    )
                 val data = extractData(createJoinRequestsResponse)
 
                 data.toPrettyString().asClue {
@@ -44,15 +48,15 @@ class JoinRequestsSpec : DescribeSpec({
                         data.shouldHasPath("$.id")
                     }
 
-                    it("has group from request") {
+                    it("has group from the request") {
                         data.shouldContains("$.groupId", groupId)
                     }
 
-                    it("has user from request") {
+                    it("has user from the request") {
                         data.shouldContains("$.userId", userA.id)
                     }
 
-                    it("has creation time") {
+                    it("has the creation time") {
                         data.shouldHasPath("$.ctime")
                     }
 
@@ -60,16 +64,20 @@ class JoinRequestsSpec : DescribeSpec({
                         data.shouldContains("$.status", JoinRequestsApi.APPROVED)
                     }
 
+                    it("has message from the request") {
+                        data.shouldContains("$.message", "Please add me to the group")
+                    }
+
                 }
             }
 
             describe("join requests status depends on groups entry mode") {
                 table(
-                        headers("entryMode", "joinRequestStatus"),
-                        row(GroupsApi.PUBLIC, JoinRequestsApi.APPROVED),
-                        row(GroupsApi.CLOSED, JoinRequestsApi.UNRESOLVED),
-                        row(GroupsApi.PRIVATE, JoinRequestsApi.UNRESOLVED)
-                ).forAll {entryMode : String, status : String ->
+                    headers("entryMode", "joinRequestStatus"),
+                    row(GroupsApi.PUBLIC, JoinRequestsApi.APPROVED),
+                    row(GroupsApi.CLOSED, JoinRequestsApi.UNRESOLVED),
+                    row(GroupsApi.PRIVATE, JoinRequestsApi.UNRESOLVED)
+                ).forAll {entryMode: String, status: String ->
                     describe("for $entryMode group status should be $status") {
 
                         val createGroupsResponse = userA.groups.create("userA public group", entryMode = entryMode)
@@ -79,13 +87,13 @@ class JoinRequestsSpec : DescribeSpec({
                         val data = extractData(createJoinRequestsResponse)
 
                         it("status is $status") {
-                            data.shouldContains("$.status",status)
+                            data.shouldContains("$.status", status)
                         }
                     }
                 }
             }
 
-            xdescribe("user already in group"){
+            xdescribe("user already in group") {
                 // should ignore request and sent approved
             }
         }
