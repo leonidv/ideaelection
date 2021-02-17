@@ -16,6 +16,9 @@ blocks:
         commands:
           - echo "BUILD_DIR = $BUILD_DIR"
           - checkout
+          - echo "from prologue"
+          - echo $HOME
+          - echo $SEMAPHORE_GIT_DIR
           - echo $HOME/$SEMAPHORE_GIT_DIR
           - cd scripts/
           - ./couchbase-run.sh
@@ -39,6 +42,10 @@ blocks:
       jobs:
         - name: Build backend application
           commands:
+            - echo "from commands"
+            - echo $HOME
+            - echo $SEMAPHORE_GIT_DIR
+            - echo $HOME/$SEMAPHORE_GIT_DIR
             - cd backend
             - ./gradlew -v
             - ./gradlew bootJar
