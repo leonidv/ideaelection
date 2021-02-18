@@ -13,7 +13,7 @@ class Invite(
     val ctime: LocalDateTime = LocalDateTime.now(),
     val mtime: LocalDateTime = ctime
 ) : Identifiable {
-    override val id = compositeId(groupId, userId)
+    override val id = compositeId(key = "invite", groupId, userId)
 
     companion object {
         fun create(groupId: String, userId: UserId) =

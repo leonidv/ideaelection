@@ -12,7 +12,7 @@ class GroupMember(
         val avatar: String,
 ) : Identifiable {
     companion object {
-        fun calculateId(groupId: String, userId: String) = compositeId(groupId, userId)
+        fun calculateId(groupId: String, userId: String) = compositeId(key = "gm", groupId, userId)
 
         fun of(groupId: String, userInfo: IUserInfo): GroupMember {
             return GroupMember(

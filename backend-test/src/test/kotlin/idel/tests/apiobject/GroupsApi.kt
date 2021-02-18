@@ -3,7 +3,9 @@ package idel.tests.apiobject
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
 import idel.tests.infrastructure.BodyArrayElementExists
+import idel.tests.infrastructure.BodyArraySize
 import idel.tests.infrastructure.BodyFieldValueChecker
+import idel.tests.infrastructure.asUserId
 import mu.KotlinLogging
 import java.net.http.HttpResponse
 
@@ -18,10 +20,12 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
     }
 
 
-    fun create(name: String,
-               entryMode: String,
-               description: String = "$name, $entryMode",
-               admins: Set<String> = setOf("$username@httpbasic")): HttpResponse<JsonNode> {
+    fun create(
+        name: String,
+        entryMode: String,
+        description: String = "$name, $entryMode",
+        admins: Set<String> = setOf("$username@httpbasic")
+    ): HttpResponse<JsonNode> {
         val body = """
             {
                 "name": "$name",
@@ -31,21 +35,27 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
                 "administrators": ${asJson(admins)}
             }
         """.trimIndent()
-        
-        return post("",body)
+
+        return post("", body)
     }
 
     /**
      * Return available groups
      */
     fun loadAvailable() = get("?onlyAvailable")
+
+    /**
+     * Load user's groups.
+     */
+    fun loadForUser(userId: String = username.asUserId()) = get("?userId=$userId")
 }
 
 fun groupHasName(name: String) = BodyFieldValueChecker.forField("name", name)
 fun groupHasDescription(description: String) = BodyFieldValueChecker.forField("description", description)
-fun groupHasEntryMode(entryMode : String) = BodyFieldValueChecker.forField("entryMode", entryMode)
-fun groupHasAdmin(user : User) = BodyArrayElementExists("has admin $user", "$.data.administrators", "id", user.id)
+fun groupHasEntryMode(entryMode: String) = BodyFieldValueChecker.forField("entryMode", entryMode)
+fun groupHasAdmin(user: User) = BodyArrayElementExists("has admin $user", "$.data.administrators", "id", user.id)
 
-fun includeGroup(groupId : String) = BodyArrayElementExists("includes groups $groupId", "$.data","id", groupId)
+fun noGroups() = BodyArraySize("no any groups", "$.data", 0)
+fun includeGroup(groupId: String) = BodyArrayElementExists("includes groups $groupId", "$.data", "id", groupId)
 
 

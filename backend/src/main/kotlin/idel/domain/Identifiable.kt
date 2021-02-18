@@ -26,7 +26,7 @@ fun generateId() : String = UUID.randomUUID().toString().replace("-","")
  *
  * @return md5 of concatenation of values. MD5 used because it's need speed, not security.
  */
-fun compositeId(vararg values: Any) : String {
-    val valueString = values.joinToString(separator = "|")
-    return DigestUtils.md5DigestAsHex(valueString.toByteArray())
+fun compositeId(key : String,  vararg values: Any) : String {
+    val valueString = key + "$" + values.joinToString(separator = "|")
+    return key + DigestUtils.md5DigestAsHex(valueString.toByteArray())
 }
