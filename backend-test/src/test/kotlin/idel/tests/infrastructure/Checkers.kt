@@ -41,6 +41,28 @@ class BodyArrayElementExists(
     }
 }
 
+class BodyArraySize(
+    override val testName: String,
+    private val arrayPath: String,
+    private val size : Int
+ ) : ResponseChecker {
+
+    override fun check(jsonNode: JsonNode) {
+        jsonNode.queryArraySize(arrayPath).shouldBeSome(size)
+    }
+}
+
+class BodyElementIsPresent(
+    override val testName: String,
+    private val elementPath : String
+) : ResponseChecker {
+    override fun check(jsonNode: JsonNode) {
+        jsonNode.shouldHasPath(elementPath)
+    }
+}
+
+val hasId = BodyElementIsPresent("id is present","$.data.id")
+
 suspend fun DescribeScope.checkIsOk(response: HttpResponse<JsonNode>, vararg fieldChecks: ResponseChecker) {
     val body = response.body()
 

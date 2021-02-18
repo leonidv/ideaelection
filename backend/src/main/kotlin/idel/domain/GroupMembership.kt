@@ -2,6 +2,7 @@ package idel.domain
 
 import arrow.core.*
 import arrow.core.extensions.fx
+import mu.KotlinLogging
 import java.time.LocalDateTime
 import kotlin.Exception
 
@@ -46,6 +47,7 @@ class GroupMembershipService(
         private val groupMemberRepository: GroupMemberRepository
 
 ) {
+    private val log = KotlinLogging.logger {}
 
     data class Entities(val groupEntryMode: GroupEntryMode, val user: User)
 
@@ -103,10 +105,11 @@ class GroupMembershipService(
                 AcceptStatus.APPROVED -> {
                     Either.fx {
                         val (user) = userRepository.load(joinRequest.userId)
-                        groupMemberRepository.add(GroupMember.of(joinRequest.groupId, user)).bind()
-                        joinRequest.resolve(AcceptStatus.APPROVED) // for future notification and event-based perstence
-                        joinRequestRepository.remove(joinRequest.id).bind()
-                        joinRequest
+                        val groupMember = GroupMember.of(joinRequest.groupId, user)
+                        groupMemberRepository.add(groupMember).bind()
+                        val nextJoinRequest = joinRequest.resolve(AcceptStatus.APPROVED)
+                        joinRequestRepository.replace(nextJoinRequest)
+                        nextJoinRequest
                     }
                 }
                 AcceptStatus.REJECTED -> {

@@ -7,7 +7,6 @@ import idel.tests.infrastructure.JsonNodeExtensions.dataId
 import idel.tests.infrastructure.checkIsForbidden
 import idel.tests.infrastructure.checkIsOk
 import io.kotest.assertions.arrow.option.shouldNotBeNone
-import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.DescribeSpec
 import java.net.HttpURLConnection
 import kotlin.time.ExperimentalTime

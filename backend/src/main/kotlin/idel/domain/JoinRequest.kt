@@ -14,7 +14,7 @@ class JoinRequest(val groupId: String,
                   val mtime: LocalDateTime = ctime
 ) : Identifiable {
 
-    override val id = compositeId(groupId, userId)
+    override val id = compositeId(key = "jnreq", groupId, userId)
 
     companion object {
         fun createUnresolved(groupId: String, userId: UserId, message: String) =
@@ -55,7 +55,7 @@ class JoinRequest(val groupId: String,
 interface JoinRequestRepository : BaseRepository<JoinRequest> {
     fun remove(id: String): Either<Exception, Unit>
 
-    fun replace(invite: JoinRequest): Either<Exception, JoinRequest>
+    fun replace(joinRequest: JoinRequest): Either<Exception, JoinRequest>
 
     fun loadByUser(userId: UserId, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination): Either<Exception, List<JoinRequest>>
 

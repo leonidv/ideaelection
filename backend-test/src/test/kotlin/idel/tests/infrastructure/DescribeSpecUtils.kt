@@ -19,12 +19,12 @@ suspend fun DescribeScope.registryUsers(vararg users: User) {
     }
 }
 
-suspend fun DescribeScope.initGroup(groupAdmin: User, members: Set<User>): String {
+suspend fun DescribeScope.initGroup(groupAdmin: User, members: Set<User>, entryMode : String = GroupsApi.PUBLIC): String {
 
     lateinit var groupId: String
 
     describe("$groupAdmin creates the public group") {
-        val response = groupAdmin.groups.create("assignee spec group", GroupsApi.PUBLIC)
+        val response = groupAdmin.groups.create("assignee spec group", entryMode)
 
         checkIsOk(response)
 

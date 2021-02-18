@@ -69,6 +69,10 @@ class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi
         return get("/$ideaId")
     }
 
+    fun list(groupId: String): HttpResponse<JsonNode> {
+        return get("?groupId=$groupId")
+    }
+
     fun assign(ideaId: String, assignee: User): HttpResponse<JsonNode> {
         val body = """{
             "userId":"${assignee.id}"

@@ -57,11 +57,11 @@ class JoinRequestController(val groupMembershipService: GroupMembershipService,
     }
 
     data class Resolution(val status : AcceptStatus)
-    @PostMapping("{joinRequestId}/status")
+    @PatchMapping("{joinRequestId}/status")
     fun resolve(@AuthenticationPrincipal user: IdelOAuth2User,
                 @PathVariable joinRequestId : String,
-                @RequestBody resolution : Resolution) : EntityOrError<String> {
-        val result = groupMembershipService.resolveRequest(joinRequestId, resolution.status).map {"ok"}
+                @RequestBody resolution : Resolution) : EntityOrError<JoinRequest> {
+        val result = groupMembershipService.resolveRequest(joinRequestId, resolution.status)
         return DataOrError.fromEither(result, log)
     }
 }
