@@ -3,7 +3,6 @@ package idel.domain
 import arrow.core.*
 import arrow.core.extensions.fx
 import mu.KotlinLogging
-import java.time.LocalDateTime
 import kotlin.Exception
 
 
@@ -24,7 +23,7 @@ enum class AcceptStatus {
     /**
      * Request was rejected.
      */
-    REJECTED
+    DECLINED
 }
 
 
@@ -112,8 +111,8 @@ class GroupMembershipService(
                         nextJoinRequest
                     }
                 }
-                AcceptStatus.REJECTED -> {
-                    val rejectedRequest = joinRequest.resolve(AcceptStatus.REJECTED)
+                AcceptStatus.DECLINED -> {
+                    val rejectedRequest = joinRequest.resolve(AcceptStatus.DECLINED)
                     joinRequestRepository.replace(rejectedRequest)
                 }
             }

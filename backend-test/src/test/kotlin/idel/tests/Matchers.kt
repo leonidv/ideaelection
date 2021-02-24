@@ -5,6 +5,7 @@ import arrow.core.Some
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.infrastructure.JsonNodeExtensions.hasArrayElement
+import idel.tests.infrastructure.JsonNodeExtensions.hasArrayObjectWithFields
 import idel.tests.infrastructure.JsonNodeExtensions.hasPath
 import idel.tests.infrastructure.JsonNodeExtensions.queryInt
 import idel.tests.infrastructure.JsonNodeExtensions.queryString
@@ -101,6 +102,18 @@ object ResponseMatchers {
             )
         }
     }
+
+    fun hasArrayObjectWithFields(arrayPath: String, vararg fields : Pair<String,String>) = object : Matcher<JsonNode> {
+        override fun test(value: JsonNode): MatcherResult {
+            val hasObject = value.hasArrayObjectWithFields(arrayPath, *fields)
+            val msg = """contains object of array at path $arrayPath with fields ${fields.joinToString()}"""
+            return MatcherResult(
+                passed = hasObject,
+                failureMessage = "Json should $msg",
+                negatedFailureMessage = "Json should not $msg"
+            )
+        }
+    }
 }
 
 /**
@@ -142,6 +155,8 @@ fun JsonNode.shouldContains(jsonPath: String, value: Int) = this should Response
 fun JsonNode.shouldContainsArrayElement(arrayPath: String, elementKey: String, elementValue: String) =
     this should ResponseMatchers.hasArrayElement(arrayPath, elementKey, elementValue)
 
+fun JsonNode.shouldContainsArrayObjectWithFields(arrayPath: String, vararg fields : Pair<String,String>) =
+    this should ResponseMatchers.hasArrayObjectWithFields(arrayPath, *fields)
 
 
 

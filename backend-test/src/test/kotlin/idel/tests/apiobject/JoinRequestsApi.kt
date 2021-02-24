@@ -3,6 +3,7 @@ package idel.tests.apiobject
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
 import idel.tests.infrastructure.BodyArrayElementExists
+import idel.tests.infrastructure.BodyArrayObjectWithFields
 import idel.tests.infrastructure.BodyFieldValueChecker
 import idel.tests.infrastructure.asUserId
 import mu.KotlinLogging
@@ -14,7 +15,7 @@ class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : Abstract
 
     companion object {
         val APPROVED = "APPROVED"
-        val REJECTED = "REJECTED"
+        val DECLINED = "DECLINED"
         val UNRESOLVED = "UNRESOLVED"
     }
 
@@ -46,9 +47,15 @@ class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : Abstract
     }
 }
 
-fun joinRequestIsApproved() = BodyFieldValueChecker("join request is approved", "$.data.status", JoinRequestsApi.APPROVED)
-fun joinRequestIsUnresolved() = BodyFieldValueChecker("join request is unresolved", "$.data.status", JoinRequestsApi.UNRESOLVED)
+val joinRequestIsApproved = BodyFieldValueChecker("join request is approved", "$.data.status", JoinRequestsApi.APPROVED)
+val joinRequestIsUnresolved = BodyFieldValueChecker("join request is unresolved", "$.data.status", JoinRequestsApi.UNRESOLVED)
+val joinRequestIsDeclined = BodyFieldValueChecker("join request is declined","$.data.status",JoinRequestsApi.DECLINED)
 
 
 fun includeJoinRequest(joinRequestId : String) =
     BodyArrayElementExists("include joinRequest $joinRequestId", "$.data","id",joinRequestId)
+
+fun includeJoinRequestWithStatus(joinRequestId: String, status: String) =
+    BodyArrayObjectWithFields("include joinRequest $joinRequestId with status $status", "$.data",
+        arrayOf(Pair("id",joinRequestId),Pair("status",status))
+    )

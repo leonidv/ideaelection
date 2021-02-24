@@ -73,7 +73,7 @@ class JoinToPublicGroupScenario : DescribeSpec({
 
                     checkIsOk(
                         joinRequestResponse,
-                        joinRequestIsApproved())
+                        joinRequestIsApproved)
                 }
 
                 describe("$userC joins to the group") {
@@ -81,7 +81,7 @@ class JoinToPublicGroupScenario : DescribeSpec({
 
                     checkIsOk(
                         joinRequestResponse,
-                        joinRequestIsApproved()
+                        joinRequestIsApproved
                     )
 
                 }

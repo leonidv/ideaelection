@@ -50,6 +50,21 @@ object JsonNodeExtensions {
 
     }
 
+
+    fun JsonNode.hasArrayObjectWithFields(arrayPath: String, vararg fields : Pair<String,String>) : Boolean {
+        val jsonFilter = fields
+            .map {"@.${it.first} == '${it.second}'"}
+            .joinToString(prefix = "?(",  separator =  " && ", postfix = ")")
+        val jsonPath = """$arrayPath[$jsonFilter]"""
+        return try {
+            val parsed = JsonPath.parse(this, conf)
+            val data = parsed.read(jsonPath, listOfAny) as List<Any>
+            data.isNotEmpty()
+        } catch (e: PathNotFoundException) {
+            false
+        }
+    }
+
     fun JsonNode.queryString(jsonPath: String): Option<String> {
         return try {
             val parsed = JsonPath.parse(this, conf)
