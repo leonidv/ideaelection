@@ -41,6 +41,16 @@ class BodyArrayElementExists(
     }
 }
 
+class BodyArrayObjectWithFields(
+    override val testName: String,
+    private val arrayPath: String,
+    private val fields : Array<Pair<String,String>>
+) : ResponseChecker {
+    override fun check(jsonNode: JsonNode) {
+        jsonNode.shouldContainsArrayObjectWithFields(arrayPath, *fields)
+    }
+}
+
 class BodyArraySize(
     override val testName: String,
     private val arrayPath: String,

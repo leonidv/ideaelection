@@ -33,7 +33,7 @@ suspend fun DescribeScope.initGroup(groupAdmin: User, members: Set<User>, entryM
 
     members.forEach {user ->
         describe("$user join to group") {
-            checkIsOk(user.joinRequests.create(groupId), joinRequestIsApproved())
+            checkIsOk(user.joinRequests.create(groupId), joinRequestIsApproved)
         }
     }
 
