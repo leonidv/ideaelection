@@ -23,7 +23,7 @@ suspend fun DescribeScope.initGroup(groupAdmin: User, members: Set<User>, entryM
 
     lateinit var groupId: String
 
-    describe("$groupAdmin creates the public group") {
+    describe("$groupAdmin creates the $entryMode group") {
         val response = groupAdmin.groups.create("assignee spec group", entryMode)
 
         checkIsOk(response)

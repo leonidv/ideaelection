@@ -7,7 +7,6 @@ import idel.infrastructure.security.IdelOAuth2User
 import io.konform.validation.Invalid
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
-import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.util.Optional
@@ -87,6 +86,22 @@ class GroupController(
     ) : EntityOrError<List<Group>> {
         val result = groupRepository.loadOnlyAvailable(pagination, ordering)
         return DataOrError.fromEither(result, log)
+    }
+
+    @GetMapping("/{groupId}/members")
+    fun loadUsers(
+        @AuthenticationPrincipal user : IdelOAuth2User,
+        @PathVariable groupId: String,
+        @RequestParam username : Optional<String>,
+        pagination: Repository.Pagination
+    ) : EntityOrError<List<UserInfo>> {
+        return security.group.asMember(groupId, user) {
+            userRepository
+                .loadByGroup(groupId,pagination,username.asOption())
+                .map { users -> // map either
+                    users.map {UserInfo.ofUser(it)}
+                }
+        }
     }
 }
 

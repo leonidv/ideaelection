@@ -1,6 +1,8 @@
 package idel.infrastructure.repositories
 
 import arrow.core.Either
+import arrow.core.Option
+import arrow.core.Some
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.json.JsonObject
@@ -82,5 +84,35 @@ class UserCouchbaseRepository(
             }
         }
         return Either.right(users)
+    }
+
+
+    override fun loadByGroup(
+        groupId: String,
+        pagination: Repository.Pagination,
+        usernameFilter: Option<String>
+    ): Either<Exception, List<User>> {
+        val selectPart = """ SELECT ie FROM `$bucketName` gm JOIN `$bucketName` ie ON KEYS gm.userId
+            WHERE gm._type = "groupMember" and ie._type = "$type"
+        """.trimIndent()
+
+        val filterParts = mutableListOf("gm.groupId =  \$groupId")
+        val params = JsonObject.create()
+        params.put("groupId", groupId)
+
+        if (usernameFilter is Some) {
+            filterParts.add("""CONTAINS( UPPER(ie.displayName), UPPER(${'$'}username) )""")
+            params.put("username", usernameFilter.t)
+        }
+
+        val orderingPart = "gm.ctime DESC"
+
+        return rawLoad(
+            basePart = selectPart,
+            filterQueryParts = filterParts,
+            orderingPart = orderingPart,
+            params = params,
+            pagination = pagination
+        )
     }
 }

@@ -198,6 +198,11 @@ interface GroupRepository {
 
     fun replace(entity: Group): Either<Exception, Group>
 
+    /**
+     * Load user's groups.
+     *
+     * In fact, the best place for this method is [GroupMemberRepository], but it's required too hard refactoring.
+     */
     fun loadByUser(userId: String, pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>>
 
     /**

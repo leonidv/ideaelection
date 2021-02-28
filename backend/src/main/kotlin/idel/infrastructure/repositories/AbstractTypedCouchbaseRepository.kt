@@ -239,10 +239,10 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     protected fun load(filterQueryParts: List<String>,
                        ordering: String, params: JsonObject,
                        pagination: Repository.Pagination): Either<Exception, List<T>> {
-        return load(
+        return rawLoad(
                 basePart = """select * from `$bucketName` as ie where _type="${this.type}" """,
                 filterQueryParts = filterQueryParts,
-                ordering = ordering,
+                orderingPart = "ie.$ordering",
                 params = params,
                 pagination = pagination,
         )
@@ -252,12 +252,12 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     /**
      * Low level form of [load] function. Use this if you need customize ```select * from ... where _type = ...```.
      */
-    protected fun load(
-            basePart: String,
-            filterQueryParts: List<String>,
-            ordering: String,
-            params: JsonObject,
-            pagination: Repository.Pagination,
+    protected fun rawLoad(
+        basePart: String,
+        filterQueryParts: List<String>,
+        orderingPart: String,
+        params: JsonObject,
+        pagination: Repository.Pagination,
     ): Either<Exception, List<T>> {
         return try {
             val filterQuery =
@@ -269,7 +269,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
 
             val options = queryOptions(params).readonly(true)
             val queryString = basePart + filterQuery +
-                    "order by ie.$ordering " + pagination.queryPart()
+                    "order by $orderingPart " + pagination.queryPart()
 
             log.trace {"query: [$queryString], params: [$params]"}
 

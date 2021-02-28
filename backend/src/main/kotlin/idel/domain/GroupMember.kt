@@ -29,28 +29,20 @@ class GroupMember(
     override val id = calculateId(groupId, userId)
 }
 
-interface GroupMemberRepository {
+interface GroupMemberRepository : BaseRepository<GroupMember>  {
     /**
      * Check that groups has user as member.
      */
     fun isMember(groupId: String,userId: String) : Either<Exception, Boolean>
 
     /**
-     * Load group member by id.
-     */
-    fun load(id : String) : Either<Exception, GroupMember>
-
-    /**
      * Load group member by group and user id.
      */
     fun load(groupId: String, userId: String) : Either<Exception, GroupMember>
-    /**
-     * Add group member.
-     */
-    fun add(entity : GroupMember): Either<Exception, GroupMember>
 
     /**
-     * Remove member group group.
+     * Remove member group from a group.
      */
     fun removeFromGroup(groupId: String, userId: String): Either<Exception, Unit>
+
 }

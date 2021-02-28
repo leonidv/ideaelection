@@ -5,7 +5,7 @@ import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
 
 
-class JoinToPrivateGroupScenarios : DescribeSpec({
+class JoinToPrivateOrClosedGroupScenarios : DescribeSpec({
 
     val couchbase = Couchbase()
 
@@ -15,7 +15,7 @@ class JoinToPrivateGroupScenarios : DescribeSpec({
 
     listOf(GroupsApi.PRIVATE, GroupsApi.CLOSED).forEach {entryMode ->
 
-        context("$userA creates ${entryMode} group, userB and userC try to join") {
+        context("$userA creates $entryMode group, userB and userC try to join") {
             describe("register users") {
                 couchbase.clearAll()
                 registryUsers(userA, userB, userC)
@@ -98,6 +98,16 @@ class JoinToPrivateGroupScenarios : DescribeSpec({
                         includeJoinRequestWithStatus(joinRequestId, JoinRequestsApi.APPROVED)
                     )
                 }
+
+                listOf(userA, userB).forEach { user ->
+                    describe("$user can see $userB in the group's member list") {
+                        val response = userB.groups.loadMembers(groupId)
+                        checkIsOk(response,
+                            groupHasMember(userB)
+                        )
+                    }
+                }
+
             }
 
             describe("$userC gets decline for his request") {
@@ -138,6 +148,13 @@ class JoinToPrivateGroupScenarios : DescribeSpec({
                     checkIsOk(
                         userC.groups.loadForUser(),
                         noGroups()
+                    )
+                }
+
+                describe("$userA don't see $userC in the list of group's members") {
+                    checkIsOk(
+                        userA.groups.loadMembers(groupId),
+                        groupHasNotMember(userC)
                     )
                 }
 
