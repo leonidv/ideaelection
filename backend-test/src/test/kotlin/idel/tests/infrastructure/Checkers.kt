@@ -6,6 +6,7 @@ import idel.tests.infrastructure.JsonNodeExtensions.queryArraySize
 import io.kotest.assertions.arrow.option.shouldBeSome
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.scopes.DescribeScope
+import io.kotest.matchers.shouldNot
 import java.net.HttpURLConnection
 import java.net.http.HttpResponse
 
@@ -13,6 +14,14 @@ interface ResponseChecker {
     val testName: String
 
     fun check(jsonNode: JsonNode)
+}
+
+class NotResponseChecker(val responseChecker: ResponseChecker) : ResponseChecker {
+    override val testName: String = "NOT" + responseChecker.testName
+
+    override fun check(jsonNode: JsonNode) {
+        TODO("Not yet implemented")
+    }
 }
 
 class BodyFieldValueChecker(
@@ -40,6 +49,18 @@ class BodyArrayElementExists(
         jsonNode.shouldContainsArrayElement(arrayPath, elementKey, elementValue)
     }
 }
+
+class NotBodyArrayElementExists(
+    override val testName: String,
+    private val arrayPath: String,
+    private val elementKey: String,
+    private val elementValue: String, ) : ResponseChecker {
+
+    override fun check(jsonNode: JsonNode) {
+        jsonNode.shouldNotContainsArrayElement(arrayPath, elementKey, elementValue)
+    }
+}
+
 
 class BodyArrayObjectWithFields(
     override val testName: String,

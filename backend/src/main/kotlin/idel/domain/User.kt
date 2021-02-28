@@ -70,4 +70,10 @@ interface UserRepository {
      */
     fun load(first : Int, last : Int) : List<User>
 
+    /**
+     * Load user's from group.
+     *
+     * In fact, the best place for this method is [GroupMemberRepository], but it's required too hard refactoring.
+     */
+    fun loadByGroup(groupId : String, pagination: Repository.Pagination, usernameFilter : Option<String>) : Either<Exception, List<User>>
 }

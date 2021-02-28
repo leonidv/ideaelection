@@ -28,10 +28,12 @@ class GroupCouchbaseRepository(
             val params = JsonObject.create();
             params.put("userId", userId)
 
-            return load(
+            val orderingPart  = "ie.${Repository.enumAsOrdering(ordering)}"
+
+            return rawLoad(
                     basePart = selectPart,
                     filterQueryParts = filterParts,
-                    ordering = Repository.enumAsOrdering(ordering),
+                    orderingPart = orderingPart,
                     params, pagination
             )
     }

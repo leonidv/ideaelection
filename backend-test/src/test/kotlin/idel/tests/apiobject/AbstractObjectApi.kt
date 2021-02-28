@@ -74,4 +74,11 @@ abstract class AbstractObjectApi(val username: String, val idelUrl: String = Ide
         return send(request, "")
     }
 
+    protected fun delete(params: String, body: String) : HttpResponse<JsonNode> {
+        val request = requestBuilder(params)
+            .method("DELETE",HttpRequest.BodyPublishers.ofString(body))
+            .build()
+
+        return send(request, body)
+    }
 }

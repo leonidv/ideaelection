@@ -90,12 +90,12 @@ class GroupMemberSecurity(private val securityService: SecurityService,
     /**
      * Call an action if a [user] is a member of the group.
      */
-    fun <T> asMember(memberGroupId: String,
-                     memberUserId: String,
-                     user: IdelOAuth2User,
-                     action: GroupMemberAction<T>): EntityOrError<T> {
-        val requiredLevels = setOf(GroupMemberAccessLevel.GROUP_MEMBER)
-        return secure(memberGroupId, memberUserId, user, requiredLevels, action)
-    }
+//    fun <T> asMember(memberGroupId: String,
+//                     memberUserId: String,
+//                     user: IdelOAuth2User,
+//                     action: GroupMemberAction<T>): EntityOrError<T> {
+//        val requiredLevels = setOf(GroupMemberAccessLevel.GROUP_MEMBER)
+//        return secure(memberGroupId, memberUserId, user, requiredLevels, action)
+//    }
 
 }

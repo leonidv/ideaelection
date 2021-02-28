@@ -12,6 +12,7 @@ import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.should
+import io.kotest.matchers.shouldNot
 import java.net.http.HttpResponse
 
 object ResponseMatchers {
@@ -154,6 +155,9 @@ fun JsonNode.shouldContains(jsonPath: String, value: Int) = this should Response
  */
 fun JsonNode.shouldContainsArrayElement(arrayPath: String, elementKey: String, elementValue: String) =
     this should ResponseMatchers.hasArrayElement(arrayPath, elementKey, elementValue)
+
+fun JsonNode.shouldNotContainsArrayElement(arrayPath: String, elementKey: String, elementValue: String) =
+    this shouldNot ResponseMatchers.hasArrayElement(arrayPath, elementKey, elementValue)
 
 fun JsonNode.shouldContainsArrayObjectWithFields(arrayPath: String, vararg fields : Pair<String,String>) =
     this should ResponseMatchers.hasArrayObjectWithFields(arrayPath, *fields)

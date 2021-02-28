@@ -18,5 +18,6 @@
     <logger name="com.couchbase.tracing" level="ALL"/>
 
     <logger name="idel" level="DEBUG"/>
+    <logger name="idel.infrastructure.repositories" level="TRACE"/>
 
 </configuration>
