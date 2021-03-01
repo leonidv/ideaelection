@@ -68,6 +68,13 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
 
         return get("/$groupId/members/$params")
     }
+
+    fun deleteMember(
+        groupId: String,
+        userId: String
+    ): HttpResponse<JsonNode> {
+        return delete("/$groupId/members/$userId","")
+    }
 }
 
 

@@ -17,6 +17,7 @@ import kotlin.IllegalArgumentException
 class GroupController(
         private val groupRepository: GroupRepository,
         private val userRepository: UserRepository,
+        private val groupMemberRepository: GroupMemberRepository,
         apiSecurityFactory: ApiSecurityFactory
 ) {
     val log = KotlinLogging.logger {}
@@ -101,6 +102,19 @@ class GroupController(
                 .map { users -> // map either
                     users.map {UserInfo.ofUser(it)}
                 }
+        }
+    }
+
+
+
+    @DeleteMapping("/{groupId}/members/{userId}")
+    fun removeUser(
+        @AuthenticationPrincipal user : IdelOAuth2User,
+        @PathVariable groupId: String,
+        @PathVariable userId : String
+    ) : EntityOrError<String> {
+        return security.groupMember.asAdminOrHimSelf(groupId, userId, user) { _, _ ->
+            groupMemberRepository.removeFromGroup(groupId, userId).map {"ok"}
         }
     }
 }
