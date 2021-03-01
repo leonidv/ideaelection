@@ -2,10 +2,7 @@ package idel.tests.spec
 
 import idel.tests.*
 import idel.tests.apiobject.*
-import idel.tests.infrastructure.asUserId
-import idel.tests.infrastructure.checkIsOk
-import idel.tests.infrastructure.extractData
-import idel.tests.infrastructure.registryUsers
+import idel.tests.infrastructure.*
 
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.DescribeSpec
@@ -24,10 +21,12 @@ class GroupsSpec : DescribeSpec({
     val userAdmin = User("userA", "creator")
     val userB = User("userB", "admin")
     val userC = User("userC", "admin")
+    val userE = User("userE", "member")
+    val userD = User("userD", "not member")
 
     context("userA, userB, userC is registered in the app") {
         describe("initialization") {
-            registryUsers(userAdmin, userB, userC)
+            registryUsers(userAdmin, userB, userC, userE, userD)
         }
 
         describe("positive scenarios") {
@@ -70,6 +69,7 @@ class GroupsSpec : DescribeSpec({
                     }
                 }
             }
+
         }
     }
 })

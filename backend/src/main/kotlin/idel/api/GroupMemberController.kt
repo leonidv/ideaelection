@@ -55,6 +55,8 @@ class GroupMemberSecurity(private val securityService: SecurityService,
                           private val groupRepository: GroupRepository,
                           private val groupMemberRepository: GroupMemberRepository,
                           private val controllerLog: KLogger) {
+    private val log = KotlinLogging.logger {}
+
     private fun <T> secure(
             memberGroupId: String,
             memberUserId: String,
@@ -63,13 +65,20 @@ class GroupMemberSecurity(private val securityService: SecurityService,
             action: GroupMemberAction<T>
     ): EntityOrError<T> {
         val result: Either<Exception, Either<Exception, T>> = Either.fx {
-            val (groupMember) = groupMemberRepository.load(memberGroupId, memberUserId)
             val (group) = groupRepository.load(memberGroupId)
-            val (levels) = securityService.groupMemberAccessLevels(groupMember, group, user)
-            if (levels.intersect(requiredLevels).isNotEmpty()) {
-                action(groupMember, group)
-            } else {
+            val (userLevels)  = securityService.groupAccessLevel(group, user)
+            log.trace {"$user has $userLevels for $group"}
+            if (!userLevels.contains(GroupAccessLevel.MEMBER)) {
                 Either.left(OperationNotPermitted())
+            } else {
+                val (groupMember) = groupMemberRepository.load(memberGroupId, memberUserId)
+
+                val (levels) = securityService.groupMemberAccessLevels(groupMember, group, user)
+                if (levels.intersect(requiredLevels).isNotEmpty()) {
+                    action(groupMember, group)
+                } else {
+                    Either.left(OperationNotPermitted())
+                }
             }
         }
 

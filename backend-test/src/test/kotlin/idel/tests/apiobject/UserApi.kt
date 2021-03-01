@@ -18,7 +18,7 @@ class UserApi (userName : String, idelUrl: String = Idel.URL) : AbstractObjectAp
             {
                 "id": "$userName@httpbasic",
                 "email": "$userName@mail.fake",
-                "displayName": "$userName Registered from test ${LocalDateTime.now()}",
+                "displayName": "$userName Registered from a test ${LocalDateTime.now()}",
                 "avatar": "",
                 "roles": [
                     "ROLE_USER"

@@ -19,5 +19,6 @@
 
     <logger name="idel" level="DEBUG"/>
     <logger name="idel.infrastructure.repositories" level="TRACE"/>
+    <logger name="idel.api" level="TRACE"/>
 
 </configuration>

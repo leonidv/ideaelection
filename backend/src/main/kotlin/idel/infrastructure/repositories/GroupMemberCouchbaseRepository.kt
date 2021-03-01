@@ -19,7 +19,10 @@ class GroupMemberCouchbaseRepository(cluster: Cluster, collection: Collection) :
     override fun isMember(groupId: String, userId: String): Either<Exception, Boolean> {
         return safelyKeyOperation("[groupId = $groupId  userId =$userId]") {
             val groupMemberId = GroupMember.calculateId(groupId, userId)
-            collection.exists(groupMemberId).exists()
+            val result = collection.exists(groupMemberId)
+//            переписать, т.к. exists не работает. Или обновить драйвер сначала!
+//            collection.get(groupMemberId, getOptions())
+            result.exists()
         }
     }
 

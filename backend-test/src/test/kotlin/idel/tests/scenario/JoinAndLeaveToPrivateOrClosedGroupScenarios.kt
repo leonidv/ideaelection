@@ -5,7 +5,7 @@ import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
 
 
-class JoinToPrivateOrClosedGroupScenarios : DescribeSpec({
+class JoinAndLeaveToPrivateOrClosedGroupScenarios : DescribeSpec({
 
     val couchbase = Couchbase()
 
@@ -108,6 +108,21 @@ class JoinToPrivateOrClosedGroupScenarios : DescribeSpec({
                     }
                 }
 
+                describe("$userB leave groups") {
+                    val response = userB.groups.deleteMember(groupId, userB.id)
+                    checkIsOk(response)
+                }
+
+                describe("$userB can't see members of group anymore") {
+                    val response = userB.groups.loadMembers(groupId)
+                    checkIsForbidden(response)
+                }
+
+                describe("$userA don't see $userB in the list of group's members") {
+                    val response = userA.groups.loadMembers(groupId)
+                    checkIsOk(response, groupHasNotMember(userB))
+                }
+
             }
 
             describe("$userC gets decline for his request") {
@@ -165,7 +180,6 @@ class JoinToPrivateOrClosedGroupScenarios : DescribeSpec({
                         includeJoinRequestWithStatus(joinRequestId, JoinRequestsApi.DECLINED),
                     )
                 }
-
             }
 
         }
