@@ -6,7 +6,6 @@ import idel.tests.infrastructure.JsonNodeExtensions.queryArraySize
 import io.kotest.assertions.arrow.option.shouldBeSome
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.scopes.DescribeScope
-import io.kotest.matchers.shouldNot
 import java.net.HttpURLConnection
 import java.net.http.HttpResponse
 
@@ -43,7 +42,8 @@ class BodyArrayElementExists(
     override val testName: String,
     private val arrayPath: String,
     private val elementKey: String,
-    private val elementValue: String, ) : ResponseChecker {
+    private val elementValue: String,
+) : ResponseChecker {
 
     override fun check(jsonNode: JsonNode) {
         jsonNode.shouldContainsArrayElement(arrayPath, elementKey, elementValue)
@@ -54,7 +54,8 @@ class NotBodyArrayElementExists(
     override val testName: String,
     private val arrayPath: String,
     private val elementKey: String,
-    private val elementValue: String, ) : ResponseChecker {
+    private val elementValue: String,
+) : ResponseChecker {
 
     override fun check(jsonNode: JsonNode) {
         jsonNode.shouldNotContainsArrayElement(arrayPath, elementKey, elementValue)
@@ -65,7 +66,7 @@ class NotBodyArrayElementExists(
 class BodyArrayObjectWithFields(
     override val testName: String,
     private val arrayPath: String,
-    private val fields : Array<Pair<String,String>>
+    private val fields: Array<Pair<String, String>>
 ) : ResponseChecker {
     override fun check(jsonNode: JsonNode) {
         jsonNode.shouldContainsArrayObjectWithFields(arrayPath, *fields)
@@ -75,8 +76,8 @@ class BodyArrayObjectWithFields(
 class BodyArraySize(
     override val testName: String,
     private val arrayPath: String,
-    private val size : Int
- ) : ResponseChecker {
+    private val size: Int
+) : ResponseChecker {
 
     override fun check(jsonNode: JsonNode) {
         jsonNode.queryArraySize(arrayPath).shouldBeSome(size)
@@ -85,14 +86,16 @@ class BodyArraySize(
 
 class BodyElementIsPresent(
     override val testName: String,
-    private val elementPath : String
+    private val elementPath: String
 ) : ResponseChecker {
     override fun check(jsonNode: JsonNode) {
         jsonNode.shouldHasPath(elementPath)
     }
 }
 
-val hasId = BodyElementIsPresent("id is present","$.data.id")
+val hasId = BodyElementIsPresent("id is present", "$.data.id")
+fun dataListSize(size: Int) = BodyArraySize("data has $size elements", "$.data", size)
+
 
 suspend fun DescribeScope.checkIsOk(response: HttpResponse<JsonNode>, vararg fieldChecks: ResponseChecker) {
     val body = response.body()
