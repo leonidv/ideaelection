@@ -7,16 +7,22 @@ import com.couchbase.client.java.Collection
 import com.couchbase.client.java.codec.JacksonJsonSerializer
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.query.QueryOptions
+import com.couchbase.transactions.AttemptContext
+import com.couchbase.transactions.Transactions
+import com.fasterxml.jackson.databind.node.ObjectNode
 import idel.domain.Repository
 import idel.domain.*
 import mu.KotlinLogging
 
 class GroupCouchbaseRepository(
-        cluster: Cluster,
-        collection: Collection
+    cluster: Cluster,
+    collection: Collection
 ) : AbstractTypedCouchbaseRepository<Group>(cluster, collection, type = "group", Group::class.java), GroupRepository {
 
+
     override val log = KotlinLogging.logger {}
+
+    override fun collection(): Collection = collection
 
     override fun loadByUser(userId: String, pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>> {
             val selectPart = """
@@ -123,4 +129,6 @@ class GroupCouchbaseRepository(
         }
 
     }
+
+    override fun entityToJsonObject(entity: Group): ObjectNode = jsonSerializer.serializeToObjectNode(entity)
 }

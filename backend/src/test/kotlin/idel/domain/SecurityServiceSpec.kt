@@ -3,6 +3,9 @@ package idel.domain
 import arrow.core.Either
 import arrow.core.Option
 import arrow.core.getOrElse
+import com.couchbase.client.core.cnc.Context
+import com.couchbase.client.core.error.DocumentNotFoundException
+import com.couchbase.client.core.error.context.ErrorContext
 import io.kotest.assertions.arrow.either.shouldBeRight
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.data.forAll
@@ -27,16 +30,19 @@ class SecurityServiceSpec : DescribeSpec({
                 name = "Test group",
                 description = "",
                 logo = "",
-                entryMode = GroupEntryMode.PRIVATE,
-                administrators = listOf(UserInfo.ofUser(userA))
+                entryMode = GroupEntryMode.PRIVATE
         )
 
+        val groupMemberUserA = GroupMember.of(group.id, userA.id, GroupMemberRole.GROUP_ADMIN)
+        val groupMemberUserB = GroupMember.of(group.id, userB.id, GroupMemberRole.MEMBER)
+        val groupMemberUserC = GroupMember.of(group.id, userC.id, GroupMemberRole.MEMBER)
+
         val groupMemberRepository = mockk<GroupMemberRepository>()
-        val members = listOf(userB, userC)
-        members.forEach {user ->
-            every {groupMemberRepository.isMember(group.id, user.id)} returns Either.right(true)
-        }
-        every {groupMemberRepository.isMember(group.id, userD.id)} returns Either.right(false)
+
+        every {groupMemberRepository.load(group.id, userA.id)} returns Either.right(groupMemberUserA)
+        every {groupMemberRepository.load(group.id, userB.id)} returns Either.right(groupMemberUserB)
+        every {groupMemberRepository.load(group.id, userC.id)} returns Either.right(groupMemberUserC)
+        every {groupMemberRepository.load(group.id, userD.id)} returns Either.left(DocumentNotFoundException(object : ErrorContext(null){}))
 
         val securityService = SecurityService(groupMemberRepository)
 
@@ -50,7 +56,7 @@ class SecurityServiceSpec : DescribeSpec({
                     row(userD, setOf(GroupAccessLevel.NOT_MEMBER))
             ).forAll {user, requiredLevels ->
                 it("[${user.displayName}] has levels ${requiredLevels}") {
-                    val actualLevel = securityService.groupAccessLevel(group, user)
+                    val actualLevel = securityService.groupAccessLevel(group.id, user)
                     actualLevel.shouldBeRight(requiredLevels)
                 }
             }
@@ -69,7 +75,7 @@ class SecurityServiceSpec : DescribeSpec({
                         row(userD, setOf(IdeaAccessLevel.DENIED))
                 ).forAll {user, requiredLevels ->
                     it("[${user.id}] has levels ${requiredLevels}") {
-                        val actualLevels = securityService.ideaAccessLevels(group, idea, user)
+                        val actualLevels = securityService.ideaAccessLevels(idea, user)
                         actualLevels.shouldBeRight(requiredLevels)
                     }
                 }
@@ -80,7 +86,7 @@ class SecurityServiceSpec : DescribeSpec({
                 val idea = idea(userB, group, Option.just(userB))
                 val requiredLevels = setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.AUTHOR, IdeaAccessLevel.ASSIGNEE)
                 it("[${userB.id}] has levels $requiredLevels") {
-                    val actualLevels = securityService.ideaAccessLevels(group, idea, userB)
+                    val actualLevels = securityService.ideaAccessLevels(idea, userB)
                     actualLevels.shouldBeRight(requiredLevels)
                 }
             }
@@ -89,14 +95,14 @@ class SecurityServiceSpec : DescribeSpec({
                 val idea = idea(userD, group, Option.empty())
                 val requiredLevels = setOf(IdeaAccessLevel.DENIED)
                 it("[${userD.id}] has level ${requiredLevels}") {
-                    val actualLevels = securityService.ideaAccessLevels(group, idea, userD);
+                    val actualLevels = securityService.ideaAccessLevels(idea, userD);
                     actualLevels.shouldBeRight(requiredLevels)
                 }
             }
         }
 
         describe("groupmember security level, groupmember belongs to [userB]") {
-            val groupMember = GroupMember.of(group.id, userB)
+            val groupMember = GroupMember.of(group.id, userB.id, GroupMemberRole.MEMBER)
 
             table(
                     headers("user", "accessLevels"),
@@ -106,7 +112,7 @@ class SecurityServiceSpec : DescribeSpec({
                     row(userD, setOf(GroupMemberAccessLevel.DENIED))
             ).forAll {user, requiredLevels ->
                 it("${user.displayName} has levels $requiredLevels") {
-                    val actualLevels = securityService.groupMemberAccessLevels(groupMember, group, user)
+                    val actualLevels = securityService.groupMemberAccessLevels(groupMember, group.id, user)
                     actualLevels.shouldBeRight(requiredLevels)
                 }
 

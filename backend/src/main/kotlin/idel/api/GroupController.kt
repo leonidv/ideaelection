@@ -3,8 +3,8 @@ package idel.api
 import arrow.core.*
 import arrow.core.extensions.fx
 import idel.domain.*
+import idel.infrastructure.repositories.CouchbaseTransactions
 import idel.infrastructure.security.IdelOAuth2User
-import io.konform.validation.Invalid
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -15,6 +15,7 @@ import kotlin.IllegalArgumentException
 @RestController
 @RequestMapping("/groups")
 class GroupController(
+        private val couchbaseTransactions: CouchbaseTransactions,
         private val groupRepository: GroupRepository,
         private val userRepository: UserRepository,
         private val groupMemberRepository: GroupMemberRepository,
@@ -26,36 +27,26 @@ class GroupController(
 
     val security = apiSecurityFactory.create(log)
 
-    data class GroupInitInfo(
-            override val name: String,
-            override val description: String,
-            override val logo: String,
-            override val entryMode: GroupEntryMode,
-            val administrators: List<UserId>
-    ) : IGroupEditableProperties
-
-
-
     @PostMapping
     fun create(
-            @RequestBody properties: GroupInitInfo,
+            @RequestBody properties: GroupEditableProperties,
             @AuthenticationPrincipal user: IdelOAuth2User
     ): EntityOrError<Group> {
-        val y: Either<Exception, Either<Invalid<IGroupEditableProperties>, Group>> = Either.fx {
-            val (adminsUserInfo) = userRepository.loadUserInfo(properties.administrators)
-            val (creatorUserInfo) = userRepository.loadUserInfo(listOf(user.id))
 
-            val eGroup = factory.createGroup(creatorUserInfo.first(), properties, adminsUserInfo)
-            eGroup
-        }
 
-        return when (y) {
-            is Either.Left -> DataOrError.fromEither(y, log) // process possible options of error
-            is Either.Right -> when (val eGroup = y.b) {
-                is Either.Left -> DataOrError.invalid(eGroup.a.errors)
-                is Either.Right -> DataOrError.fromEither(groupRepository.add(eGroup.b), log)
+        val x = Either.fx<Exception,Group> {
+            val (group) = factory.createGroup(UserInfo.ofUser(user),properties)
+
+            val creatorAsAdmin = GroupMember.of(group.id,user, GroupMemberRole.GROUP_ADMIN)
+            couchbaseTransactions.transaction { ctx ->
+                groupRepository.add(group, ctx)
+                groupMemberRepository.add(creatorAsAdmin, ctx)
             }
+
+            group
         }
+
+        return DataOrError.fromEither(x,log)
     }
 
 
@@ -95,25 +86,21 @@ class GroupController(
         @PathVariable groupId: String,
         @RequestParam username : Optional<String>,
         pagination: Repository.Pagination
-    ) : EntityOrError<List<UserInfo>> {
+    ) : EntityOrError<List<GroupMember>> {
         return security.group.asMember(groupId, user) {
-            userRepository
-                .loadByGroup(groupId,pagination,username.asOption())
-                .map { users -> // map either
-                    users.map {UserInfo.ofUser(it)}
-                }
+            groupMemberRepository.loadByGroup(groupId,pagination,username.asOption())
         }
     }
 
 
 
     @DeleteMapping("/{groupId}/members/{userId}")
-    fun removeUser(
+    fun removeMember(
         @AuthenticationPrincipal user : IdelOAuth2User,
         @PathVariable groupId: String,
         @PathVariable userId : String
     ) : EntityOrError<String> {
-        return security.groupMember.asAdminOrHimSelf(groupId, userId, user) { _, _ ->
+        return security.groupMember.asAdminOrHimSelf(groupId, userId, user) {
             groupMemberRepository.removeFromGroup(groupId, userId).map {"ok"}
         }
     }

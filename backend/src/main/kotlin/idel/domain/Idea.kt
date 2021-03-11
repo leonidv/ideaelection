@@ -277,8 +277,8 @@ class Idea(
 }
 
 class IdeaValidation {
-    companion object {
-        val propertiesValidation = Validation<IIdeaEditableProperties> {
+    companion object : Validator<IIdeaEditableProperties> {
+        override val validation = Validation<IIdeaEditableProperties> {
             IIdeaEditableProperties::summary required  {
                 minLength(3)
                 maxLength(255)
@@ -296,17 +296,6 @@ class IdeaValidation {
 
             IIdeaEditableProperties::link {
                 isUrl(allowEmptyValue = true)
-            }
-        }
-
-        fun <T> ifValid(properties: IIdeaEditableProperties, action: () -> T): Either<ValidationException, T> {
-            val validationResult = propertiesValidation(properties)
-            return when (validationResult) {
-                is Invalid -> {
-                    val errors = validationResult.errors
-                    Either.left(ValidationException("properties is invalid", errors))
-                }
-                is Valid -> Either.right(action())
             }
         }
     }

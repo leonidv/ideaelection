@@ -47,7 +47,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
 
     @GetMapping("/{ideaId}")
     fun load(@AuthenticationPrincipal user: IdelOAuth2User, @PathVariable ideaId: String): EntityOrError<Idea> {
-        return secure.idea.asMember(ideaId, user) {_, idea ->
+        return secure.idea.asMember(ideaId, user) {idea ->
             Either.right(idea)
         }
     }
@@ -57,7 +57,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
             @AuthenticationPrincipal user: IdelOAuth2User,
             @PathVariable ideaId: String,
             @RequestBody properties: IdeaEditableProperties): EntityOrError<Idea> {
-        return secure.idea.withLevels(ideaId, user) {_, _, levels ->
+        return secure.idea.withLevels(ideaId, user) {_, levels ->
             ideaRepository.possibleMutate(ideaId) {idea ->
                 idea.updateInformation(properties, levels)
             }
@@ -69,7 +69,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     @ResponseStatus(HttpStatus.CREATED)
     fun vote(@AuthenticationPrincipal user: IdelOAuth2User,
              @PathVariable ideaId: String): EntityOrError<Idea> {
-        return secure.idea.asMember(ideaId, user) {_, _ ->
+        return secure.idea.asMember(ideaId, user) {
             ideaRepository.mutate(ideaId) {idea ->
                 idea.addVote(user.id)
             }
@@ -79,7 +79,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     @DeleteMapping("/{ideaId}/voters")
     fun devote(@AuthenticationPrincipal user: IdelOAuth2User,
                @PathVariable ideaId: String): EntityOrError<Idea> {
-        return secure.idea.asMember(ideaId, user) {_, _ ->
+        return secure.idea.asMember(ideaId, user) {
             ideaRepository.mutate(ideaId) {idea ->
                 idea.removeVote(user.id)
             }
@@ -92,7 +92,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     fun assign(@AuthenticationPrincipal user: IdelOAuth2User,
                @PathVariable ideaId: String,
                @RequestBody assignee: Assignee): EntityOrError<Idea> {
-        return secure.idea.withLevels(ideaId, user) {group, _, levels ->
+        return secure.idea.withLevels(ideaId, user) {idea, levels ->
             Either.fx<Exception, Either<Exception, Idea>> {
                 val removeAssignee = (assignee.userId == NOT_ASSIGNED)
                 if (removeAssignee) {
@@ -100,7 +100,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
                         idea.removeAssign(levels)
                     }
                 } else {
-                    val (assigneeIsMember) = secure.group.isMember(group, assignee.userId)
+                    val (assigneeIsMember) = secure.group.isMember(idea.groupId, assignee.userId)
                     if (assigneeIsMember) {
                         ideaRepository.possibleMutate(ideaId) {idea ->
                             idea.assign(assignee.userId, levels)
@@ -121,7 +121,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
             @PathVariable ideaId: String,
             @RequestBody body: Implemented
     ): EntityOrError<Idea> {
-        return secure.idea.withLevels(ideaId, user) {_, _, levels ->
+        return secure.idea.withLevels(ideaId, user) {_, levels ->
             ideaRepository.possibleMutate(ideaId) {idea ->
                 if (body.implemented) {
                     idea.implement(levels)

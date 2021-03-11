@@ -1,7 +1,11 @@
 package idel.domain
 
 import arrow.core.Either
-
+import com.couchbase.client.java.Cluster
+import com.couchbase.client.java.Collection
+import com.couchbase.transactions.AttemptContext
+import com.couchbase.transactions.Transactions
+import com.fasterxml.jackson.databind.node.ObjectNode
 
 interface BaseRepository<T : Identifiable> {
     /**
@@ -29,6 +33,25 @@ interface BaseRepository<T : Identifiable> {
      */
     fun possibleMutate(id: String, maxAttempts: Int = 3, mutation: (entity: T) -> Either<Exception, T>): Either<Exception, T>
 }
+
+/**
+ * Should be removed after a migration to PostgreSQL
+ */
+interface CouchbaseTransactionBaseRepository<T : Identifiable> {
+    fun collection() : Collection
+
+    fun entityToJsonObject(entity: T) : ObjectNode
+
+    fun add(entity : T, ctx: AttemptContext) : Either<Exception,Unit> {
+        return try {
+            ctx.insert(collection(), entity.id, entityToJsonObject(entity))
+            Either.right(Unit)
+        } catch(e : Exception) {
+            Either.left(e)
+        }
+    }
+}
+
 
 /**
  * Commons abstractions for repositories

@@ -22,6 +22,7 @@ class UnexpectedTypeDecodingFailure : Exception {
 /**
  * mapper is not modified
  */
+@Suppress("JoinDeclarationAndAssignment")
 class TypedJsonSerializer<T>(
     mapper: ObjectMapper,
     rootName: String,
@@ -35,9 +36,6 @@ class TypedJsonSerializer<T>(
 
 
     init {
-        // один маппер который разворачивает тип (первоначальная конвертаци)
-        // и второй, который уже оперирует без типа (вторая конвертаци) и вызывать эти мапперы в convertTyped
-
         mapperForUnwrappedJson = mapper.copy()
 
         mapperForUnwrappedJson
@@ -56,16 +54,21 @@ class TypedJsonSerializer<T>(
     val typeField = "_type"
 
 
+    fun serializeToObjectNode(input: Any?) : ObjectNode {
+        val json = ObjectNode(mapperForUnwrappedJson.nodeFactory)
+        val jsonEntity = mapperForUnwrappedJson.valueToTree<ObjectNode>(input)
+        json.put(typeField, type)
+        json.setAll<ObjectNode>(jsonEntity)
+        return json
+    }
+
     override fun serialize(input: Any?): ByteArray {
         if (input is ByteArray) {
             return input
         }
 
 
-        val json = ObjectNode(mapperForUnwrappedJson.nodeFactory)
-        val jsonEntity = mapperForUnwrappedJson.valueToTree<ObjectNode>(input)
-        json.put("_type", type)
-        json.setAll<ObjectNode>(jsonEntity)
+        val json = serializeToObjectNode(input)
         val x = mapperForUnwrappedJson.writeValueAsBytes(json) // for debug
         return x;
     }
@@ -75,7 +78,7 @@ class TypedJsonSerializer<T>(
             return input as T
         }
 
-        log.trace {"dezerialize: target=[$target], input=${String(input)}"}
+        log.trace {"deserialize: target=[$target], input=${String(input)}"}
 
         return try {
             if (typedClass.isAssignableFrom(target)) {
@@ -110,8 +113,8 @@ class TypedJsonSerializer<T>(
             }
 
         if (!json.has(typeField)) {
-            log.warn("Document is not typed ([_type] is null), input = [${String(input)}]")
-            throw UnexpectedTypeDecodingFailure("Field [_type] is not exists in document")
+            log.warn("Document is not typed ([$type] is null), input = [${String(input)}]")
+            throw UnexpectedTypeDecodingFailure("Field [$type] is not exists in document")
         }
 
         val inputType = json[typeField].asText()
