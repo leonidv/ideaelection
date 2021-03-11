@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service
 
 typealias GroupAction<T> = (group: Group) -> Either<Exception, T>
 
+typealias Action<T> = () -> Either<Exception, T>
+
 class ApiSecurity(
         securityService: SecurityService,
         userRepository: UserRepository,
@@ -55,13 +57,15 @@ class GroupSecurity(
             groupId: String,
             user: IdelOAuth2User,
             requiredLevels: Set<GroupAccessLevel>,
-            action: GroupAction<T>
+            action: Action<T>
     ): EntityOrError<T> {
+
+
         val result: Either<Exception, Either<Exception, T>> = Either.fx {
-            val (group) = groupRepository.load(groupId)
-            val (accessLevels) = securityService.groupAccessLevel(group, user)
+            //val (group) = groupRepository.load(groupId)
+            val (accessLevels) = securityService.groupAccessLevel(groupId, user)
             if (accessLevels.intersect(requiredLevels).isNotEmpty()) {
-                action(group)
+                action()
             } else {
                 Either.left(OperationNotPermitted())
             }
@@ -70,29 +74,29 @@ class GroupSecurity(
         return DataOrError.fromEither(result.flatten(), controllerLog)
     }
 
-    fun <T> asMember(groupId: String, user: IdelOAuth2User, action: GroupAction<T>): EntityOrError<T> {
+    fun <T> asMember(groupId: String, user: IdelOAuth2User, action: Action<T>): EntityOrError<T> {
         return secure(groupId, user, memberLevel, action)
     }
 
-    fun <T> asAdmin(groupId: String, user: IdelOAuth2User, action: GroupAction<T>): EntityOrError<T> {
+    fun <T> asAdmin(groupId: String, user: IdelOAuth2User, action: Action<T>): EntityOrError<T> {
         return secure(groupId, user, adminLevel, action)
     }
 
     /**
      * Check that user is member of group.
      */
-    fun isMember(group: Group, userId: String): Either<Exception, Boolean> {
+    fun isMember(groupId: String, userId: String): Either<Exception, Boolean> {
         return Either.fx<Exception, Boolean> {
             val (user) = userRepository.load(userId)
-            val (levels) = securityService.groupAccessLevel(group, user)
+            val (levels) = securityService.groupAccessLevel(groupId, user)
             levels.contains(GroupAccessLevel.MEMBER)
         }
     }
 
 }
 
-typealias IdeaAction<T> = (group: Group, idea: Idea) -> Either<Exception, T>
-typealias IdeaActionWithLevels<T> = (group: Group, idea: Idea, levels: Set<IdeaAccessLevel>) -> Either<Exception, T>
+typealias IdeaAction<T> = (idea: Idea) -> Either<Exception, T>
+typealias IdeaActionWithLevels<T> = (idea: Idea, levels: Set<IdeaAccessLevel>) -> Either<Exception, T>
 
 class IdeaSecurity(private val securityService: SecurityService,
                    private val groupRepository: GroupRepository,
@@ -108,10 +112,10 @@ class IdeaSecurity(private val securityService: SecurityService,
     ): EntityOrError<T> {
         val result: Either<Exception, Either<Exception, T>> = Either.fx {
             val (idea) = ideaRepository.load(ideaId)
-            val (group) = groupRepository.load(idea.groupId)
-            val (levels) = securityService.ideaAccessLevels(group, idea, user)
+            //val (group) = groupRepository.load(idea.groupId)
+            val (levels) = securityService.ideaAccessLevels(idea, user)
             if (levels.intersect(requiredLevels).isNotEmpty()) {
-                action(group, idea)
+                action(idea)
             } else {
                 Either.left(OperationNotPermitted())
             }
@@ -123,9 +127,9 @@ class IdeaSecurity(private val securityService: SecurityService,
     fun <T> withLevels(ideaId: String, user: IdelOAuth2User, action: IdeaActionWithLevels<T>): EntityOrError<T> {
         val result: Either<Exception, Either<Exception, T>> = Either.fx {
             val (idea) = ideaRepository.load(ideaId)
-            val (group) = groupRepository.load(idea.groupId)
-            val (levels) = securityService.ideaAccessLevels(group, idea, user)
-            action(group, idea, levels)
+            //val (group) = groupRepository.load(idea.groupId)
+            val (levels) = securityService.ideaAccessLevels(idea, user)
+            action(idea, levels)
         }
 
         return DataOrError.fromEither(result.flatten(), controllerLog)

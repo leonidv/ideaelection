@@ -17,21 +17,22 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
         const val PUBLIC = "PUBLIC"
         const val CLOSED = "CLOSED"
         const val PRIVATE = "PRIVATE"
+
+        const val MEMBER= "MEMBER"
+        const val ADMIN = "GROUP_ADMIN"
     }
 
     fun create(
         name: String,
         entryMode: String,
-        description: String = "$name, $entryMode",
-        admins: Set<String> = setOf("$username@httpbasic")
+        description: String = "$name, $entryMode"
     ): HttpResponse<JsonNode> {
         val body = """
             {
                 "name": "$name",
                 "description": "$description",
                 "logo": "data:image/png;base64,dGVzdA==",
-                "entryMode" : "$entryMode",
-                "administrators": ${asJson(admins)}
+                "entryMode" : "$entryMode"
             }
         """.trimIndent()
 
@@ -81,8 +82,14 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
 fun groupHasName(name: String) = BodyFieldValueChecker.forField("name", name)
 fun groupHasDescription(description: String) = BodyFieldValueChecker.forField("description", description)
 fun groupHasEntryMode(entryMode: String) = BodyFieldValueChecker.forField("entryMode", entryMode)
-fun groupHasAdmin(user: User) = BodyArrayElementExists("has admin $user", "$.data.administrators", "id", user.id)
-fun groupHasMember(user: User) = BodyArrayElementExists("has member $user", "$.data", "id", user.id)
+fun groupHasCreator(user: User) = BodyFieldValueChecker.forField("creator.id",user.id)
+
+fun groupHasMemberWithRole(user: User, role : String) =
+    BodyArrayObjectWithFields("has [$user] as [$role]", "$.data", fields = arrayOf(Pair("userId",user.id), Pair("roleInGroup", role)) )
+
+fun groupHasAdmin(user : User) = groupHasMemberWithRole(user, GroupsApi.ADMIN)
+fun groupHasMember(user: User) = groupHasMemberWithRole(user, GroupsApi.MEMBER)
+
 fun groupHasNotMember(user: User) = NotBodyArrayElementExists("has member $user", "$.data", "id", user.id)
 
 fun noGroups() = BodyArraySize("no any groups", "$.data", 0)

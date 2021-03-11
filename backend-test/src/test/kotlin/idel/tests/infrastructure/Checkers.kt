@@ -116,9 +116,12 @@ suspend fun DescribeScope.checkIsOk(response: HttpResponse<JsonNode>, vararg fie
 }
 
 suspend fun DescribeScope.checkIsForbidden(response: HttpResponse<JsonNode>) {
-    it("response is 403 with code 103") {
-        response.shouldHasStatus(HttpURLConnection.HTTP_FORBIDDEN)
-        response.shouldBeError(103)
+    val body = response.body()
+    body.toPrettyString().asClue {
+        it("response is 403 with code 103") {
+            response.shouldHasStatus(HttpURLConnection.HTTP_FORBIDDEN)
+            response.shouldBeError(103)
+        }
     }
 }
 

@@ -79,7 +79,11 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
 
     }
 
-    protected fun <T> safelyKeyOperation(id: String, action: () -> T): Either<Exception, T> {
+    protected fun traceRawQuery(query : String, params : JsonObject) {
+        log.trace {"\nquery:  [$query], \nparams:  [$params]"}
+    }
+
+    protected fun <X> safelyKeyOperation(id: String, action: () -> X): Either<Exception, X> {
         return try {
             Either.right(action())
         } catch (e: DocumentNotFoundException) {
@@ -91,7 +95,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         }
     }
 
-    protected fun <T> safely(action: () -> Either<Exception, T>): Either<Exception, T> {
+    protected fun <X> safely(action: () -> Either<Exception, X>): Either<Exception, X> {
         return try {
             return action();
 
@@ -271,7 +275,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
             val queryString = basePart + filterQuery +
                     "order by $orderingPart " + pagination.queryPart()
 
-            log.trace {"query: [$queryString], params: [$params]"}
+         traceRawQuery(queryString, params)
 
             Either.right(cluster.query(queryString, options).rowsAs(typedClass))
         } catch (e: Exception) {

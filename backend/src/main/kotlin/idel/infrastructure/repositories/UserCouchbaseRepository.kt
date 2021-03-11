@@ -10,31 +10,36 @@ import idel.domain.*
 import mu.KotlinLogging
 
 data class PersistsUser(
-        override val id: String,
-        override val email: String,
-        override val displayName: String,
-        override val avatar: String,
-        override val roles: Set<String>) : User {
+    override val id: String,
+    override val email: String,
+    override val displayName: String,
+    override val avatar: String,
+    override val roles: Set<String>
+) : User {
 
 
     companion object {
         fun of(user: User): PersistsUser {
             return PersistsUser(
-                    id = user.id,
-                    email = user.email,
-                    displayName = user.displayName,
-                    avatar = user.avatar,
-                    roles = user.roles
+                id = user.id,
+                email = user.email,
+                displayName = user.displayName,
+                avatar = user.avatar,
+                roles = user.roles
             )
         }
     }
 }
 
 class UserCouchbaseRepository(
-        cluster: Cluster,
-        collection: Collection) :
-        AbstractTypedCouchbaseRepository<PersistsUser>(cluster, collection, "user", PersistsUser::class.java),
-        UserRepository {
+    cluster: Cluster,
+    collection: Collection
+) :
+    AbstractTypedCouchbaseRepository<PersistsUser>(cluster, collection, TYPE, PersistsUser::class.java),
+    UserRepository {
+    companion object {
+        const val TYPE = "user"
+    }
 
     override val log = KotlinLogging.logger {}
 
@@ -62,8 +67,8 @@ class UserCouchbaseRepository(
 
 
         val q = cluster.query(
-                queryString,
-                queryOptions(params).readonly(true)
+            queryString,
+            queryOptions(params).readonly(true)
         )
 
         return q.rowsAs(this.typedClass)
@@ -73,9 +78,11 @@ class UserCouchbaseRepository(
         val users = mutableListOf<UserInfo>()
         for (id in ids) {
             when (val eUser = load(id)) {
-                is Either.Left -> when(val ex = eUser.a) {
-                   is EntityNotFound -> {log.debug {ex.message}} // ignore users which are not found
-                   else -> return eUser
+                is Either.Left -> when (val ex = eUser.a) {
+                    is EntityNotFound -> {
+                        log.debug {ex.message}
+                    } // ignore users which are not found
+                    else -> return eUser
                 }
                 is Either.Right -> {
                     val userInfo = UserInfo.ofUser(eUser.b)
@@ -92,27 +99,6 @@ class UserCouchbaseRepository(
         pagination: Repository.Pagination,
         usernameFilter: Option<String>
     ): Either<Exception, List<User>> {
-        val selectPart = """ SELECT ie FROM `$bucketName` gm JOIN `$bucketName` ie ON KEYS gm.userId
-            WHERE gm._type = "groupMember" and ie._type = "$type"
-        """.trimIndent()
-
-        val filterParts = mutableListOf("gm.groupId =  \$groupId")
-        val params = JsonObject.create()
-        params.put("groupId", groupId)
-
-        if (usernameFilter is Some) {
-            filterParts.add("""CONTAINS( UPPER(ie.displayName), UPPER(${'$'}username) )""")
-            params.put("username", usernameFilter.t)
-        }
-
-        val orderingPart = "gm.ctime DESC"
-
-        return rawLoad(
-            basePart = selectPart,
-            filterQueryParts = filterParts,
-            orderingPart = orderingPart,
-            params = params,
-            pagination = pagination
-        )
+        throw NotImplementedError()
     }
 }

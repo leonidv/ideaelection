@@ -28,7 +28,7 @@ class GroupMemberController(
 
     @DeleteMapping
     fun remove(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody request: KickRequest) : EntityOrError<String> {
-        return security.groupMember.asAdminOrHimSelf(request.groupId, request.userId, user) {_, _ ->
+        return security.groupMember.asAdminOrHimSelf(request.groupId, request.userId, user) {
             val result = groupMemberRepository.removeFromGroup(request.groupId, request.userId)
             result.map {"ok"}
         }
@@ -49,7 +49,7 @@ class GroupMemberController(
 }
 
 
-typealias GroupMemberAction<T> = (groupMember: GroupMember, group: Group) -> Either<Exception, T>
+typealias GroupMemberAction<T> = (groupMember: GroupMember) -> Either<Exception, T>
 
 class GroupMemberSecurity(private val securityService: SecurityService,
                           private val groupRepository: GroupRepository,
@@ -58,24 +58,24 @@ class GroupMemberSecurity(private val securityService: SecurityService,
     private val log = KotlinLogging.logger {}
 
     private fun <T> secure(
-            memberGroupId: String,
-            memberUserId: String,
-            user: IdelOAuth2User,
-            requiredLevels: Set<GroupMemberAccessLevel>,
-            action: GroupMemberAction<T>
+        groupId: String,
+        memberUserId: String,
+        user: IdelOAuth2User,
+        requiredLevels: Set<GroupMemberAccessLevel>,
+        action: GroupMemberAction<T>
     ): EntityOrError<T> {
         val result: Either<Exception, Either<Exception, T>> = Either.fx {
-            val (group) = groupRepository.load(memberGroupId)
-            val (userLevels)  = securityService.groupAccessLevel(group, user)
-            log.trace {"$user has $userLevels for $group"}
+            //val (group) = groupRepository.load(memberGroupId)
+            val (userLevels)  = securityService.groupAccessLevel(groupId, user)
+            log.trace {"$user has $userLevels for $groupId"}
             if (!userLevels.contains(GroupAccessLevel.MEMBER)) {
                 Either.left(OperationNotPermitted())
             } else {
-                val (groupMember) = groupMemberRepository.load(memberGroupId, memberUserId)
+                val (groupMember) = groupMemberRepository.load(groupId, memberUserId)
 
-                val (levels) = securityService.groupMemberAccessLevels(groupMember, group, user)
+                val (levels) = securityService.groupMemberAccessLevels(groupMember, groupId, user)
                 if (levels.intersect(requiredLevels).isNotEmpty()) {
-                    action(groupMember, group)
+                    action(groupMember)
                 } else {
                     Either.left(OperationNotPermitted())
                 }

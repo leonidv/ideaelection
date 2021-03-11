@@ -19,6 +19,11 @@ class DomainConfiguration {
     private lateinit var couchbaseCluster: Cluster
 
     @Bean
+    fun couchbaseTransactions() : CouchbaseTransactions {
+        return CouchbaseTransactions(couchbaseCluster)
+    }
+
+    @Bean
     fun groupRepository() : GroupRepository {
         return GroupCouchbaseRepository(couchbaseCluster,couchbaseCollection)
     }

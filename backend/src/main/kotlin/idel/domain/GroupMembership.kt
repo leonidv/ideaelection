@@ -80,7 +80,7 @@ class GroupMembershipService(
                 when (entryMode) {
                     GroupEntryMode.PUBLIC -> {
                         val request = JoinRequest.createApproved(groupId, userId, message)
-                        val newMember = GroupMember.of(groupId, user)
+                        val newMember = GroupMember.of(groupId, user, GroupMemberRole.MEMBER)
                         //groupRepository.addMember(groupId, newMember).map {request}
                         groupMemberRepository.add(newMember).map {request}
 
@@ -104,7 +104,7 @@ class GroupMembershipService(
                 AcceptStatus.APPROVED -> {
                     Either.fx {
                         val (user) = userRepository.load(joinRequest.userId)
-                        val groupMember = GroupMember.of(joinRequest.groupId, user)
+                        val groupMember = GroupMember.of(joinRequest.groupId, user, GroupMemberRole.MEMBER)
                         groupMemberRepository.add(groupMember).bind()
                         val nextJoinRequest = joinRequest.resolve(AcceptStatus.APPROVED)
                         joinRequestRepository.replace(nextJoinRequest)

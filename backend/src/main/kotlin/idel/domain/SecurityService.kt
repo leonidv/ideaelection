@@ -2,6 +2,9 @@ package idel.domain
 
 import arrow.core.Either
 import arrow.core.extensions.fx
+import com.couchbase.client.core.error.DocumentNotFoundException
+import mu.KLogger
+import mu.KotlinLogging
 
 
 class OperationNotPermitted : Exception()
@@ -36,8 +39,10 @@ enum class GroupMemberAccessLevel {
  * we should not check that a user is an admin every time. But if action can do only admin, {admin} level is checked.
  */
 class SecurityService(
-        private val groupMemberRepository: GroupMemberRepository
+    private val groupMemberRepository: GroupMemberRepository
 ) {
+
+    val log = KotlinLogging.logger {}
 
     companion object {
 
@@ -74,7 +79,11 @@ class SecurityService(
         /**
          * Group member level of a group admin.
          */
-        val GROUP_MEMBER_LEVELS_FOR_ADMIN = setOf(GroupMemberAccessLevel.GROUP_ADMIN, GroupMemberAccessLevel.GROUP_MEMBER, GroupMemberAccessLevel.HIM_SELF)
+        val GROUP_MEMBER_LEVELS_FOR_ADMIN = setOf(
+            GroupMemberAccessLevel.GROUP_ADMIN,
+            GroupMemberAccessLevel.GROUP_MEMBER,
+            GroupMemberAccessLevel.HIM_SELF
+        )
 
         /**
          * Group member level of a group member.
@@ -106,66 +115,75 @@ class SecurityService(
     fun isSuperUser(user: User): Boolean {
         return user.roles.contains(Roles.SUPER_USER)
     }
+
     /**
      * Calculate group access level.
      */
-    fun groupAccessLevel(group: Group, user: User): Either<Exception, Set<GroupAccessLevel>> {
-        return Either.fx {
-            val isAdmin = group.administrators.has(user) || isSuperUser(user)
-            if (isAdmin) {
-                // group admin can do anything that can do member
-                GROUP_LEVELS_ADMIN
-            } else {
-                val (isMember) = groupMemberRepository.isMember(group.id, user.id)
-                if (isMember) {
-                    GROUP_LEVELS_MEMBER
+    fun groupAccessLevel(groupId: String, user: User): Either<Exception, Set<GroupAccessLevel>> {
+        if (user.roles.contains(Roles.SUPER_USER)) {
+            return Either.right(GROUP_LEVELS_ADMIN)
+        }
+
+        val eUser = groupMemberRepository.load(groupId, user.id)
+
+        return when (eUser) {
+            is Either.Left ->
+                if (eUser.a is EntityNotFound) {
+                    log.info {"SECURITY ${user.id} try to get access into group ${groupId} "}
+                    Either.right(GROUP_LEVELS_NOT_MEMBER)
                 } else {
-                    GROUP_LEVELS_NOT_MEMBER
+                    eUser
                 }
-            }
+
+            is Either.Right ->
+                when (eUser.b.roleInGroup) {
+                    GroupMemberRole.GROUP_ADMIN -> Either.right(GROUP_LEVELS_ADMIN)
+                    GroupMemberRole.MEMBER -> Either.right(GROUP_LEVELS_MEMBER)
+                }
         }
     }
 
     /**
      * Calculate group access levels. It's may be
      */
-    fun ideaAccessLevels(group: Group, idea: Idea, user: User): Either<Exception, Set<IdeaAccessLevel>> {
-        if (group.id != idea.groupId) {
-            return Either.left(IllegalArgumentException("Group doesn't contain idea, groupId = [${group.id}], idea.groupId = [${idea.groupId}]"))
-        } else {
-            return groupAccessLevel(group, user).map {groupAccessLevels ->
-                when {
-                    groupAccessLevels.contains(GroupAccessLevel.NOT_MEMBER) -> IDEA_LEVELS_FOR_NOT_GROUP_MEMBER
+    fun ideaAccessLevels(idea: Idea, user: User): Either<Exception, Set<IdeaAccessLevel>> {
+        return groupAccessLevel(idea.groupId, user).map {groupAccessLevels ->
+            when {
+                groupAccessLevels.contains(GroupAccessLevel.NOT_MEMBER) -> IDEA_LEVELS_FOR_NOT_GROUP_MEMBER
 
-                    groupAccessLevels.contains(GroupAccessLevel.ADMIN) -> IDEA_LEVELS_FOR_GROUP_ADMIN
+                groupAccessLevels.contains(GroupAccessLevel.ADMIN) -> IDEA_LEVELS_FOR_GROUP_ADMIN
 
-                    groupAccessLevels.contains(GroupAccessLevel.MEMBER) -> {
-                        val levels = IDEA_LEVELS_FOR_MEMBER.toMutableSet()
-                        if (idea.assignee == user.id) {
-                            levels.add(IdeaAccessLevel.ASSIGNEE)
-                        }
-
-                        if (idea.author == user.id) {
-                            levels.add(IdeaAccessLevel.AUTHOR)
-                        }
-
-                        levels
+                groupAccessLevels.contains(GroupAccessLevel.MEMBER) -> {
+                    val levels = IDEA_LEVELS_FOR_MEMBER.toMutableSet()
+                    if (idea.assignee == user.id) {
+                        levels.add(IdeaAccessLevel.ASSIGNEE)
                     }
 
-                    else -> setOf(IdeaAccessLevel.DENIED)
+                    if (idea.author == user.id) {
+                        levels.add(IdeaAccessLevel.AUTHOR)
+                    }
+
+                    levels
                 }
+
+                else -> setOf(IdeaAccessLevel.DENIED)
             }
         }
+
     }
 
 
-    fun groupMemberAccessLevels(groupMember: GroupMember, group: Group, user: User): Either<Exception, Set<GroupMemberAccessLevel>> {
+    fun groupMemberAccessLevels(
+        groupMember: GroupMember,
+        groupId: String,
+        user: User
+    ): Either<Exception, Set<GroupMemberAccessLevel>> {
         return if (groupMember.userId == user.id) {
             Either.right(GROUP_MEMBER_HIM_SELF)
         } else {
             Either.fx {
                 // it has a second call to a repository, but the operation is rarely so we don't optimize it
-                val (groupAccessLevel) = groupAccessLevel(group, user)
+                val (groupAccessLevel) = groupAccessLevel(groupId, user)
                 when {
                     groupAccessLevel.contains(GroupAccessLevel.ADMIN) -> GROUP_MEMBER_LEVELS_FOR_ADMIN
                     groupAccessLevel.contains(GroupAccessLevel.MEMBER) -> GROUP_MEMBER_LEVELS_FOR_MEMBER

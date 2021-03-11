@@ -5,7 +5,7 @@ testmode: false
 couchbase:
   host: 127.0.0.1
   port:
-  username: Administrator
+  username: admin
   password: password
   bucket: ideaelection
 

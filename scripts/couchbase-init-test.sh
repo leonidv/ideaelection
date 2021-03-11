@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 CB_HOST=localhost
-CURL_COMMON="--fail -u Administrator:password"
+CURL_COMMON="--fail -u admin:password"
+CB_STORAGE_ENGINE="plasma" #plasma for enterprise, forestdb for community
 
 checkCurlExec() {
     echo $1 $2
@@ -35,7 +36,7 @@ checkCurlExec $? 'Quotas: 256mb to all'
 
 #Create administrator user with default name and password
 curl ${CURL_COMMON} http://${CB_HOST}:8091/settings/web  \
-        --data username=Administrator \
+        --data username=admin \
         --data password=password \
         --data port=8091
 
@@ -43,9 +44,9 @@ checkCurlExec $? 'Default admin user'
 
 
 curl ${CURL_COMMON} http://${CB_HOST}:8091/settings/indexes   \
-        --data storageMode=forestdb
+        --data storageMode=$CB_STORAGE_ENGINE
 
-checkCurlExec $? 'Index forestdb enabled'
+checkCurlExec $? 'Index $CB_STORAGE_ENGINE enabled'
 
 curl ${CURL_COMMON} http://${CB_HOST}:8091/pools/default/buckets  \
         --data replicaNumber=0 \
@@ -61,8 +62,12 @@ curl -G -XPOST ${CURL_COMMON} http://${CB_HOST}:8093/query/service \
 checkCurlExec $? 'Index on type created'
 
 curl -G -XPOST ${CURL_COMMON} http://${CB_HOST}:8093/query/service \
-        --data-urlencode statement='CREATE INDEX `ideas-by-ctime` ON `ideaelection`(`_type`,`ctime`)'
+        --data-urlencode statement='CREATE INDEX `index_type_ctime` ON `ideaelection`(`_type`,`ctime`)'
 checkCurlExec $? 'Index on type and ctime created'
+
+curl -G -XPOST ${CURL_COMMON} http://${CB_HOST}:8093/query/service \
+        --data-urlencode statement='CREATE INDEX index_id_type ON `ideaelection`(`id`,`_type`)'
+checkCurlExec $? 'Index on id and type created'
 
 curl ${CURL_COMMON} -XPUT http://${CB_HOST}:8094/api/index/idea_fts \
         -H 'cache-control: no-cache' \

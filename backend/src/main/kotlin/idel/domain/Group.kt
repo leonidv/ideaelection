@@ -90,11 +90,6 @@ class Group(
          */
         override val entryMode: GroupEntryMode,
 
-        /**
-         * Administrators of groups.
-         */
-        val administrators: List<UserInfo>,
-
         ) : IGroupEditableProperties, Identifiable {
 
     override fun equals(other: Any?): Boolean {
@@ -115,22 +110,22 @@ class Group(
     override fun toString(): String {
         return "Group(id='" + id +
                 "', ctime=" + ctime + ", creator=" + creator + ", name='" + name + "', description='" + description +
-                "', logo='" + logo + "', entryMode=" + entryMode + ", administrators=" + administrators + ")"
+                "', logo='" + logo + "', entryMode=" + entryMode + ")"
     }
 
 
 }
 
 
-class GroupValidation {
-    companion object {
+class GroupValidation  {
+    companion object : Validator<IGroupEditableProperties> {
 
         // https://rgxdb.com/r/1NUN74O6
         private val base64Regex = """data\:image/(png|jpg);base64,(?:[A-Za-z0-9+\/]{4})*""" +
                 """(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{4})""".toRegex()
 
 
-        val propertiesValidation = Validation<IGroupEditableProperties> {
+        override val validation = Validation<IGroupEditableProperties> {
             IGroupEditableProperties::name {
                 minLength(3)
                 maxLength(255)
@@ -146,32 +141,25 @@ class GroupValidation {
             }
         }
     }
+
 }
 
 
 class GroupFactory {
     fun createGroup(
             creator: UserInfo,
-            properties: IGroupEditableProperties,
-            administrators: List<UserInfo>
-    ): Either<Invalid<IGroupEditableProperties>, Group> {
-        val validationResult: ValidationResult<IGroupEditableProperties> = GroupValidation.propertiesValidation(properties)
-
-        return when (validationResult) {
-            is Invalid -> Either.left(validationResult)
-            is Valid -> {
-                val group = Group(
-                        id = generateId(),
-                        ctime = LocalDateTime.now(),
-                        creator = creator,
-                        name = properties.name,
-                        description = properties.description,
-                        logo = properties.logo,
-                        entryMode = properties.entryMode,
-                        administrators = administrators + creator
-                )
-                Either.right(group)
-            }
+            properties: IGroupEditableProperties
+    ): Either<ValidationException, Group> {
+        return GroupValidation.ifValid(properties) {
+            Group(
+                id = generateId(),
+                ctime = LocalDateTime.now(),
+                creator = creator,
+                name = properties.name,
+                description = properties.description,
+                logo = properties.logo,
+                entryMode = properties.entryMode
+            )
         }
     }
 }
@@ -183,19 +171,7 @@ enum class GroupOrdering {
     TITLE_DESC
 }
 
-data class GroupFiltering(
-
-        /**
-         * Filter groups with member
-         */
-        val member: Option<UserId>
-)
-
-interface GroupRepository {
-    fun add(entity: Group): Either<Exception, Group>
-
-    fun load(id: String): Either<Exception, Group>
-
+interface GroupRepository : BaseRepository<Group>, CouchbaseTransactionBaseRepository<Group> {
     fun replace(entity: Group): Either<Exception, Group>
 
     /**

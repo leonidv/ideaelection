@@ -38,6 +38,7 @@ dependencies {
     implementation("org.springframework.security:spring-security-oauth2-jose")
 
     implementation("com.couchbase.client:java-client:3.1.2")
+    implementation("com.couchbase.client:couchbase-transactions:1.1.5")
 
     implementation("io.github.microutils:kotlin-logging:1.7.9")
 
