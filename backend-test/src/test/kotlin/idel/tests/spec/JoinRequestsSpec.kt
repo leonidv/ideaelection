@@ -1,12 +1,11 @@
+@file:Suppress("JoinDeclarationAndAssignment")
+
 package idel.tests.spec
 
-import idel.tests.apiobject.GroupsApi
-import idel.tests.apiobject.JoinRequestsApi
-import idel.tests.apiobject.User
+import idel.tests.apiobject.*
+import idel.tests.infrastructure.*
 import idel.tests.shouldHasPath
 import idel.tests.shouldContains
-import idel.tests.infrastructure.extractData
-import idel.tests.infrastructure.extractId
 import idel.tests.shouldBeError
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.DescribeSpec
@@ -17,13 +16,23 @@ import io.kotest.data.table
 import java.util.*
 
 class JoinRequestsSpec : DescribeSpec({
-    val userA = User("userA")
+
+    beforeSpec {
+        Couchbase().clearAll()
+    }
+
+    val userA = User("userA", "group creator")
+    val userB = User("userB")
+
+    describe("register users [userA, userB]") {
+        registryUsers(userA, userB)
+    }
 
     describe("negative scenarios") {
         describe("group id is not exists") {
             val response = userA.joinRequests.create(UUID.randomUUID().toString())
 
-            it("should be 102 error (entity not exists") {
+            it("should be 102 error (entity not exists)") {
                 response.shouldBeError(102)
             }
         }
@@ -31,44 +40,22 @@ class JoinRequestsSpec : DescribeSpec({
 
 
     describe("positive scenarios") {
-        describe("creating join requests") {
+        describe("creating join requests to public group") {
             describe("basic checks") {
-                val createGroupsResponse = userA.groups.create("userA public group", entryMode = GroupsApi.PUBLIC)
-                val groupId = extractId(createGroupsResponse)
+                lateinit var groupId : String
+                groupId = initGroup(userA, entryMode = GroupsApi.PUBLIC, members = setOf())
 
-                val createJoinRequestsResponse =
-                    userA.joinRequests.create(
-                        groupId = groupId,
-                        message = "Please add me to the group"
-                    )
-                val data = extractData(createJoinRequestsResponse)
+                val response  = userB.joinRequests.create(groupId = groupId, message = "msg")
 
-                data.toPrettyString().asClue {
-                    it("has id") {
-                        data.shouldHasPath("$.id")
-                    }
+                checkIsOk(
+                    response,
+                    hasId,
+                    joinRequestHasGroupId(groupId),
+                    joinRequestHasUserId(userB.id),
+                    joinRequestIsApproved,
+                    joinRequestHasMessage("msg")
+                )
 
-                    it("has group from the request") {
-                        data.shouldContains("$.groupId", groupId)
-                    }
-
-                    it("has user from the request") {
-                        data.shouldContains("$.userId", userA.id)
-                    }
-
-                    it("has the creation time") {
-                        data.shouldHasPath("$.ctime")
-                    }
-
-                    it("is approved") {
-                        data.shouldContains("$.status", JoinRequestsApi.APPROVED)
-                    }
-
-                    it("has message from the request") {
-                        data.shouldContains("$.message", "Please add me to the group")
-                    }
-
-                }
             }
 
             describe("join requests status depends on groups entry mode") {
@@ -79,16 +66,14 @@ class JoinRequestsSpec : DescribeSpec({
                     row(GroupsApi.PRIVATE, JoinRequestsApi.UNRESOLVED)
                 ).forAll {entryMode: String, status: String ->
                     describe("for $entryMode group status should be $status") {
+                        lateinit var groupId : String
+                        groupId = initGroup(userA, entryMode = entryMode, members = setOf())
 
-                        val createGroupsResponse = userA.groups.create("userA public group", entryMode = entryMode)
-                        val groupId = extractId(createGroupsResponse)
-
-                        val createJoinRequestsResponse = userA.joinRequests.create(groupId)
-                        val data = extractData(createJoinRequestsResponse)
-
-                        it("status is $status") {
-                            data.shouldContains("$.status", status)
-                        }
+                        val response = userB.joinRequests.create(groupId)
+                        checkIsOk(
+                            response,
+                            joinRequestHasStatus(status)
+                        )
                     }
                 }
             }
