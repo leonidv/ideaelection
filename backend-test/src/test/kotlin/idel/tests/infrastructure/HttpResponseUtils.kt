@@ -8,11 +8,14 @@ import java.net.http.HttpResponse
 
 fun extractData(response: HttpResponse<JsonNode>): JsonNode {
 
-    "basic checks failed, tests are skipped".asClue {
-        response.shouldHasStatus(200)
-        response.shouldBeData()
-    }
+    val body = response.body();
 
+    body.toPrettyString().asClue {
+        "basic checks failed, tests are skipped".asClue {
+            response.shouldHasStatus(200)
+            response.shouldBeData()
+        }
+    }
     return response.body().get("data")
 }
 

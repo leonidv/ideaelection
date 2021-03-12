@@ -47,9 +47,13 @@ class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : Abstract
     }
 }
 
+fun joinRequestHasStatus(status : String) = BodyFieldValueChecker.forField("status",status)
 val joinRequestIsApproved = BodyFieldValueChecker("join request is approved", "$.data.status", JoinRequestsApi.APPROVED)
 val joinRequestIsUnresolved = BodyFieldValueChecker("join request is unresolved", "$.data.status", JoinRequestsApi.UNRESOLVED)
 val joinRequestIsDeclined = BodyFieldValueChecker("join request is declined","$.data.status",JoinRequestsApi.DECLINED)
+fun joinRequestHasGroupId(groupId : String) = BodyFieldValueChecker.forField("groupId",groupId)
+fun joinRequestHasUserId(userId : String) = BodyFieldValueChecker.forField("userId",userId)
+fun joinRequestHasMessage(msg : String) = BodyFieldValueChecker.forField("message", msg)
 
 
 fun includeJoinRequest(joinRequestId : String) =

@@ -118,7 +118,7 @@ class GroupsSpec : DescribeSpec({
 
                     checkIsOk(
                         response,
-                        dataListSize(3""),
+                        dataListSize(3),
                         groupHasMember(userC),
                         groupHasMember(userB),
                         groupHasAdmin(userA)
