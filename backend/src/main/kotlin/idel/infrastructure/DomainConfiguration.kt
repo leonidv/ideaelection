@@ -72,6 +72,11 @@ class DomainConfiguration {
     }
 
     @Bean
+    fun groupService(groupMemberRepository: GroupMemberRepository) : GroupService {
+        return GroupService(groupMemberRepository)
+    }
+
+    @Bean
     fun securityService(groupMemberRepository: GroupMemberRepository) : SecurityService {
         return SecurityService(groupMemberRepository)
     }

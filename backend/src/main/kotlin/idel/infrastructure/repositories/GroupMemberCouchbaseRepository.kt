@@ -3,6 +3,8 @@ package idel.infrastructure.repositories
 import arrow.core.Either
 import arrow.core.Option
 import arrow.core.Some
+import arrow.core.extensions.either.monad.flatten
+import arrow.core.extensions.fx
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.json.JsonObject
@@ -12,7 +14,7 @@ import idel.domain.*
 import mu.KotlinLogging
 import java.time.LocalDateTime
 
-class GroupMemberLink(
+private data class GroupMemberLink(
     override val id: String,
     val ctime: LocalDateTime,
     val groupId: String,
@@ -119,10 +121,12 @@ class GroupMemberCouchbaseRepository(cluster: Cluster, collection: Collection) :
         }
     }
 
+
     override fun loadByGroup(
         groupId: String,
         pagination: Repository.Pagination,
-        usernameFilter: Option<String>
+        usernameFilter: Option<String>,
+        roleFilter: Option<GroupMemberRole>
     ): Either<Exception, List<GroupMember>> {
         val selectPart = """ SELECT  OBJECT_CONCAT(u, gm) as ie 
              FROM `$bucketName` gm JOIN `$bucketName` u ON KEYS gm.userId
@@ -136,6 +140,11 @@ class GroupMemberCouchbaseRepository(cluster: Cluster, collection: Collection) :
         if (usernameFilter is Some) {
             filterParts.add("""CONTAINS( UPPER(u.displayName), UPPER(${'$'}username) )""")
             params.put("username", usernameFilter.t)
+        }
+
+        if (roleFilter is Some) {
+            filterParts.add("gm.roleInGroup = \$roleInGroup")
+            params.put("roleInGroup", roleFilter.t.name)
         }
 
         val orderingPart = "gm.ctime DESC"
@@ -153,5 +162,16 @@ class GroupMemberCouchbaseRepository(cluster: Cluster, collection: Collection) :
 
     override fun add(groupMember: GroupMember, ctx: AttemptContext): Either<Exception, Unit> {
         return groupMemberLinkRepository.add(GroupMemberLink.of(groupMember), ctx)
+    }
+
+    override fun changeRole(groupMember: GroupMember): Either<Exception, GroupMember> {
+        val memberId = groupMember.id
+        return Either.fx<Exception, Either<Exception, GroupMember>> {
+            groupMemberLinkRepository.possibleMutate(memberId) {link ->
+                Either.right(link.copy(roleInGroup = groupMember.roleInGroup))
+            }.bind()
+
+            load(groupMember.groupId, groupMember.userId)
+        }.flatten()
     }
 }

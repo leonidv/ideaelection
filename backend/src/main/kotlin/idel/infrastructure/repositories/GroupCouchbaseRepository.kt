@@ -7,8 +7,6 @@ import com.couchbase.client.java.Collection
 import com.couchbase.client.java.codec.JacksonJsonSerializer
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.query.QueryOptions
-import com.couchbase.transactions.AttemptContext
-import com.couchbase.transactions.Transactions
 import com.fasterxml.jackson.databind.node.ObjectNode
 import idel.domain.Repository
 import idel.domain.*
@@ -48,13 +46,13 @@ class GroupCouchbaseRepository(
     override fun loadOnlyAvailable(pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>> {
         val params = JsonObject.create()
 
-        val ordering = Repository.enumAsOrdering(ordering)
+        val orderingValue = Repository.enumAsOrdering(ordering)
 
         var filterQueryParts = listOf(
                 """entryMode IN ["${GroupEntryMode.PUBLIC}","${GroupEntryMode.CLOSED}"]"""
         )
 
-        return super.load(filterQueryParts, ordering, params, pagination)
+        return super.load(filterQueryParts, orderingValue, params, pagination)
     }
 
     fun addMember(groupId: String, member: GroupMember): Either<Exception, Unit> {

@@ -218,6 +218,68 @@ class GroupsSpec : DescribeSpec({
                     )
                 }
             }
+
+            describe("changes members role") {
+                lateinit var groupId: String
+
+                describe("$userA creates PUBLIC group with members $userB") {
+                    groupId = initGroup(userA, setOf(userB))
+                    userB.role = "member"
+                }
+
+                describe("$userB is member of group") {
+                    val response = userA.groups.loadMembers(groupId)
+                    checkIsOk(
+                        response,
+                        groupHasMember(userB)
+                    )
+                }
+
+                describe("$userA makes $userB a group administrator") {
+                    val response = userA.groups.changeRoleInGroup(groupId, userB.id, GroupsApi.ADMIN)
+
+                    describe("change role response") {
+                        checkIsOk(response)
+
+                        userB.role = "admin"
+
+                    }
+
+
+                    describe("checks $userB is admin") {
+                        val membersResponse = userA.groups.loadMembers(groupId)
+                        checkIsOk(
+                            membersResponse,
+                            groupHasAdmin(userA),
+                            groupHasAdmin(userB)
+                        )
+                    }
+                }
+
+                describe("$userB removes administrator rights from $userA") {
+                    val response = userB.groups.changeRoleInGroup(groupId, userA.id, GroupsApi.MEMBER)
+
+                    describe("change role response") {
+                        checkIsOk(response)
+                        userA.role = "member"
+                    }
+
+                    describe("check that $userA is member") {
+                        val membersResponse = userA.groups.loadMembers(groupId)
+                        checkIsOk(
+                            membersResponse,
+                            groupHasAdmin(userB),
+                            groupHasMember(userA)
+                        )
+                    }
+                }
+
+                describe("$userB can't remove administrator right if group doesn't have another administrators") {
+                    val response = userB.groups.changeRoleInGroup(groupId, userB.id, GroupsApi.ADMIN)
+
+                    // проверка, что произошла ошибка
+                }
+            }
         }
     }
 })

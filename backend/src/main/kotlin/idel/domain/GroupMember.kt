@@ -19,6 +19,7 @@ class GroupMember(
     override val email: String,
     override val roles: Set<String>
 
+
 ) : Identifiable, User {
     override val id = calculateId(groupId, userId)
 
@@ -36,6 +37,36 @@ class GroupMember(
                     email = user.email,
                     roles = user.roles
             )
+        }
+    }
+
+    private fun clone(
+        userId : String = this.userId,
+        groupId: String = this.groupId,
+        ctime: LocalDateTime = this.ctime,
+        roleInGroup: GroupMemberRole = this.roleInGroup,
+        avatar: String = this.avatar,
+        displayName: String = this.displayName,
+        email: String = this.email,
+        roles: Set<String> = this.roles
+    ) : GroupMember {
+        return GroupMember(
+            userId = userId,
+            groupId = groupId,
+            ctime = ctime,
+            roleInGroup = roleInGroup,
+            avatar = avatar,
+            displayName = displayName,
+            email = email,
+            roles = roles
+        )
+    }
+
+    fun changeRole(nextRole : GroupMemberRole) : GroupMember {
+        return if (this.roleInGroup == nextRole) {
+            this
+        } else {
+            this.clone(roleInGroup = nextRole)
         }
     }
 }
@@ -56,10 +87,13 @@ interface GroupMemberRepository : BaseRepository<GroupMember>, CouchbaseTransact
      */
     fun removeFromGroup(groupId: String, userId: String): Either<Exception, Unit>
 
+    fun changeRole(groupMember: GroupMember) : Either<Exception, GroupMember>;
+
     fun loadByGroup(
         groupId: String,
         pagination: Repository.Pagination,
-        usernameFilter: Option<String>
+        usernameFilter: Option<String> = Option.empty(),
+        roleFilter : Option<GroupMemberRole> = Option.empty()
     ): Either<Exception, List<GroupMember>>
 
 }
