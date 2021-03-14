@@ -1,4 +1,4 @@
-val kotlinVersion = "1.4.0"
+val kotlinVersion = "1.4.30"
 val jacksonVersion = "2.11.2"
 
 

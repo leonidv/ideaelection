@@ -10,7 +10,7 @@ buildscript {
 
 
 plugins {
-    kotlin("jvm") version "1.4.0"
+    kotlin("jvm") version "1.4.30"
     id("io.qameta.allure") version("2.8.1")
 }
 
