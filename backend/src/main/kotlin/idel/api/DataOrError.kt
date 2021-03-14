@@ -118,6 +118,11 @@ data class ErrorDescription(val code: Int,
         fun conflict(ex : EntityAlreadyExists): ErrorDescription {
             return ErrorDescription(108, ex.message!!)
         }
+
+        fun invalidOperation(description : String) : ErrorDescription {
+            return ErrorDescription (109, description)
+        }
+
     }
 }
 
@@ -127,6 +132,7 @@ data class ErrorDescription(val code: Int,
  */
 typealias EntityOrError<T> = ResponseEntity<DataOrError<T>>
 
+@Suppress("unused")
 data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription>) {
     companion object {
         fun <T> error(description: ErrorDescription): DataOrError<T> {
@@ -180,6 +186,10 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
             return errorResponse(ErrorDescription.validationFailed("request has validation errors", errors), HttpStatus.BAD_REQUEST)
         }
 
+        fun <T> invalidOperation(description: String) : ResponseEntity<DataOrError<T>> {
+            return errorResponse(ErrorDescription.invalidOperation(description), HttpStatus.BAD_REQUEST)
+        }
+
         fun <T> conflict(ex : EntityAlreadyExists) : ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.conflict(ex), HttpStatus.CONFLICT)
         }
@@ -198,6 +208,7 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
                     is EntityAlreadyExists -> conflict(ex)
                     is OperationNotPermitted -> forbidden("operation is not permitted")
                     is ValidationException -> invalid(ex.errors)
+                    is InvalidOperation -> invalidOperation(ex.message!!)
                     else -> internal(operationResult.a, log)
                 }
             }

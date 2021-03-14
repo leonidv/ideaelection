@@ -3,15 +3,6 @@ package idel.domain
 import arrow.core.Either
 import io.konform.validation.*
 import java.net.URL
-import kotlin.reflect.KProperty
-import kotlin.reflect.KProperty1
-
-/**
- * Represent exception which are thrown on the validation fail.
- */
-class ValidationException(msg: String, val errors: Collection<ValidationError>)
-    : RuntimeException("$msg, errors = $errors") {
-}
 
 /**
  * Validate that string is URL

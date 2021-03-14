@@ -7,8 +7,6 @@ import mu.KLogger
 import mu.KotlinLogging
 
 
-class OperationNotPermitted : Exception()
-
 enum class GroupAccessLevel {
     NOT_MEMBER,
     MEMBER,

@@ -275,9 +275,9 @@ class GroupsSpec : DescribeSpec({
                 }
 
                 describe("$userB can't remove administrator right if group doesn't have another administrators") {
-                    val response = userB.groups.changeRoleInGroup(groupId, userB.id, GroupsApi.ADMIN)
+                    val response = userB.groups.changeRoleInGroup(groupId, userB.id, GroupsApi.MEMBER)
 
-                    // проверка, что произошла ошибка
+                    checkIsBadRequest(response, errorCode = 109)
                 }
             }
         }
