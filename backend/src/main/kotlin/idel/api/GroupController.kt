@@ -17,8 +17,8 @@ import kotlin.IllegalArgumentException
 class GroupController(
         private val couchbaseTransactions: CouchbaseTransactions,
         private val groupRepository: GroupRepository,
-        private val userRepository: UserRepository,
         private val groupMemberRepository: GroupMemberRepository,
+        private val groupService: GroupService,
         apiSecurityFactory: ApiSecurityFactory
 ) {
     val log = KotlinLogging.logger {}
@@ -88,20 +88,34 @@ class GroupController(
         pagination: Repository.Pagination
     ) : EntityOrError<List<GroupMember>> {
         return security.group.asMember(groupId, user) {
-            groupMemberRepository.loadByGroup(groupId,pagination,username.asOption())
+            groupMemberRepository.loadByGroup(groupId,pagination,username.asOption(), roleFilter = Option.empty())
+        }
+    }
+
+    data class RolePatch(val roleInGroup : GroupMemberRole)
+
+    @PatchMapping("/{groupId}/members/{userId}/role-in-group")
+    fun changeMemberRole(
+        @AuthenticationPrincipal user : IdelOAuth2User,
+        @PathVariable groupId: String,
+        @PathVariable userId: String,
+        @RequestBody rolePatch: RolePatch
+    ) : EntityOrError<GroupMember> {
+        return security.group.asAdmin(groupId, user) {
+            groupService.changeRole(groupId, userId, rolePatch.roleInGroup)
         }
     }
 
 
 
-    @DeleteMapping("/{groupId}/members/{userId}")
+    @DeleteMapping("/{groupId}/members/{memberId}")
     fun removeMember(
         @AuthenticationPrincipal user : IdelOAuth2User,
         @PathVariable groupId: String,
-        @PathVariable userId : String
+        @PathVariable memberId : String
     ) : EntityOrError<String> {
-        return security.groupMember.asAdminOrHimSelf(groupId, userId, user) {
-            groupMemberRepository.removeFromGroup(groupId, userId).map {"ok"}
+        return security.groupMember.asAdminOrHimSelf(groupId, memberId, user) {
+            groupMemberRepository.removeFromGroup(groupId, memberId).map {"ok"}
         }
     }
 }

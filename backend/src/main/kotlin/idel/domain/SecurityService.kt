@@ -102,15 +102,15 @@ class SecurityService(
     }
 
 
-    private fun containsEntity(collection: Collection<out Identifiable>, entityId: String): Boolean {
+    private fun containsEntity(collection: Collection<Identifiable>, entityId: String): Boolean {
         return collection.find {it.id == entityId} != null
     }
 
-    private fun <T : Identifiable> containsEntity(collection: Collection<out T>, entity: T): Boolean {
+    private fun <T : Identifiable> containsEntity(collection: Collection<T>, entity: T): Boolean {
         return containsEntity(collection, entity.id)
     }
 
-    private fun <T : Identifiable> Collection<out T>.has(entity: T) = containsEntity(this, entity)
+    private fun <T : Identifiable> Collection<T>.has(entity: T) = containsEntity(this, entity)
 
     fun isSuperUser(user: User): Boolean {
         return user.roles.contains(Roles.SUPER_USER)

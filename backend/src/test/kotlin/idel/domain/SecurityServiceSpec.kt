@@ -33,9 +33,9 @@ class SecurityServiceSpec : DescribeSpec({
                 entryMode = GroupEntryMode.PRIVATE
         )
 
-        val groupMemberUserA = GroupMember.of(group.id, userA.id, GroupMemberRole.GROUP_ADMIN)
-        val groupMemberUserB = GroupMember.of(group.id, userB.id, GroupMemberRole.MEMBER)
-        val groupMemberUserC = GroupMember.of(group.id, userC.id, GroupMemberRole.MEMBER)
+        val groupMemberUserA = GroupMember.of(group.id, userA, GroupMemberRole.GROUP_ADMIN)
+        val groupMemberUserB = GroupMember.of(group.id, userB, GroupMemberRole.MEMBER)
+        val groupMemberUserC = GroupMember.of(group.id, userC, GroupMemberRole.MEMBER)
 
         val groupMemberRepository = mockk<GroupMemberRepository>()
 
@@ -102,7 +102,7 @@ class SecurityServiceSpec : DescribeSpec({
         }
 
         describe("groupmember security level, groupmember belongs to [userB]") {
-            val groupMember = GroupMember.of(group.id, userB.id, GroupMemberRole.MEMBER)
+            val groupMember = GroupMember.of(group.id, userB, GroupMemberRole.MEMBER)
 
             table(
                     headers("user", "accessLevels"),

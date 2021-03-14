@@ -11,43 +11,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 
-@RestController
-@RequestMapping("/groupmembers")
-class GroupMemberController(
-        val groupMemberRepository: GroupMemberRepository,
-        val apiSecurityFactory: ApiSecurityFactory
-) {
-    private val log = KotlinLogging.logger {}
-
-    private val security = apiSecurityFactory.create(log)
-
-
-    private val userSecurity = UserSecurity(log)
-
-    data class KickRequest(val groupId : String, val userId : String)
-
-    @DeleteMapping
-    fun remove(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody request: KickRequest) : EntityOrError<String> {
-        return security.groupMember.asAdminOrHimSelf(request.groupId, request.userId, user) {
-            val result = groupMemberRepository.removeFromGroup(request.groupId, request.userId)
-            result.map {"ok"}
-        }
-    }
-
-    @GetMapping(params = ["userId"])
-    fun loadByUser(
-            @AuthenticationPrincipal user : IdelOAuth2User,
-            @RequestParam(required = true) userId : String,
-            pagination: Repository.Pagination
-    ) : EntityOrError<Repository.Pagination> {
-        return userSecurity.asHimSelf(userId, user) {
-            Either.right(pagination)
-        }
-
-    }
-
-}
-
 
 typealias GroupMemberAction<T> = (groupMember: GroupMember) -> Either<Exception, T>
 

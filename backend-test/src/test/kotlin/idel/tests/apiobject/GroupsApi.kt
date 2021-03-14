@@ -76,6 +76,16 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
     ): HttpResponse<JsonNode> {
         return delete("/$groupId/members/$userId","")
     }
+
+    fun changeRoleInGroup(groupId: String, userId: String, nextRole : String): HttpResponse<JsonNode> {
+        val body = """ { 
+            "roleInGroup": "$nextRole" 
+           }
+        """.trimIndent()
+
+        return patch("/$groupId/members/$userId/role-in-group", body)
+    }
+
 }
 
 
