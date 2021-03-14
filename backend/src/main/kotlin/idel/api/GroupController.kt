@@ -92,6 +92,8 @@ class GroupController(
         }
     }
 
+
+
     data class RolePatch(val roleInGroup : GroupMemberRole)
 
     @PatchMapping("/{groupId}/members/{userId}/role-in-group")
