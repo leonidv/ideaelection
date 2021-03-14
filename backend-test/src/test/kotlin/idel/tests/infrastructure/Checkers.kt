@@ -125,6 +125,16 @@ suspend fun DescribeScope.checkIsForbidden(response: HttpResponse<JsonNode>) {
     }
 }
 
+suspend fun DescribeScope.checkIsBadRequest(response: HttpResponse<JsonNode>, errorCode : Int) {
+    val body = response.body()
+    body.toPrettyString().asClue {
+        it("response is 404 with code $errorCode") {
+            response.shouldHasStatus(HttpURLConnection.HTTP_BAD_REQUEST)
+            response.shouldBeError(errorCode)
+        }
+    }
+}
+
 class ValidationError(
     /**
      *Path to an incorrect field in the request. It's not a path of the response!

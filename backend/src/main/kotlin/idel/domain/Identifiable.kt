@@ -8,15 +8,6 @@ interface Identifiable {
 }
 
 /**
- * Usually indicate that required entity (or value object) is not exists.
- */
-class EntityNotFound(entityType : String, id : String) : IllegalArgumentException("Entity is not exists, type=[$entityType], id = [$id] ")
-
-/**
- * Usually indicate that creation of new entity (or value object) is failed, because id is not unique.
- */
-class EntityAlreadyExists(entityType: String, id : String) : IllegalArgumentException("Entity already exists, type=[$entityType], id = [$id]")
-/**
  * Generate id from UUID without dashes.
  */
 fun generateId() : String = UUID.randomUUID().toString().replace("-","")

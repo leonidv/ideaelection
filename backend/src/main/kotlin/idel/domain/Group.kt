@@ -223,7 +223,7 @@ class GroupService(val groupMemberRepository: GroupMemberRepository) {
                   val (member) = groupMemberRepository.load(groupId, userId )
                   groupMemberRepository.changeRole(member.changeRole(nextRole))
             } else {
-                Either.left(IllegalStateException("Group should contains at least one admin, you try to remove last admin"))
+                Either.left(InvalidOperation("Group should contains at least one admin, you try to remove last admin"))
             }
 
         }.flatten()
