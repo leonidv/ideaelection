@@ -18,7 +18,7 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
         const val CLOSED = "CLOSED"
         const val PRIVATE = "PRIVATE"
 
-        const val MEMBER= "MEMBER"
+        const val MEMBER = "MEMBER"
         const val ADMIN = "GROUP_ADMIN"
     }
 
@@ -38,6 +38,11 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
 
         return post("", body)
     }
+
+    /**
+     * Load group by id
+     */
+    fun load(groupId : String) : HttpResponse<JsonNode> = get("/$groupId")
 
     /**
      * Return available groups
@@ -74,10 +79,10 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
         groupId: String,
         userId: String
     ): HttpResponse<JsonNode> {
-        return delete("/$groupId/members/$userId","")
+        return delete("/$groupId/members/$userId", "")
     }
 
-    fun changeRoleInGroup(groupId: String, userId: String, nextRole : String): HttpResponse<JsonNode> {
+    fun changeRoleInGroup(groupId: String, userId: String, nextRole: String): HttpResponse<JsonNode> {
         val body = """ { 
             "roleInGroup": "$nextRole" 
            }
@@ -86,18 +91,40 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
         return patch("/$groupId/members/$userId/role-in-group", body)
     }
 
+
+    fun changeProperties(
+        groupId: String,
+        name: String,
+        description: String,
+        entryMode: String,
+        logo: String = "data:image/png;base64,dGVzdA=="
+    ): HttpResponse<JsonNode> {
+        val body = """ {
+                "name": "$name",
+                "description": "$description",
+                "logo": "$logo",
+                "entryMode" : "$entryMode"
+        }    
+        """.trimMargin()
+
+        return patch("/$groupId", body)
+    }
 }
 
 
 fun groupHasName(name: String) = BodyFieldValueChecker.forField("name", name)
 fun groupHasDescription(description: String) = BodyFieldValueChecker.forField("description", description)
 fun groupHasEntryMode(entryMode: String) = BodyFieldValueChecker.forField("entryMode", entryMode)
-fun groupHasCreator(user: User) = BodyFieldValueChecker.forField("creator.id",user.id)
+fun groupHasCreator(user: User) = BodyFieldValueChecker.forField("creator.id", user.id)
 
-fun groupHasMemberWithRole(user: User, role : String) =
-    BodyArrayObjectWithFields("has [$user] as [$role]", "$.data", fields = arrayOf(Pair("userId",user.id), Pair("roleInGroup", role)) )
+fun groupHasMemberWithRole(user: User, role: String) =
+    BodyArrayObjectWithFields(
+        "has [$user] as [$role]",
+        "$.data",
+        fields = arrayOf(Pair("userId", user.id), Pair("roleInGroup", role))
+    )
 
-fun groupHasAdmin(user : User) = groupHasMemberWithRole(user, GroupsApi.ADMIN)
+fun groupHasAdmin(user: User) = groupHasMemberWithRole(user, GroupsApi.ADMIN)
 fun groupHasMember(user: User) = groupHasMemberWithRole(user, GroupsApi.MEMBER)
 
 fun groupHasNotMember(user: User) = NotBodyArrayElementExists("has member $user", "$.data", "id", user.id)

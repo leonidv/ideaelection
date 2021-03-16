@@ -22,6 +22,20 @@ fun ValidationBuilder<String>.isUrl(allowEmptyValue : Boolean): Constraint<Strin
     }
 }
 
+// https://rgxdb.com/r/1NUN74O6
+val base64Regex = ("""data\:image/(png|jpg);base64,(?:[A-Za-z0-9+\/]{4})*""" +
+        """(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{4})""").toRegex()
+
+fun ValidationBuilder<String>.isImageBase64(allowEmptyValue: Boolean): Constraint<String> {
+
+    return addConstraint("must be PNG or JPG in base64") { value ->
+        if (allowEmptyValue && value.isBlank()) {
+            true
+        } else {
+            base64Regex.matches(value)
+        }
+    }
+}
 
 interface Validator<T> {
     val validation : Validation<T>
