@@ -1,6 +1,0 @@
-{
-"requestID": "0f070eea-20b5-4590-9d2b-537c877ca580",
-"errors": [{"code":1000,"msg":"The server or request is read-only and cannot accept this write statement."}],
-"status": "fatal",
-"metrics": {"elapsedTime": "479.859µs","executionTime": "437.539µs","resultCount": 0,"resultSize": 0,"errorCount": 1}
-}

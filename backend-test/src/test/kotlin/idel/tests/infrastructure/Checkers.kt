@@ -15,14 +15,6 @@ interface ResponseChecker {
     fun check(jsonNode: JsonNode)
 }
 
-class NotResponseChecker(val responseChecker: ResponseChecker) : ResponseChecker {
-    override val testName: String = "NOT" + responseChecker.testName
-
-    override fun check(jsonNode: JsonNode) {
-        TODO("Not yet implemented")
-    }
-}
-
 class BodyFieldValueChecker(
     override val testName: String,
     private val jsonPath: String,
@@ -157,6 +149,11 @@ class ValidationError(
         fun mustBeUrl(field: String) = ValidationError(
             field = field,
             message = "must be URL"
+        )
+
+        fun mustBeBase64Image(field: String) = ValidationError(
+            field = field,
+            message = "must be PNG or JPG in base64"
         )
     }
 }

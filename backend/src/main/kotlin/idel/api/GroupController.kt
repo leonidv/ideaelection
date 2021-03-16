@@ -93,6 +93,18 @@ class GroupController(
     }
 
 
+    @PatchMapping("/{groupId}")
+    fun updateInfo(
+        @AuthenticationPrincipal user: IdelOAuth2User,
+        @PathVariable groupId: String,
+        @RequestBody properties : GroupEditableProperties
+    ) : EntityOrError<Group> {
+        return security.group.asAdmin(groupId, user) {
+            groupRepository.possibleMutate(groupId) { group ->
+                group.update(properties)
+            }
+        }
+    }
 
     data class RolePatch(val roleInGroup : GroupMemberRole)
 

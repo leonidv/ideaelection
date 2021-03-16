@@ -39,7 +39,11 @@ abstract class AbstractObjectApi(val username: String, val idelUrl: String = Ide
     }
 
     private fun send(request: HttpRequest, bodyForLog : String) : HttpResponse<JsonNode> {
-        log.trace {"\n ${request.method()} ${request.uri()} $bodyForLog"}
+        if (bodyForLog.length < 2000) {
+            log.trace {"\n ${request.method()} ${request.uri()} \n$bodyForLog"}
+        } else {
+            log.trace {"\n ${request.method()}, ${request.uri()} body is too big for log"}
+        }
         return client.send(request, ofJson())!!
     }
 

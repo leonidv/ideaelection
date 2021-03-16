@@ -1,9 +1,0 @@
-{
-"requestID": "d1e9e2f6-679b-4154-b192-4588263cd577",
-"signature": null,
-"results": [
-],
-"errors": [{"code":5000,"msg":"GSI CreateIndex() - cause: Please Set Indexer Storage Mode Before Create Index\n"}],
-"status": "errors",
-"metrics": {"elapsedTime": "10.648356362s","executionTime": "10.648323959s","resultCount": 0,"resultSize": 0,"errorCount": 1}
-}

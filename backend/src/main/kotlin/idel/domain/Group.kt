@@ -116,15 +116,26 @@ class Group(
     }
 
 
+    fun update(properties: IGroupEditableProperties) : Either<ValidationException, Group> {
+        return GroupValidation.ifValid(properties) {
+            Group(
+                id = this.id,
+                creator = this.creator,
+                ctime = this.ctime,
+                entryMode = properties.entryMode,
+                description = properties.description,
+                logo = properties.logo,
+                name = properties.name
+            )
+        }
+    }
 }
 
 
 class GroupValidation {
     companion object : Validator<IGroupEditableProperties> {
 
-        // https://rgxdb.com/r/1NUN74O6
-        private val base64Regex = """data\:image/(png|jpg);base64,(?:[A-Za-z0-9+\/]{4})*""" +
-                """(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{4})""".toRegex()
+
 
 
         override val validation = Validation<IGroupEditableProperties> {
@@ -139,7 +150,8 @@ class GroupValidation {
             }
 
             IGroupEditableProperties::logo {
-                pattern(base64Regex)
+                maxLength(150_000) // approx 100kb in base64
+                isImageBase64(allowEmptyValue = false)
             }
         }
     }
@@ -174,7 +186,6 @@ enum class GroupOrdering {
 }
 
 interface GroupRepository : BaseRepository<Group>, CouchbaseTransactionBaseRepository<Group> {
-    fun replace(entity: Group): Either<Exception, Group>
 
     /**
      * Load user's groups.
