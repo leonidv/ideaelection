@@ -10,28 +10,48 @@ import mu.KotlinLogging
 
 
 class JoinRequestCouchbaseRepository(
-        cluster: Cluster,
-        collection: Collection
-) : AbstractTypedCouchbaseRepository<JoinRequest>(cluster, collection, type = "joinRequest", JoinRequest::class.java), JoinRequestRepository {
+    cluster: Cluster,
+    collection: Collection
+) : AbstractTypedCouchbaseRepository<JoinRequest>(cluster, collection, type = "joinRequest", JoinRequest::class.java),
+    JoinRequestRepository {
 
     override val log = KotlinLogging.logger {}
 
-    override fun loadByUser(userId: UserId, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination): Either<Exception, List<JoinRequest>> {
+    override fun loadByUser(
+        userId: UserId,
+        ordering: GroupMembershipRequestOrdering,
+        pagination: Repository.Pagination
+    ): Either<Exception, List<JoinRequest>> {
         val params = JsonObject.create()
 
         val filterQueryParts = listOf("userId = \$userId")
         params.put("userId", userId)
 
-        return super.load(filterQueryParts, Repository.enumAsOrdering(ordering), params, pagination)
+        return super.load(
+            filterQueryParts,
+            Repository.enumAsOrdering(ordering),
+            params,
+            pagination,
+            useFulltextSearch = false
+        )
     }
 
-    override fun loadByGroup(groupId: String, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination): Either<Exception, List<JoinRequest>> {
+    override fun loadByGroup(
+        groupId: String,
+        ordering: GroupMembershipRequestOrdering,
+        pagination: Repository.Pagination
+    ): Either<Exception, List<JoinRequest>> {
         val params = JsonObject.create()
 
         val filterQueryParts = listOf("groupId = \$groupId")
         params.put("groupId", groupId)
 
-        return super.load(filterQueryParts, Repository.enumAsOrdering(ordering), params, pagination)
-
+        return super.load(
+            filterQueryParts,
+            Repository.enumAsOrdering(ordering),
+            params,
+            pagination,
+            useFulltextSearch = false
+        )
     }
 }

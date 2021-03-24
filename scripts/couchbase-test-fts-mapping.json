@@ -1,66 +1,35 @@
 
 
+
 {
-  "name": "idea_fts",
   "type": "fulltext-index",
+  "name": "idea_fts",
+  "uuid": "264a9e11d7b85aca",
+  "sourceType": "couchbase",
+  "sourceName": "ideaelection",
+  "sourceUUID": "f6d67980589c6b35188e53cd2b668532",
+  "planParams": {
+    "maxPartitionsPerPIndex": 171,
+    "indexPartitions": 6
+  },
   "params": {
+    "doc_config": {
+      "docid_prefix_delim": "",
+      "docid_regexp": "",
+      "mode": "type_field",
+      "type_field": "_type"
+    },
     "mapping": {
-      "types": {
-        "idea": {
-          "enabled": true,
-          "dynamic": false,
-          "properties": {
-            "description": {
-              "enabled": true,
-              "dynamic": false,
-              "fields": [
-                {
-                  "name": "description",
-                  "type": "text",
-                  "store": false,
-                  "index": true,
-                  "include_term_vectors": true,
-                  "include_in_all": true,
-                  "docvalues": true
-                }
-              ]
-            },
-            "title": {
-              "enabled": true,
-              "dynamic": false,
-              "fields": [
-                {
-                  "name": "title",
-                  "type": "text",
-                  "store": false,
-                  "index": true,
-                  "include_term_vectors": true,
-                  "include_in_all": true,
-                  "docvalues": true
-                }
-              ]
-            }
-          }
-        }
-      },
-      "default_mapping": {
-        "enabled": false,
-        "dynamic": true
-      },
-      "default_type": "_default",
-      "default_analyzer": "RU",
-      "default_datetime_parser": "dateTimeOptional",
-      "default_field": "_all",
       "analysis": {
         "analyzers": {
           "RU": {
-            "type": "custom",
-            "tokenizer": "unicode",
             "token_filters": [
               "stemmer_ru_snowball",
               "to_lower",
               "unicode nfc"
-            ]
+            ],
+            "tokenizer": "unicode",
+            "type": "custom"
           }
         },
         "token_filters": {
@@ -70,28 +39,58 @@
           }
         }
       },
+      "default_analyzer": "RU",
+      "default_datetime_parser": "dateTimeOptional",
+      "default_field": "_all",
+      "default_mapping": {
+        "dynamic": true,
+        "enabled": false
+      },
+      "default_type": "_default",
+      "docvalues_dynamic": true,
+      "index_dynamic": true,
       "store_dynamic": false,
-      "index_dynamic": true
+      "type_field": "_type",
+      "types": {
+        "idea": {
+          "dynamic": false,
+          "enabled": true,
+          "properties": {
+            "descriptionPlainText": {
+              "dynamic": false,
+              "enabled": true,
+              "fields": [
+                {
+                  "docvalues": true,
+                  "include_in_all": true,
+                  "include_term_vectors": true,
+                  "index": true,
+                  "name": "descriptionPlainText",
+                  "type": "text"
+                }
+              ]
+            },
+            "summary": {
+              "dynamic": false,
+              "enabled": true,
+              "fields": [
+                {
+                  "docvalues": true,
+                  "include_in_all": true,
+                  "include_term_vectors": true,
+                  "index": true,
+                  "name": "summary",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        }
+      }
     },
     "store": {
-      "indexType": "scorch",
-      "kvStoreName": ""
-    },
-    "doc_config": {
-      "mode": "type_field",
-      "type_field": "_type",
-      "docid_prefix_delim": "",
-      "docid_regexp": ""
+      "indexType": "scorch"
     }
   },
-  "sourceType": "couchbase",
-  "sourceName": "ideaelection",
-  "sourceParams": {},
-  "planParams": {
-    "maxPartitionsPerPIndex": 171,
-    "numReplicas": 0,
-    "indexPartitions": 6
-  },
-  "uuid": ""
+  "sourceParams": {}
 }
-

@@ -4,10 +4,6 @@ package idel.tests.spec
 
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
-import idel.tests.shouldHasPath
-import idel.tests.shouldContains
-import idel.tests.shouldBeError
-import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.data.forAll
 import io.kotest.data.headers

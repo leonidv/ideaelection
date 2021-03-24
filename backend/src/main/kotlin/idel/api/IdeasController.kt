@@ -138,51 +138,41 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     )
     @ResponseBody
     fun load(
-            @RequestParam(required = false, defaultValue = "0") first: Int,
-            @RequestParam(required = false, defaultValue = "10") last: Int,
-            @RequestParam(required = false, defaultValue = "") sorting: IdeaSorting,
-            @RequestParam("offeredBy") offeredBy: Optional<String>,
-            @RequestParam("assignee") assignee: Optional<String>,
-            @RequestParam("implemented") implemented: Optional<Boolean>,
-            @RequestParam("text") text: Optional<String>
+        @AuthenticationPrincipal user: IdelOAuth2User,
+        @RequestParam(required = true) groupId : String,
+        @RequestParam(required = false, defaultValue = "") ordering: IdeaOrdering,
+        @RequestParam("offered-by") offeredBy: Optional<String>,
+        @RequestParam("assignee") assignee: Optional<String>,
+        @RequestParam("implemented") implemented: Optional<Boolean>,
+        @RequestParam("text") text: Optional<String>,
+        pagination: Repository.Pagination
     )
             : EntityOrError<List<Idea>> {
-        val size = last - first
 
-        if (size <= 0) {
-            return DataOrError.incorrectArgument("last: $last, first: $first", "first should be less then first")
-        }
-
-        if (size > 100) {
-            val error = ErrorDescription.tooManyItems(size, 100)
-            return DataOrError.errorResponse(error)
-        }
-
-
-        val filtering = IdeaFiltering(
-                offeredBy = offeredBy,
-                implemented = implemented,
-                assignee = assignee,
-                text = text
-        )
-
-        val data = ideaRepository.loadWithVersion(first, last, sorting, filtering)
-        return DataOrError.data(data)
+       return  secure.group.asMember(groupId, user) {
+           val filtering = IdeaFiltering(
+               offeredBy = offeredBy.asOption(),
+               implemented = implemented.asOption(),
+               assignee = assignee.asOption(),
+               text = text.asOption()
+           )
+           ideaRepository.load(groupId, ordering, filtering, pagination)
+       }
     }
 }
 
 /**
- * Convert string to IdeaSorting. If string is empty, return [IdeaSorting.CTIME_DESC] as default value.
+ * Convert string to IdeaSorting. If string is empty, return [IdeaOrdering.CTIME_DESC] as default value.
  */
-class StringToIdeaSortingConverter : Converter<String, IdeaSorting> {
-    val DEFAULT = IdeaSorting.CTIME_DESC
+class StringToIdeaSortingConverter : Converter<String, IdeaOrdering> {
+    val DEFAULT = IdeaOrdering.CTIME_DESC
 
-    override fun convert(source: String): IdeaSorting {
+    override fun convert(source: String): IdeaOrdering {
         return if (source.isNullOrBlank()) {
             DEFAULT
         } else {
             try {
-                IdeaSorting.valueOf(source.toUpperCase())
+                IdeaOrdering.valueOf(source.toUpperCase())
             } catch (ex: IllegalArgumentException) {
                 DEFAULT
             }

@@ -1,11 +1,12 @@
-package idel.tests
+package idel.tests.infrastructure
 
 import arrow.core.None
 import arrow.core.Some
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.infrastructure.JsonNodeExtensions.hasArrayElement
-import idel.tests.infrastructure.JsonNodeExtensions.hasArrayObjectWithFields
+import idel.tests.infrastructure.JsonNodeExtensions.hasArrayObjectsOrder
+import idel.tests.infrastructure.JsonNodeExtensions.hasObjectWithFields
 import idel.tests.infrastructure.JsonNodeExtensions.hasPath
 import idel.tests.infrastructure.JsonNodeExtensions.queryInt
 import idel.tests.infrastructure.JsonNodeExtensions.queryString
@@ -28,7 +29,7 @@ object ResponseMatchers {
     fun hasDataPayload() = object : Matcher<HttpResponse<JsonNode>> {
         override fun test(response: HttpResponse<JsonNode>): MatcherResult =
             MatcherResult(
-                passed = response.body()?.hasNonNull("data") ?: false,
+                passed = response.hasDataPayload(),
                 failureMessage = "Payload should be data",
                 negatedFailureMessage = "Payload should be error"
             )
@@ -91,10 +92,10 @@ object ResponseMatchers {
         }
     }
 
-    fun hasArrayElement(arrayPath: String, elementKey: String, elementValue: String) = object : Matcher<JsonNode> {
+    fun hasArrayElement(arrayPath: String, elementValue: String) = object : Matcher<JsonNode> {
         override fun test(value: JsonNode): MatcherResult {
-            val hasElement = value.hasArrayElement(arrayPath, elementKey, elementValue)
-            val msg = """contains element of array at path $arrayPath with field {"$elementKey" : "$elementValue"}"""
+            val hasElement = value.hasArrayElement(arrayPath, elementValue)
+            val msg = """contains element of array at path $arrayPath with value [$elementValue]"""
             return MatcherResult(
                 passed = hasElement,
                 failureMessage = "Json should $msg",
@@ -104,14 +105,32 @@ object ResponseMatchers {
         }
     }
 
-    fun hasArrayObjectWithFields(arrayPath: String, vararg fields : Pair<String,String>) = object : Matcher<JsonNode> {
+    fun hasObjectWithFields(objectPath: String, vararg fields: Pair<String, String>) = object : Matcher<JsonNode> {
         override fun test(value: JsonNode): MatcherResult {
-            val hasObject = value.hasArrayObjectWithFields(arrayPath, *fields)
-            val msg = """contains object of array at path $arrayPath with fields ${fields.joinToString()}"""
+            val hasObject = value.hasObjectWithFields(objectPath, *fields)
+            val msg = """contains object of array at path $objectPath with fields ${fields.joinToString()}"""
             return MatcherResult(
                 passed = hasObject,
                 failureMessage = "Json should $msg",
                 negatedFailureMessage = "Json should not $msg"
+            )
+        }
+    }
+
+    fun hasArrayObjectsOrder(arrayPath: String, field: String, values: Array<String>) = object : Matcher<JsonNode> {
+        override fun test(value: JsonNode): MatcherResult {
+            val incorrectIndex = value.hasArrayObjectsOrder(arrayPath, field, values)
+            val failureMsg = if (incorrectIndex == -1) {
+                ""
+            } else {
+                "order is incorrect, first incorrect index is $incorrectIndex," +
+                        " incorrect value = [${values[incorrectIndex]}], expected order = [$values]"
+            }
+
+            return MatcherResult(
+                passed = incorrectIndex == -1,
+                failureMessage = failureMsg,
+                negatedFailureMessage = "order is same as given, but should not"
             )
         }
     }
@@ -153,14 +172,18 @@ fun JsonNode.shouldContains(jsonPath: String, value: Int) = this should Response
 /**
  * Check that JSON contains element of array.
  */
-fun JsonNode.shouldContainsArrayElement(arrayPath: String, elementKey: String, elementValue: String) =
-    this should ResponseMatchers.hasArrayElement(arrayPath, elementKey, elementValue)
+fun JsonNode.shouldContainsArrayElement(arrayPath: String, elementValue: String) =
+    this should ResponseMatchers.hasArrayElement(arrayPath, elementValue)
 
-fun JsonNode.shouldNotContainsArrayElement(arrayPath: String, elementKey: String, elementValue: String) =
-    this shouldNot ResponseMatchers.hasArrayElement(arrayPath, elementKey, elementValue)
+fun JsonNode.shouldNotContainsArrayElement(arrayPath: String, elementValue: String) =
+    this shouldNot ResponseMatchers.hasArrayElement(arrayPath, elementValue)
 
-fun JsonNode.shouldContainsArrayObjectWithFields(arrayPath: String, vararg fields : Pair<String,String>) =
-    this should ResponseMatchers.hasArrayObjectWithFields(arrayPath, *fields)
+fun JsonNode.shouldContainsObject(arrayPath: String, vararg fields: Pair<String, String>) =
+    this should ResponseMatchers.hasObjectWithFields(arrayPath, *fields)
+
+fun JsonNode.shouldNotContainsObject(arrayPath: String, vararg fields: Pair<String, String>) =
+    this shouldNot ResponseMatchers.hasObjectWithFields(arrayPath, *fields)
 
 
-
+fun JsonNode.shouldHasArrayObjectsOrder(arrayPath: String, field : String, values: Array<String>) =
+    this should ResponseMatchers.hasArrayObjectsOrder(arrayPath, field, values)

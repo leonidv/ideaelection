@@ -51,20 +51,20 @@ class IdeaEditSpec : DescribeSpec({
                     ideaHasDescriptionPlainText("description v1"),
                     ideaHasLink("http://test.io/v1")
                 )
-                ideaId = extractId(addResponse)
+                ideaId = addResponse.extractId()
                 userB.role = "author"
             }
 
             describe("unassigned idea") {
                 describe("$userAdmin can edit") {
                     val version = newVersion()
-                    val response = userAdmin.ideas.edit(ideaId, version)
+                    val response = userAdmin.ideas.quickEdit(ideaId, version)
                     checkUpdateToVersion(response, version)
                 }
 
                 describe("$userB can edit") {
                     val version = newVersion()
-                    val response = userB.ideas.edit(ideaId, version)
+                    val response = userB.ideas.quickEdit(ideaId, version)
                     checkUpdateToVersion(response, version)
                 }
 
@@ -82,13 +82,13 @@ class IdeaEditSpec : DescribeSpec({
 
                 describe("$userAdmin can edit") {
                     val version = newVersion();
-                    val response = userAdmin.ideas.edit(ideaId, version)
+                    val response = userAdmin.ideas.quickEdit(ideaId, version)
                     checkUpdateToVersion(response, version)
                 }
 
                 describe("$userC can edit") {
                     val version = newVersion()
-                    val response = userC.ideas.edit(ideaId, version)
+                    val response = userC.ideas.quickEdit(ideaId, version)
                     checkUpdateToVersion(response, version)
                 }
 
@@ -102,7 +102,7 @@ class IdeaEditSpec : DescribeSpec({
 
                 describe("$userAdmin can edit idea") {
                     val version = newVersion()
-                    var response = userAdmin.ideas.edit(ideaId, version)
+                    var response = userAdmin.ideas.quickEdit(ideaId, version)
                     checkUpdateToVersion(response, version)
                 }
 
@@ -116,7 +116,7 @@ class IdeaEditSpec : DescribeSpec({
             describe("$userB adds idea") {
                 val response = userB.ideas.add(groupId)
                 checkIsOk(response)
-                ideaId = extractId(response)
+                ideaId = response.extractId()
                 userB.role = "author"
             }
 
@@ -171,7 +171,7 @@ class IdeaEditSpec : DescribeSpec({
 })
 
 /**
- * Check idea is update. See [IdeasApi.edit] for details.
+ * Check idea is update. See [IdeasApi.quickEdit] for details.
  */
 suspend fun DescribeScope.checkUpdateToVersion(response: HttpResponse<JsonNode>, version: CharSequence) {
     checkIsOk(
@@ -189,7 +189,7 @@ suspend fun DescribeScope.checkUpdateToVersion(response: HttpResponse<JsonNode>,
 suspend fun DescribeScope.checkCanNotEdit(ideaId: String, vararg users: User) {
     users.forEach {user ->
         describe("$user can't edit") {
-            checkIsForbidden(user.ideas.edit(ideaId, newVersion()))
+            checkIsForbidden(user.ideas.quickEdit(ideaId, newVersion()))
         }
     }
 }

@@ -7,7 +7,6 @@ import idel.tests.infrastructure.checkIsForbidden
 import idel.tests.infrastructure.checkIsOk
 import idel.tests.infrastructure.initGroup
 import idel.tests.infrastructure.registryUsers
-import idel.tests.shouldBeOk
 import io.kotest.core.spec.style.DescribeSpec
 
 class IdeaImplementedSpec : DescribeSpec({

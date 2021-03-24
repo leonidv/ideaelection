@@ -52,10 +52,10 @@ class GroupCouchbaseRepository(
                 """entryMode IN ["${GroupEntryMode.PUBLIC}","${GroupEntryMode.CLOSED}"]"""
         )
 
-        return super.load(filterQueryParts, orderingValue, params, pagination)
+        return super.load(filterQueryParts, orderingValue, params, pagination, useFulltextSearch = false)
     }
 
-    fun addMember(groupId: String, member: GroupMember): Either<Exception, Unit> {
+    fun addMember(groupId: String, member: GroupMember): Either<Exception, String> {
         return try {
             val pMember = "\$member"
             val query = """
@@ -85,14 +85,14 @@ class GroupCouchbaseRepository(
             log.trace {"query: [$query], params: [$params]"}
 
             cluster.query(query, options)
-            Either.right(Unit)
+            Either.right("OK")
 
         } catch (e: Exception) {
             Either.left(e)
         }
     }
 
-    fun removeMember(groupId: String, userId: String): Either<Exception, Unit> {
+    fun removeMember(groupId: String, userId: String): Either<Exception, String> {
         return try {
             val pGroupId = "\$groupId"
             val pUserId = "\$userId"
@@ -120,7 +120,7 @@ class GroupCouchbaseRepository(
             log.trace {"query: [$query], params: [$params]"}
 
             cluster.query(query, options)
-            Either.right(Unit)
+            Either.right("ok")
 
         } catch (e: Exception) {
             Either.left(e)

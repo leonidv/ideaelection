@@ -2,8 +2,7 @@ package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
-import idel.tests.infrastructure.BodyArrayElementExists
-import idel.tests.infrastructure.BodyArrayObjectWithFields
+import idel.tests.infrastructure.BodyContainsObject
 import idel.tests.infrastructure.BodyFieldValueChecker
 import idel.tests.infrastructure.asUserId
 import mu.KotlinLogging
@@ -57,9 +56,9 @@ fun joinRequestHasMessage(msg : String) = BodyFieldValueChecker.forField("messag
 
 
 fun includeJoinRequest(joinRequestId : String) =
-    BodyArrayElementExists("include joinRequest $joinRequestId", "$.data","id",joinRequestId)
+    BodyContainsObject("include joinRequest $joinRequestId", "$.data", arrayOf(Pair("id",joinRequestId)))
 
 fun includeJoinRequestWithStatus(joinRequestId: String, status: String) =
-    BodyArrayObjectWithFields("include joinRequest $joinRequestId with status $status", "$.data",
+    BodyContainsObject("include joinRequest $joinRequestId with status $status", "$.data",
         arrayOf(Pair("id",joinRequestId),Pair("status",status))
     )

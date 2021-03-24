@@ -12,7 +12,7 @@ fun asJSON(): HttpResponse.BodySubscriber<JsonNode> {
     val upstream = HttpResponse.BodySubscribers.ofByteArray();
     return HttpResponse.BodySubscribers.mapping(upstream) {
         val jsonNode = jacksonObjectMapper().readValue(it) as JsonNode
-        log.trace {jsonNode.toPrettyString()}
+        log.trace {"body = \n" + jsonNode.toPrettyString()}
         jsonNode
     }
 }
