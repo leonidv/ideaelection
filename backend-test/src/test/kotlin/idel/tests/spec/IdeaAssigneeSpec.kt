@@ -4,7 +4,6 @@ import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
-import idel.tests.shouldBeOk
 import io.kotest.core.spec.style.DescribeSpec
 
 class IdeaAssigneeSpec : DescribeSpec({

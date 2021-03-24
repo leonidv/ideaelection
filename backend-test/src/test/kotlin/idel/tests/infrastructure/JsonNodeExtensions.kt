@@ -3,19 +3,16 @@ package idel.tests.infrastructure
 import arrow.core.Option
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.jayway.jsonpath.Configuration
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
 import com.jayway.jsonpath.TypeRef
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider
-import com.jayway.jsonpath.spi.json.JacksonJsonProvider
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider
 import com.jayway.jsonpath.spi.mapper.MappingException
-import idel.tests.infrastructure.JsonNodeExtensions.queryInt
-import java.lang.IllegalArgumentException
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
+
+fun idField(id: String) = Pair("id", id)
 
 object JsonNodeExtensions {
     private val provider = JacksonJsonNodeJsonProvider(jacksonObjectMapper())
@@ -28,8 +25,8 @@ object JsonNodeExtensions {
     private val listOfAny = object : TypeRef<List<Any>>() {}
     private val listStringTypeRef = object : TypeRef<List<String>>() {}
     private val setStringTypeRef = object : TypeRef<Set<String>>() {}
-    private val stringTypeRef = object : TypeRef<String>(){}
-    private val intTypeRef = object : TypeRef<Int>(){}
+    private val stringTypeRef = object : TypeRef<String>() {}
+    private val intTypeRef = object : TypeRef<Int>() {}
 
     fun JsonNode.hasPath(jsonPath: String): Boolean {
         return this
@@ -38,8 +35,8 @@ object JsonNodeExtensions {
             .getOrElse {false}
     }
 
-    fun JsonNode.hasArrayElement(arrayPath: String, elementKey : String, elementValue : String) : Boolean {
-        val jsonPath = """$arrayPath[?(@.$elementKey == "$elementValue")]"""
+    fun JsonNode.hasArrayElement(arrayPath: String, elementValue: String): Boolean {
+        val jsonPath = """$arrayPath[?(@ == "$elementValue")]"""
         return try {
             val parsed = JsonPath.parse(this, conf)
             val data = parsed.read(jsonPath, listOfAny) as List<Any>
@@ -51,11 +48,11 @@ object JsonNodeExtensions {
     }
 
 
-    fun JsonNode.hasArrayObjectWithFields(arrayPath: String, vararg fields : Pair<String,String>) : Boolean {
+    fun JsonNode.hasObjectWithFields(objectPath: String, vararg fields: Pair<String, String>): Boolean {
         val jsonFilter = fields
             .map {"@.${it.first} == '${it.second}'"}
-            .joinToString(prefix = "?(",  separator =  " && ", postfix = ")")
-        val jsonPath = """$arrayPath[$jsonFilter]"""
+            .joinToString(prefix = "?(", separator = " && ", postfix = ")")
+        val jsonPath = """$objectPath[$jsonFilter]"""
         return try {
             val parsed = JsonPath.parse(this, conf)
             val data = parsed.read(jsonPath, listOfAny) as List<Any>
@@ -63,6 +60,28 @@ object JsonNodeExtensions {
         } catch (e: PathNotFoundException) {
             false
         }
+    }
+
+
+    /**
+     * Check that array contains element at positions as they are given.
+     * Return -1 if order is OK or index of first broken element.
+     */
+    fun JsonNode.hasArrayObjectsOrder(arrayPath: String, field: String, values: Array<String>): Int {
+        var index = -1
+        var objectExists: Boolean
+        do {
+            index += 1
+            val elementPath = "$arrayPath[$index]"
+            objectExists = this.hasObjectWithFields(elementPath, Pair(field, values[index]))
+        } while (objectExists && index < values.size - 1)
+
+        return if (objectExists) {
+            -1
+        } else {
+            index
+        }
+
     }
 
     fun JsonNode.queryString(jsonPath: String): Option<String> {
@@ -89,12 +108,12 @@ object JsonNodeExtensions {
         }
     }
 
-    fun JsonNode.queryArraySize(jsonPath: String) : Option<Int> {
+    fun JsonNode.queryArraySize(jsonPath: String): Option<Int> {
         return try {
             val parsed = JsonPath.parse(this, conf)
             val size = parsed.read<Int>("${jsonPath}.length()")
             Option.just(size)
-        } catch (e : PathNotFoundException) {
+        } catch (e: PathNotFoundException) {
             Option.empty()
         }
     }
@@ -119,11 +138,10 @@ object JsonNodeExtensions {
     }
 
 
-
     /**
      * extract id of entity. Is always has same path in response.
      */
-    fun JsonNode.dataId() : Option<String> {
+    fun JsonNode.dataId(): Option<String> {
         return this.queryString("$.data.id")
     }
 }

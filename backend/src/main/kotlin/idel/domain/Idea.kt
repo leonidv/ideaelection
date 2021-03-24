@@ -2,8 +2,6 @@ package idel.domain
 
 import arrow.core.*
 import io.konform.validation.Validation
-import io.konform.validation.Invalid
-import io.konform.validation.Valid
 import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minLength
 import java.time.LocalDateTime
@@ -88,14 +86,13 @@ class Idea(
     /**
      * Voters which give their voice for this idea.
      */
-    val voters: Set<String>,
+    val voters: List<String>,
 
     ) : IIdeaEditableProperties, Identifiable {
 
     init {
         require(id.isNotBlank()) {"id can't be blank"}
         require(summary.isNotBlank()) {"title can't be blank"}
-        require(!voters.contains(author)) {"user can't vote his idea"}
         require(!author.isBlank()) {"author can't be blank"}
     }
 
@@ -106,7 +103,7 @@ class Idea(
      * User, which offered an idea, can't vote for it. In this case the method returns an Idea without any changes)
      */
     fun addVote(userId: String): Idea {
-        if (this.author == userId) {
+        if (voters.contains(userId)) {
             return this
         }
         val newVoters = this.voters.plus(userId)
@@ -137,7 +134,7 @@ class Idea(
         assignee: String = this.assignee,
         implemented: Boolean = this.implemented,
         offeredBy: String = this.author,
-        voters: Set<String> = this.voters
+        voters: List<String> = this.voters
     ): Idea = Idea(
         id = id,
         groupId = groupId,
@@ -279,17 +276,17 @@ class Idea(
 class IdeaValidation {
     companion object : Validator<IIdeaEditableProperties> {
         override val validation = Validation<IIdeaEditableProperties> {
-            IIdeaEditableProperties::summary required  {
+            IIdeaEditableProperties::summary required {
                 minLength(3)
                 maxLength(255)
             }
 
-            IIdeaEditableProperties::description required  {
+            IIdeaEditableProperties::description required {
                 minLength(3)
                 maxLength(10000)
             }
 
-            IIdeaEditableProperties::descriptionPlainText required  {
+            IIdeaEditableProperties::descriptionPlainText required {
                 minLength(3)
                 maxLength(2000)
             }
@@ -315,7 +312,7 @@ class IdeaFactory {
                 implemented = false,
                 assignee = NOT_ASSIGNED,
                 author = userId,
-                voters = emptySet(),
+                voters = emptyList(),
                 ctime = LocalDateTime.now()
             )
         }
@@ -326,23 +323,23 @@ class IdeaFactory {
 /**
  * Possible Idea's sorting
  */
-enum class IdeaSorting {
+enum class IdeaOrdering {
     CTIME_ASC,
     CTIME_DESC,
     VOTES_DESC
 }
 
-fun requireNoneOrNotEmptyValue(opt: Optional<String>, field: String) {
-    if (opt.isPresent) {
-        require(!opt.get().isNullOrBlank()) {"$field is empty string, but should be Optional.empty()"}
+fun requireNoneOrNotEmptyValue(opt: Option<String>, field: String) {
+    if (opt is Some) {
+        require(!opt.t.isNullOrBlank()) {"$field is empty string, but should be Optional.empty()"}
     }
 }
 
 data class IdeaFiltering(
-    val offeredBy: Optional<String>,
-    val implemented: Optional<Boolean>,
-    val assignee: Optional<String>,
-    val text: Optional<String>
+    val offeredBy: Option<String>,
+    val implemented: Option<Boolean>,
+    val assignee: Option<String>,
+    val text: Option<String>
 ) {
     init {
         requireNoneOrNotEmptyValue(offeredBy, "offeredBy")
@@ -362,7 +359,8 @@ data class IdeaWithVersion(val idea: Idea, val version: Long)
 
 interface IdeaRepository : BaseRepository<Idea> {
 
-    fun loadWithVersion(first: Int, last: Int, sorting: IdeaSorting, filtering: IdeaFiltering): List<Idea>
+    fun load(groupId: String, ordering: IdeaOrdering, filtering: IdeaFiltering, pagination: Repository.Pagination):
+            Either<Exception, List<Idea>>
 
     fun loadWithVersion(id: String): Optional<IdeaWithVersion>
 }

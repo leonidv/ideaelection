@@ -1,8 +1,7 @@
 package idel.tests.infrastructure
 
 import com.fasterxml.jackson.databind.JsonNode
-import idel.tests.shouldBeData
-import idel.tests.shouldHasStatus
+
 import io.kotest.assertions.asClue
 import java.net.http.HttpResponse
 
@@ -22,6 +21,8 @@ fun extractData(response: HttpResponse<JsonNode>): JsonNode {
 /**
  * Extract id ($.data.id) from response body
  */
-fun extractId(response: HttpResponse<JsonNode>): String {
-    return extractData(response).get("id")?.asText() ?: throw IllegalStateException("id is not found in result")
+fun HttpResponse<JsonNode>.extractId(): String {
+    return extractData(this).get("id")?.asText() ?: throw IllegalStateException("id is not found in result")
 }
+
+fun HttpResponse<JsonNode>.hasDataPayload() : Boolean = this.body()?.hasNonNull("data") ?: false

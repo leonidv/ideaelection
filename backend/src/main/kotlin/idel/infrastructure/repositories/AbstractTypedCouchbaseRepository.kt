@@ -242,13 +242,16 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
 
     protected fun load(filterQueryParts: List<String>,
                        ordering: String, params: JsonObject,
-                       pagination: Repository.Pagination): Either<Exception, List<T>> {
+                       pagination: Repository.Pagination,
+                       useFulltextSearch: Boolean = false
+    ): Either<Exception, List<T>> {
         return rawLoad(
                 basePart = """select * from `$bucketName` as ie where _type="${this.type}" """,
                 filterQueryParts = filterQueryParts,
-                orderingPart = "ie.$ordering",
+                orderingPart = "$ordering",
                 params = params,
                 pagination = pagination,
+                useFulltextSearch
         )
     }
 
@@ -262,6 +265,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         orderingPart: String,
         params: JsonObject,
         pagination: Repository.Pagination,
+        useFulltextSearch: Boolean = false
     ): Either<Exception, List<T>> {
         return try {
             val filterQuery =
@@ -272,9 +276,15 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
                     }
 
             val options = queryOptions(params).readonly(true)
+
+            if (useFulltextSearch) {
+                options.scanConsistency(QueryScanConsistency.NOT_BOUNDED)
+                log.trace {"use fts index, QueryScanConsistency is ${QueryScanConsistency.NOT_BOUNDED}"}
+            }
+
+
             val queryString = basePart + filterQuery +
                     "order by $orderingPart " + pagination.queryPart()
-
          traceRawQuery(queryString, params)
 
             Either.right(cluster.query(queryString, options).rowsAs(typedClass))

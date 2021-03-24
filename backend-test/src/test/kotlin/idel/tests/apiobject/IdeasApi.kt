@@ -1,11 +1,20 @@
 package idel.tests.apiobject
 
+import arrow.core.Option
+import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
-import idel.tests.infrastructure.BodyFieldValueChecker
+import idel.tests.infrastructure.*
 import java.net.http.HttpResponse
 
 class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi(username, idelUrl, "ideas") {
+
+    companion object {
+        const val ORDER_CTIME_ASC = "ctime_asc"
+        const val ORDER_CTIME_DESC = "ctime_desc"
+        const val ORDER_VOTES_DESC = "votes_desc"
+
+    }
 
     /**
      * Add new idea.
@@ -30,11 +39,20 @@ class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi
         return post("", body)
     }
 
+    fun quickAdd(groupId: String, version: CharSequence): HttpResponse<JsonNode> {
+        return add(
+            groupId = groupId,
+            summary = "summary $version",
+            description = "description [b]$version[/b]",
+            descriptionPlainText = "description $version",
+            link = "http://somelink.io/$version"
+        )
+    }
     /**
      * Update idea by template. All field contains version. Use it for quick tests,
      * when values of field are not important.
      */
-    fun edit(
+    fun quickEdit(
         ideaId: String,
         version: CharSequence
     ): HttpResponse<JsonNode> {
@@ -65,12 +83,33 @@ class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi
 
     }
 
-    fun load(ideaId: String): HttpResponse<JsonNode> {
+    fun load(
+        ideaId: String,
+    ): HttpResponse<JsonNode> {
         return get("/$ideaId")
     }
 
-    fun list(groupId: String): HttpResponse<JsonNode> {
-        return get("?groupId=$groupId")
+    fun list(groupId: String,
+             ordering : Option<String> = Option.empty(),
+             offeredBy : Option<String> = Option.empty(),
+             assignee: Option<String> = Option.empty(),
+             implemented: Option<String> = Option.empty(),
+             text : Option<String> = Option.empty()
+    ): HttpResponse<JsonNode> {
+        val params = listOf(
+            Option.just("groupId=$groupId"),
+            ordering.map {"ordering=$it"},
+            offeredBy.map {"offered-by=$it"},
+            assignee.map {"assignee=$it"},
+            implemented.map {"implemented=$it"},
+            text.map {"text=$it"}
+        )
+            .map {it.getOrElse {""}}
+            .filter {it.isNotEmpty()}
+            .joinToString(separator = "&")
+
+
+        return get("?$params")
     }
 
     fun assign(ideaId: String, assignee: User): HttpResponse<JsonNode> {
@@ -104,6 +143,14 @@ class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi
 
         return patch("/$ideaId/implemented", body)
     }
+
+    fun vote(ideaId: String) : HttpResponse<JsonNode> {
+        return post("/$ideaId/voters","")
+    }
+
+    fun devote(ideaId: String) : HttpResponse<JsonNode> {
+        return delete("/$ideaId/voters","")
+    }
 }
 
 /**
@@ -120,3 +167,11 @@ fun ideaHasDescriptionPlainText(description: String) = BodyFieldValueChecker.for
 
 fun ideaHasLink(link: String) = BodyFieldValueChecker.forField("link", link)
 
+fun containsIdeaWithSummary(summary: String) = BodyContainsObject(
+    "contains idea with summary [$summary]", "$.data", arrayOf(Pair("summary", summary))
+)
+
+fun ideaHasVoterCount(votersCount : Int) = BodyArraySize("has $votersCount voters", "$.data.voters",votersCount)
+fun ideaHasVoter(user : User) = BodyArrayElementExists("has voter [${user.id}]", "$.data.voters", user.id)
+
+fun ideasOrder(ids : Array<String>) = BodyArrayOrder("has correct order", "$.data", "id", ids)

@@ -1,8 +1,6 @@
 package idel.infrastructure.repositories
 
-import arrow.core.Either
-import arrow.core.flatMap
-import com.couchbase.client.core.error.CasMismatchException
+import arrow.core.*
 import com.couchbase.client.core.error.DecodingFailureException
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.java.Cluster
@@ -10,21 +8,9 @@ import com.couchbase.client.java.Collection
 import com.couchbase.client.java.codec.*
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.kv.GetOptions
-import com.couchbase.client.java.query.QueryOptions
 import idel.domain.*
 import mu.KotlinLogging
-import java.time.Duration
 import java.util.*
-
-/**
- * A little sugar. Use it when call [Cluster.query].
- */
-fun JsonObject.asQueryOptions(readonly: Boolean = true): QueryOptions {
-    return QueryOptions.queryOptions()
-        .parameters(this)
-        .readonly(readonly)
-}
-
 
 class IdeaCouchbaseRepository(
         cluster: Cluster,
@@ -34,30 +20,28 @@ class IdeaCouchbaseRepository(
     override val log = KotlinLogging.logger {}
 
 
-    override fun loadWithVersion(
-            first: Int,
-            last: Int,
-            sorting: IdeaSorting,
-            filtering: IdeaFiltering
-    ): List<Idea> {
-        val limit = last - first
-        val params = JsonObject.create()
-            .put("offset", first)
-            .put("limit", limit)
-
-        val ordering = when (sorting) {
-            IdeaSorting.CTIME_ASC -> "ctime asc"
-            IdeaSorting.CTIME_DESC -> "ctime desc"
-            IdeaSorting.VOTES_DESC -> "ARRAY_COUNT(voters) desc"
+    override fun load(
+        groupId : String,
+        ordering: IdeaOrdering,
+        filtering: IdeaFiltering,
+        pagination: Repository.Pagination
+    ): Either<Exception, List<Idea>> {
+        val orderingValue = when (ordering) {
+            IdeaOrdering.CTIME_ASC -> "ctime asc"
+            IdeaOrdering.CTIME_DESC -> "ctime desc"
+            IdeaOrdering.VOTES_DESC -> "ARRAY_COUNT(voters) desc"
         }
 
+        val params = JsonObject.create();
+
         val filters = listOf(
+                Option.just("groupId" to groupId),
                 filtering.assignee.map {"assignee" to it},
                 filtering.offeredBy.map {"offeredBy" to it},
                 filtering.implemented.map {"implemented" to it}
         )
-            .filter {it.isPresent}
-            .map {it.get()}
+            .filter {it.isDefined()}
+            .map {(it as Some).t}
 
         filters.forEach {(field, value) ->
             params.put(field, value)
@@ -68,40 +52,21 @@ class IdeaCouchbaseRepository(
             "$field = \$${field}"  //should get [name == \$name], for example
         }
 
-        if (filtering.text.isPresent) {
-            val filterValue = filtering.text.get()
+        if (filtering.text is Some) {
+            val filterValue = filtering.text.t
             params.put("text", filterValue)
             filterQueryParts = filterQueryParts + """SEARCH(ie, ${'$'}text, {"index":"idea_fts"})"""
         }
 
 
-        val filterQuery =
-                if (filterQueryParts.isNotEmpty()) {
-                    filterQueryParts.joinToString(prefix = " and ", separator = " and ")
-                } else {
-                    ""
-                }
 
-        val options = params.asQueryOptions()
-            .serializer(jsonSerializer)
-            .timeout(Duration.ofSeconds(2))
-
-        val queryString = "select * from `ideaelection` as ie " +
-                "where _type = \"${this.type}\" $filterQuery " +
-                "order by $ordering offset \$offset limit \$limit"
-
-
-        log.trace {"query: [$queryString], params: [$params]"}
-
-
-        val q = cluster.query(
-                queryString,
-                options
+        return load(
+            filterQueryParts = filterQueryParts,
+            ordering = orderingValue,
+            params = params,
+            pagination = pagination,
+            useFulltextSearch = filtering.text.map {true}.getOrElse {false}
         )
-
-
-
-        return q.rowsAs(Idea::class.java)
     }
 
     override fun loadWithVersion(id: String): Optional<IdeaWithVersion> {

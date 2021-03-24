@@ -1,7 +1,6 @@
 package idel.tests.infrastructure
 
 import com.fasterxml.jackson.databind.JsonNode
-import idel.tests.*
 import idel.tests.infrastructure.JsonNodeExtensions.queryArraySize
 import io.kotest.assertions.arrow.option.shouldBeSome
 import io.kotest.assertions.asClue
@@ -33,35 +32,54 @@ class BodyFieldValueChecker(
 class BodyArrayElementExists(
     override val testName: String,
     private val arrayPath: String,
-    private val elementKey: String,
     private val elementValue: String,
 ) : ResponseChecker {
 
     override fun check(jsonNode: JsonNode) {
-        jsonNode.shouldContainsArrayElement(arrayPath, elementKey, elementValue)
+        jsonNode.shouldContainsArrayElement(arrayPath, elementValue)
     }
 }
 
 class NotBodyArrayElementExists(
     override val testName: String,
     private val arrayPath: String,
-    private val elementKey: String,
     private val elementValue: String,
 ) : ResponseChecker {
 
     override fun check(jsonNode: JsonNode) {
-        jsonNode.shouldNotContainsArrayElement(arrayPath, elementKey, elementValue)
+        jsonNode.shouldNotContainsArrayElement(arrayPath, elementValue)
     }
 }
 
 
-class BodyArrayObjectWithFields(
+class BodyContainsObject(
     override val testName: String,
-    private val arrayPath: String,
+    private val objectPath: String,
     private val fields: Array<Pair<String, String>>
 ) : ResponseChecker {
     override fun check(jsonNode: JsonNode) {
-        jsonNode.shouldContainsArrayObjectWithFields(arrayPath, *fields)
+        jsonNode.shouldContainsObject(objectPath, *fields)
+    }
+}
+
+class NotBodyContainsObject(
+    override val testName: String,
+    private val objectPath: String,
+    private val fields: Array<Pair<String, String>>
+) : ResponseChecker {
+    override fun check(jsonNode: JsonNode) {
+        jsonNode.shouldNotContainsObject(objectPath, *fields)
+    }
+}
+
+class BodyArrayOrder(
+    override val testName: String,
+    private val arrayPath: String,
+    private val field : String,
+    private val values : Array<String>
+) : ResponseChecker {
+    override fun check(jsonNode: JsonNode) {
+        jsonNode.shouldHasArrayObjectsOrder(arrayPath, field, values)
     }
 }
 
@@ -98,12 +116,14 @@ suspend fun DescribeScope.checkIsOk(response: HttpResponse<JsonNode>, vararg fie
             response.shouldBeData()
         }
 
-        fieldChecks.forEach {checker ->
-            it(checker.testName) {
-                //body.shouldContains(it.jsonPath, it.expectedValue)
-                checker.check(body)
-            }
-        }
+       if (response.hasDataPayload()) {
+           fieldChecks.forEach {checker ->
+               it(checker.testName) {
+                   //body.shouldContains(it.jsonPath, it.expectedValue)
+                   checker.check(body)
+               }
+           }
+       }
     }
 }
 
@@ -179,8 +199,7 @@ suspend fun DescribeScope.checkValidationErrors(
 
         expectedErrors.forEach {expectedError ->
             it("field [${expectedError.field}] has validation error [${expectedError.message}] ") {
-                body.shouldContainsArrayElement(errorsPath, "dataPath", expectedError.field)
-                body.shouldContainsArrayElement(errorsPath, "message", expectedError.message)
+                body.shouldContainsObject(errorsPath, Pair("dataPath", expectedError.field), Pair("message", expectedError.message))
             }
         }
     }

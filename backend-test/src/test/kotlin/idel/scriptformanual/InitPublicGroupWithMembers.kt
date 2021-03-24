@@ -19,7 +19,7 @@ fun main() {
     lateinit var groupId : String
 
     var response = userAdmin.groups.create(name = "architecture reports", entryMode = GroupsApi.PUBLIC)
-    groupId = extractId(response)
+    groupId = response.extractId()
 
     users.subList(0,3).forEach {it.joinRequests.create(groupId)}
 }

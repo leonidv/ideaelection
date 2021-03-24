@@ -52,7 +52,7 @@ class JoinAndLeaveToPrivateOrClosedGroupScenarios : DescribeSpec({
                         joinRequestIsUnresolved
                     )
 
-                    joinRequestId = extractId(response)
+                    joinRequestId = response.extractId()
                 }
 
                 describe("$userB see join request in his list") {
@@ -136,7 +136,7 @@ class JoinAndLeaveToPrivateOrClosedGroupScenarios : DescribeSpec({
                         joinRequestIsUnresolved
                     )
 
-                    joinRequestId = extractId(response)
+                    joinRequestId = response.extractId()
                 }
 
                 describe("$userC don't see the group in the list of his groups") {

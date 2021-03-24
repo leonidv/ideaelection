@@ -2,7 +2,6 @@ package idel.tests.apiobject
 
 import arrow.core.Option
 import arrow.core.getOrElse
-import arrow.core.orElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
 import idel.tests.infrastructure.*
@@ -118,7 +117,7 @@ fun groupHasEntryMode(entryMode: String) = BodyFieldValueChecker.forField("entry
 fun groupHasCreator(user: User) = BodyFieldValueChecker.forField("creator.id", user.id)
 
 fun groupHasMemberWithRole(user: User, role: String) =
-    BodyArrayObjectWithFields(
+    BodyContainsObject(
         "has [$user] as [$role]",
         "$.data",
         fields = arrayOf(Pair("userId", user.id), Pair("roleInGroup", role))
@@ -127,9 +126,10 @@ fun groupHasMemberWithRole(user: User, role: String) =
 fun groupHasAdmin(user: User) = groupHasMemberWithRole(user, GroupsApi.ADMIN)
 fun groupHasMember(user: User) = groupHasMemberWithRole(user, GroupsApi.MEMBER)
 
-fun groupHasNotMember(user: User) = NotBodyArrayElementExists("has member $user", "$.data", "id", user.id)
+fun groupHasNotMember(user: User) = NotBodyContainsObject("has member $user", "$.data", arrayOf(Pair("id", user.id)))
 
 fun noGroups() = BodyArraySize("no any groups", "$.data", 0)
-fun includeGroup(groupId: String) = BodyArrayElementExists("includes groups $groupId", "$.data", "id", groupId)
+fun includeGroup(groupId: String) =
+    BodyContainsObject("includes groups $groupId", "$.data", arrayOf(Pair("id", groupId)))
 
 
