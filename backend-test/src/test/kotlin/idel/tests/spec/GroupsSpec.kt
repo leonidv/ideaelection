@@ -25,7 +25,7 @@ class GroupsSpec : DescribeSpec({
     val userE = User("userE")
     val userD = User("userD", "not member")
 
-    context("userA, userB, userC, user is registered in the app") {
+    context("$userA, $userB, $userC, $userE, $userD user is registered in the app") {
         describe("initialization") {
             registryUsers(userA, userB, userC, userE, userD)
         }
@@ -225,6 +225,7 @@ class GroupsSpec : DescribeSpec({
 
             describe("$userA creates PUBLIC group with members $userB") {
                 groupId = initGroup(userA, setOf(userB))
+                userA.role = "admin"
                 userB.role = "member"
             }
 
@@ -278,7 +279,7 @@ class GroupsSpec : DescribeSpec({
             describe("$userB can't remove administrator right if group doesn't have another administrators") {
                 val response = userB.groups.changeRoleInGroup(groupId, userB.id, GroupsApi.MEMBER)
 
-                checkIsBadRequest(response, errorCode = 109)
+                checkIsBadRequest(response, 109)
             }
         }
 
@@ -359,6 +360,91 @@ class GroupsSpec : DescribeSpec({
 
             }
         }
+
+        describe("delete group") {
+            lateinit var groupId : String
+            lateinit var ideaId : String
+
+            describe("init group with idea") {
+
+                groupId = initGroup(userA, members = setOf(userB))
+                userE.role = "non member"
+
+                val addIdeaResponse = userA.ideas.quickAdd(groupId,"1")
+                ideaId = addIdeaResponse.extractId()
+
+            }
+
+            describe("security") {
+                describe("$userB can't delete group") {
+                    checkIsForbidden(userB.groups.delete(groupId))
+                }
+            }
+
+            describe("operation on delete group is not allowed") {
+                describe("$userA delete group") {
+                    val response = userA.groups.delete(groupId)
+
+                    checkIsOk(response, groupHasStateDeleted)
+                }
+
+
+                arrayOf(userA, userB).forEach {user ->
+                    describe("$user don't see group in user's groups list") {
+                        val response = user.groups.loadForUser(user.id)
+                        checkIsOk(response, notIncludeGroup(groupId))
+                    }
+                }
+
+                arrayOf(userA, userB, userE).forEach {user ->
+                    describe("$user don't see group in the available groups ") {
+                        val response = user.groups.loadAvailable()
+                        checkIsOk(response, notIncludeGroup(groupId))
+                    }
+                }
+
+                arrayOf(userA, userB).forEach {user ->
+                    describe("$user can't list groups ideas") {
+                        val response = user.ideas.list(groupId)
+                        checkIsNotFound(response)
+                    }
+                }
+
+                arrayOf(userA, userB).forEach {user ->
+                    describe("$user can't load idea from deleted group by id") {
+                        val response = user.ideas.load(ideaId)
+                        checkIsNotFound(response)
+                    }
+                }
+
+                arrayOf(userA, userB).forEach {user ->
+                    describe("$user can't add idea to deleted group") {
+                        val response = user.ideas.quickAdd(groupId, "-1")
+                        checkIsNotFound(response)
+                    }
+                }
+
+                describe("$userA can't change group properties") {
+                    val response =
+                        userA.groups.changeProperties(groupId, "next name", "next description", GroupsApi.PUBLIC)
+                    checkIsNotFound(response)
+                }
+
+                describe("$userA can't update idea in group") {
+                    val response = userA.ideas.quickEdit(ideaId, "-1")
+                    checkIsNotFound(response)
+                }
+
+                arrayOf(userA, userB).forEach {user ->
+                    describe("$user can't vote for idea") {
+                        val response = userA.ideas.vote(ideaId)
+                        checkIsNotFound(response)
+                    }
+                }
+            }
+        }
     }
+
+
 })
 

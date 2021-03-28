@@ -19,6 +19,9 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
 
         const val MEMBER = "MEMBER"
         const val ADMIN = "GROUP_ADMIN"
+
+        const val DELETED = "DELETED"
+        const val ACTIVE = "ACTIVE"
     }
 
     fun create(
@@ -42,6 +45,8 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
      * Load group by id
      */
     fun load(groupId : String) : HttpResponse<JsonNode> = get("/$groupId")
+
+    fun delete(groupId: String) : HttpResponse<JsonNode> = super.delete("/$groupId","")
 
     /**
      * Return available groups
@@ -132,4 +137,6 @@ fun noGroups() = BodyArraySize("no any groups", "$.data", 0)
 fun includeGroup(groupId: String) =
     BodyContainsObject("includes groups $groupId", "$.data", arrayOf(Pair("id", groupId)))
 
+fun notIncludeGroup(groupId: String) = NotBodyContainsObject("doesn't include group $groupId", "$.data", arrayOf(Pair("id", groupId)))
 
+val groupHasStateDeleted = BodyFieldValueChecker.forField("state",GroupsApi.DELETED)

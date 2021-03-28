@@ -17,39 +17,64 @@ class GroupCouchbaseRepository(
     collection: Collection
 ) : AbstractTypedCouchbaseRepository<Group>(cluster, collection, type = "group", Group::class.java), GroupRepository {
 
+    companion object {
+        val NOT_DELETED_CONDITION: String = """state != "${GroupState.DELETED}" """;
+    }
 
     override val log = KotlinLogging.logger {}
 
     override fun collection(): Collection = collection
 
-    override fun loadByUser(userId: String, pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>> {
-            val selectPart = """
+    override fun load(id: String): Either<Exception, Group> {
+        val result = super.load(id)
+
+        return if (result is Either.Right && result.b.isDeleted()) {
+            Either.left(EntityNotFound(type, id))
+        } else {
+            result
+        }
+    }
+
+    override fun exists(id: String): Either<Exception, Boolean> {
+        return load(id).map {!it.isDeleted()}
+    }
+
+    override fun loadByUser(
+        userId: String,
+        pagination: Repository.Pagination,
+        ordering: GroupOrdering
+    ): Either<Exception, List<Group>> {
+        val selectPart = """
                 SELECT ie  from `$bucketName` gm JOIN `$bucketName` ie  ON KEYS gm.groupId
-                WHERE gm._type = "groupMember" and ie._type ="$type"  
+                WHERE gm._type = "groupMember" and ie._type ="$type" and ie.$NOT_DELETED_CONDITION   
             """.trimIndent()
 
-            val filterParts = listOf("gm.userId = \$userId")
-            val params = JsonObject.create();
-            params.put("userId", userId)
+        val filterParts = listOf("gm.userId = \$userId")
+        val params = JsonObject.create();
+        params.put("userId", userId)
 
-            val orderingPart  = "ie.${Repository.enumAsOrdering(ordering)}"
+        val orderingPart = "ie.${Repository.enumAsOrdering(ordering)}"
 
-            return rawLoad(
-                    basePart = selectPart,
-                    filterQueryParts = filterParts,
-                    orderingPart = orderingPart,
-                    params, pagination
-            )
+        return rawLoad(
+            basePart = selectPart,
+            filterQueryParts = filterParts,
+            orderingPart = orderingPart,
+            params, pagination
+        )
     }
 
 
-    override fun loadOnlyAvailable(pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>> {
+    override fun loadOnlyAvailable(
+        pagination: Repository.Pagination,
+        ordering: GroupOrdering
+    ): Either<Exception, List<Group>> {
         val params = JsonObject.create()
 
         val orderingValue = Repository.enumAsOrdering(ordering)
 
         var filterQueryParts = listOf(
-                """entryMode IN ["${GroupEntryMode.PUBLIC}","${GroupEntryMode.CLOSED}"]"""
+            """entryMode IN ["${GroupEntryMode.PUBLIC}","${GroupEntryMode.CLOSED}"]""",
+            NOT_DELETED_CONDITION,
         )
 
         return super.load(filterQueryParts, orderingValue, params, pagination, useFulltextSearch = false)

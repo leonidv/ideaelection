@@ -6,12 +6,8 @@ import arrow.core.extensions.either.monad.flatten
 import arrow.core.extensions.fx
 
 import io.konform.validation.*
-import io.konform.validation.Invalid
-import io.konform.validation.Valid
 import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minLength
-import io.konform.validation.jsonschema.pattern
-import java.lang.IllegalStateException
 import java.time.LocalDateTime
 
 /**
@@ -51,6 +47,17 @@ enum class GroupEntryMode {
     PRIVATE
 }
 
+enum class GroupState {
+    /**
+     * Group is available for working.
+     */
+    ACTIVE,
+
+    /**
+     * User deleted group and can't work with it.
+     */
+    DELETED
+}
 /**
  * Group is binding between users and ideas.
  *
@@ -71,6 +78,11 @@ class Group(
      * User which created the group
      */
     val creator: UserInfo,
+
+    /**
+     * State of group (active, archived, etc).
+     */
+    val state : GroupState,
 
     /**
      * Name of group.
@@ -115,13 +127,28 @@ class Group(
                 "', logo='" + logo + "', entryMode=" + entryMode + ")"
     }
 
+    private fun clone(
+        state : GroupState = this.state,
+        entryMode: GroupEntryMode = this.entryMode,
+        description: String = this.description,
+        logo : String = this.logo,
+        name : String = this.name
+    ) : Group {
+        return Group(
+            id = this.id,
+            creator = this.creator,
+            ctime = this.ctime,
+            state =state,
+            entryMode = entryMode,
+            description = description,
+            logo = logo,
+            name = name
+        )
+    }
 
     fun update(properties: IGroupEditableProperties) : Either<ValidationException, Group> {
         return GroupValidation.ifValid(properties) {
-            Group(
-                id = this.id,
-                creator = this.creator,
-                ctime = this.ctime,
+            clone(
                 entryMode = properties.entryMode,
                 description = properties.description,
                 logo = properties.logo,
@@ -129,14 +156,22 @@ class Group(
             )
         }
     }
+
+    /**
+     * Logical delete. Change status to [[GroupState.DELETED]] which is mean that user can't work with group.
+     */
+    fun delete() : Group {
+        return this.clone(state = GroupState.DELETED)
+    }
+
+    fun isDeleted() : Boolean {
+        return state == GroupState.DELETED
+    }
 }
 
 
 class GroupValidation {
     companion object : Validator<IGroupEditableProperties> {
-
-
-
 
         override val validation = Validation<IGroupEditableProperties> {
             IGroupEditableProperties::name {
@@ -169,6 +204,7 @@ class GroupFactory {
                 id = generateId(),
                 ctime = LocalDateTime.now(),
                 creator = creator,
+                state = GroupState.ACTIVE,
                 name = properties.name,
                 description = properties.description,
                 logo = properties.logo,
@@ -223,7 +259,7 @@ class GroupService(val groupMemberRepository: GroupMemberRepository) {
         return admins.map {it.size > 1}
     }
 
-    fun changeRole(groupId: String, userId: String, nextRole: GroupMemberRole): Either<Exception, GroupMember> {
+    fun changeRoleInGroup(groupId: String, userId: String, nextRole: GroupMemberRole): Either<Exception, GroupMember> {
         return Either.fx<Exception, Either<Exception, GroupMember>> {
             val (canChange) = when (nextRole) {
                 GroupMemberRole.GROUP_ADMIN -> Either.right(true)
