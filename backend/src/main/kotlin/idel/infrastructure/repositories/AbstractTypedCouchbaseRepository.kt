@@ -15,6 +15,8 @@ import com.couchbase.client.java.kv.InsertOptions
 import com.couchbase.client.java.kv.ReplaceOptions
 import com.couchbase.client.java.query.QueryOptions
 import com.couchbase.client.java.query.QueryScanConsistency
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.PropertyAccessor
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -76,6 +78,8 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
             .registerModule(timeModule)
             .registerModule(Jdk8Module())
             .registerModule(ParameterNamesModule())
+            .setVisibility(PropertyAccessor.IS_GETTER, JsonAutoDetect.Visibility.NONE)
+
 
     }
 

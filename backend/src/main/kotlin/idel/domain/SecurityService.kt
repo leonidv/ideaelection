@@ -37,7 +37,8 @@ enum class GroupMemberAccessLevel {
  * we should not check that a user is an admin every time. But if action can do only admin, {admin} level is checked.
  */
 class SecurityService(
-    private val groupMemberRepository: GroupMemberRepository
+    private val groupMemberRepository: GroupMemberRepository,
+    private val groupRepository: GroupRepository
 ) {
 
     val log = KotlinLogging.logger {}
@@ -118,26 +119,33 @@ class SecurityService(
      * Calculate group access level.
      */
     fun groupAccessLevel(groupId: String, user: User): Either<Exception, Set<GroupAccessLevel>> {
-        if (user.roles.contains(Roles.SUPER_USER)) {
-            return Either.right(GROUP_LEVELS_ADMIN)
-        }
+        val eGroupExists = groupRepository.exists(groupId)
 
-        val eUser = groupMemberRepository.load(groupId, user.id)
+        // check that the group is not logically deleted. By design, for logical deleted group member is exists.
+        return if (eGroupExists is Either.Right && eGroupExists.b) {
+            if (user.roles.contains(Roles.SUPER_USER)) {
+                return Either.right(GROUP_LEVELS_ADMIN)
+            }
 
-        return when (eUser) {
-            is Either.Left ->
-                if (eUser.a is EntityNotFound) {
-                    log.info {"SECURITY ${user.id} try to get access into group ${groupId} "}
-                    Either.right(GROUP_LEVELS_NOT_MEMBER)
-                } else {
-                    eUser
-                }
+            val eUser = groupMemberRepository.load(groupId, user.id)
 
-            is Either.Right ->
-                when (eUser.b.roleInGroup) {
-                    GroupMemberRole.GROUP_ADMIN -> Either.right(GROUP_LEVELS_ADMIN)
-                    GroupMemberRole.MEMBER -> Either.right(GROUP_LEVELS_MEMBER)
-                }
+            when (eUser) {
+                is Either.Left ->
+                    if (eUser.a is EntityNotFound) {
+                        log.info {"SECURITY ${user.id} try to get access into group ${groupId} "}
+                        Either.right(GROUP_LEVELS_NOT_MEMBER)
+                    } else {
+                        eUser
+                    }
+
+                is Either.Right ->
+                    when (eUser.b.roleInGroup) {
+                        GroupMemberRole.GROUP_ADMIN -> Either.right(GROUP_LEVELS_ADMIN)
+                        GroupMemberRole.MEMBER -> Either.right(GROUP_LEVELS_MEMBER)
+                    }
+            }
+        } else {
+            eGroupExists.map {GROUP_LEVELS_NOT_MEMBER}
         }
     }
 

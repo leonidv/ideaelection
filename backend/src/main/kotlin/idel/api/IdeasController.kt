@@ -64,7 +64,6 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
         }
     }
 
-
     @PostMapping("/{ideaId}/voters")
     @ResponseStatus(HttpStatus.CREATED)
     fun vote(@AuthenticationPrincipal user: IdelOAuth2User,

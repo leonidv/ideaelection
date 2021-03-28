@@ -2,16 +2,18 @@ package idel.domain
 
 import io.konform.validation.ValidationError
 
+open class NoStacktraceRuntimeException(msg: String) : java.lang.RuntimeException(msg,  null, false, false)
+
 /**
  * User can permissions for operation
  */
-class OperationNotPermitted : Exception()
+class OperationNotPermitted : NoStacktraceRuntimeException("")
 
 /**
  * Represent exception which are thrown on the validation fail.
  */
 class ValidationException(msg: String, val errors: Collection<ValidationError>)
-    : RuntimeException("$msg, errors = $errors") {
+    : NoStacktraceRuntimeException("$msg, errors = $errors") {
 }
 
 /**
@@ -27,4 +29,4 @@ class EntityAlreadyExists(entityType: String, id : String) : IllegalArgumentExce
 /**
  *  Required operation is invalid because some of the precondition is failed checks.
  */
-class InvalidOperation(msg : String) : Exception(msg)
+class InvalidOperation(msg : String) : NoStacktraceRuntimeException(msg)

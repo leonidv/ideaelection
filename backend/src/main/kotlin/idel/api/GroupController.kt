@@ -106,6 +106,23 @@ class GroupController(
         }
     }
 
+    @DeleteMapping("/{groupId}")
+    fun archive(
+        @AuthenticationPrincipal user: IdelOAuth2User,
+        @PathVariable groupId: String
+    ) : EntityOrError<Group> {
+        return security.group.asAdmin(groupId, user) {
+            Either.fx<Exception, Group> {
+                val (group) = groupRepository.load(groupId)
+                val (nextGroup) = groupRepository.mutate(groupId) {
+                    group.delete()
+                }
+                nextGroup
+            }
+        }
+    }
+
+
     data class RolePatch(val roleInGroup : GroupMemberRole)
 
     @PatchMapping("/{groupId}/members/{userId}/role-in-group")
@@ -116,7 +133,7 @@ class GroupController(
         @RequestBody rolePatch: RolePatch
     ) : EntityOrError<GroupMember> {
         return security.group.asAdmin(groupId, user) {
-            groupService.changeRole(groupId, userId, rolePatch.roleInGroup)
+            groupService.changeRoleInGroup(groupId, userId, rolePatch.roleInGroup)
         }
     }
 

@@ -137,15 +137,27 @@ suspend fun DescribeScope.checkIsForbidden(response: HttpResponse<JsonNode>) {
     }
 }
 
-suspend fun DescribeScope.checkIsBadRequest(response: HttpResponse<JsonNode>, errorCode : Int) {
+suspend fun DescribeScope.checkIsNotFound(response: HttpResponse<JsonNode>) {
     val body = response.body()
     body.toPrettyString().asClue {
-        it("response is 404 with code $errorCode") {
-            response.shouldHasStatus(HttpURLConnection.HTTP_BAD_REQUEST)
-            response.shouldBeError(errorCode)
+        it("response is 404 with error.code 102") {
+            response.shouldHasStatus(HttpURLConnection.HTTP_NOT_FOUND)
+            response.shouldBeError(102)
         }
     }
 }
+
+
+suspend fun DescribeScope.checkIsBadRequest(response: HttpResponse<JsonNode>, error : Int) {
+    val body = response.body()
+    body.toPrettyString().asClue {
+        it("response is 400 with error.code $error") {
+            response.shouldHasStatus(HttpURLConnection.HTTP_BAD_REQUEST)
+            response.shouldBeError(109)
+        }
+    }
+}
+
 
 class ValidationError(
     /**
