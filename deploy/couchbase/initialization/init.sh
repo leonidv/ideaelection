@@ -1,65 +1,72 @@
 #!/usr/bin/env bash
-CB_HOST=localhost
-CURL_COMMON="--fail -u admin:password"
-CB_STORAGE_ENGINE="plasma" #plasma for enterprise, forestdb for community
+
+CB_ADMIN="${CB_ADMIN:=admin}"
+CB_PASSWORD="${CB_PASSWORD:=password}"
+CB_HOST="${CB_HOST:=localhost}"
+CB_STORAGE_ENGINE="${CB_STORAGE_ENGINE:=plasma}" #plasma for enterprise, forestdb for community
+
+CURL_COMMON="-s --fail -u $CB_ADMIN:$CB_PASSWORD"
+
+CALL_DIR="$(pwd)"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 checkCurlExec() {
-    echo $1 $2
-    curlCode=$1
-    msg=$2
-    if [[ ! curlCode -eq 0 ]]
+    local curlCode=$1
+    local msg=$2
+    if [[ curlCode -eq 0 ]]
      then
+        echo "${msg}"
+     else
         echo -e "\033[31mFailed on [${msg}], exit code = ${curlCode}\e[0m"
         exit 1
-     else
-        echo "Success ${msg}"
     fi
 }
 
+
 ## Set controller name
-curl ${CURL_COMMON} http://${CB_HOST}:8091/node/controller/rename \
+curl -s --fail http://${CB_HOST}:8091/node/controller/rename \
         --data hostname=127.0.0.1
 
 checkCurlExec $? "Name is 127.0.0.1"
 
-curl ${CURL_COMMON} http://${CB_HOST}:8091/node/controller/setupServices \
-        --data 'services=kv,n1ql,index,fts'
+curl -s --fail http://${CB_HOST}:8091/node/controller/setupServices \
+        --data "services=kv,n1ql,index,fts"
 
-checkCurlExec $? 'Services: kv, n1ql, index, fts'
+checkCurlExec $? "Services: kv, n1ql, index, fts"
 
-curl ${CURL_COMMON} http://${CB_HOST}:8091/pools/default  \
+curl -s --fail http://${CB_HOST}:8091/pools/default  \
         --data memoryQuota=256 \
         --data indexMemoryQuota=256 \
         --data ftsMemoryQuota=256
 
-checkCurlExec $? 'Quotas: 256mb to all'
+checkCurlExec $? "Quotas: 256mb to all"
 
 #Create administrator user with default name and password
-curl ${CURL_COMMON} http://${CB_HOST}:8091/settings/web  \
-        --data username=admin \
-        --data password=password \
+curl -s --fail http://${CB_HOST}:8091/settings/web  \
+        --data username=$CB_ADMIN \
+        --data password=$CB_PASSWORD \
         --data port=8091
 
-checkCurlExec $? 'Default admin user'
+checkCurlExec $? "Default admin user is $CB_ADMIN"
 
 
 curl ${CURL_COMMON} http://${CB_HOST}:8091/settings/indexes   \
         --data storageMode=$CB_STORAGE_ENGINE
 
-checkCurlExec $? 'Index $CB_STORAGE_ENGINE enabled'
+checkCurlExec $? "Index $CB_STORAGE_ENGINE enabled"
 
 curl ${CURL_COMMON} http://${CB_HOST}:8091/pools/default/buckets  \
         --data replicaNumber=0 \
         --data name=ideaelection \
         --data ramQuotaMB=128
 
-checkCurlExec $? 'Default bucket ideaelection is created'
+checkCurlExec $? "Default bucket ideaelection is created"
 
 sleep 3
 
 curl -G -XPOST ${CURL_COMMON} http://${CB_HOST}:8093/query/service \
         --data-urlencode statement='CREATE INDEX `ideas` ON `ideaelection`(`_type`)'
-checkCurlExec $? 'Index on type created'
+checkCurlExec $? "Index on type created"
 
 curl -G -XPOST ${CURL_COMMON} http://${CB_HOST}:8093/query/service \
         --data-urlencode statement='CREATE INDEX `index_type_ctime` ON `ideaelection`(`_type`,`ctime`)'
@@ -72,5 +79,6 @@ checkCurlExec $? 'Index on id and type created'
 curl ${CURL_COMMON} -XPUT http://${CB_HOST}:8094/api/index/idea_fts \
         -H 'cache-control: no-cache' \
         -H 'content-type: application/json' \
-        -d @couchbase-test-fts-mapping.json
+        -d @${SCRIPT_DIR}/idea-fts-mapping.json
 checkCurlExec $? 'FTS is created'
+
