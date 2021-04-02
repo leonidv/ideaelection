@@ -9,7 +9,7 @@ fi
 
 
 
-CONTAINER_ID=$(${CONTAINER_MANAGER} ps -a | grep couchbase | head -c 12)
+CONTAINER_ID=$(${CONTAINER_MANAGER} ps -a | grep "couchbase:6.6.1" | head -c 12)
 
 if [[ -z "${CONTAINER_ID}" ]]
 then

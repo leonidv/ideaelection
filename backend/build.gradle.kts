@@ -3,15 +3,16 @@ val jacksonVersion = "2.11.2"
 
 
 plugins {
-    id("org.springframework.boot") version "2.3.3.RELEASE"
-    id("io.spring.dependency-management") version "1.0.9.RELEASE"
-    kotlin("jvm") version "1.4.0"
-    kotlin("plugin.spring") version "1.4.0"
+    id("org.springframework.boot") version "2.4.4"
+    kotlin("jvm") version "1.4.30"
+    kotlin("plugin.spring") version "1.4.30"
     id("idea")
 }
 
+apply(plugin = "io.spring.dependency-management")
+
 group = "ideaelection"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 val kotestVersion="4.2.4"
 
@@ -75,7 +76,13 @@ tasks {
         kotlinOptions.jvmTarget = "11"
         kotlinOptions.freeCompilerArgs = listOf("-Xjsr305=strict")
     }
+
     compileTestKotlin {
         kotlinOptions.jvmTarget = "11"
+    }
+
+    bootJar {
+        archiveFileName.set("idel-backend.jar")
+
     }
 }
