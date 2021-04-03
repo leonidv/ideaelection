@@ -23,6 +23,7 @@ global_job_config:
 
 blocks:
   - name: Couchbase building
+    dependecies: []
     run:
       when: "change_in('/deploy/couchbase/')"
     task:
@@ -34,6 +35,9 @@ blocks:
             - podman push leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
 
   - name: Backend building
+    dependecies: []
+    run:
+      when: "change_in(['/backend/', '/backend-test/'])"
     task:
       env_vars:
         - name:  BUILD_DIR
