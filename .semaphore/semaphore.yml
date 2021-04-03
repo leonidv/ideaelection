@@ -1,10 +1,36 @@
 version: v1.0
 name: Idea Elections
+
 agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
+
+global_job_config:
+  secrets:
+    - name: DockerHubCredentials
+
+  prologue:
+    commands:
+      - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
+      - podman login --get-login docker.io
+      - checkout
+      - .semaphore/ubuntu1804-podman-install.sh
+      - podman -v
+      - buildah -v
+      - sem-version java 11
+      - java -version
+
 blocks:
+  - name: Couchbase building
+    task:
+      jobs:
+        - name: Build Couchbase container
+          commands:
+            - cd deploy/couchbase
+            - buildah bud -t leonidv/idel-couchbase
+            - podman push leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
+
   - name: Backend building
     task:
       env_vars:
@@ -15,18 +41,9 @@ blocks:
       prologue:
         commands:
           - checkout
-          - .semaphore/ubuntu1804-podman-install.sh
-          - podman -v
-          - buildah -v
-          - cd scripts/
-          - ./couchbase-run.sh
-          - sleep 5
-          - ./couchbase-init-test.sh
-          - cd ..
-          - cache restore m2
-          - cache restore gradleCache
-          - sem-version java 11
-          - java -version
+          - scripts/couchbase-run.sh
+          - sleep 15
+
       epilogue:
         always:
           commands:
