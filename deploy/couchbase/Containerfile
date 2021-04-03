@@ -1,4 +1,4 @@
-FROM couchbase:6.6.1
+FROM docker.io/couchbase:6.6.1
 COPY container-entrypoint.sh /container-entrypoint.sh
 COPY initialization/* /initialization/
 RUN ["chmod", "+x", "container-entrypoint.sh"]
