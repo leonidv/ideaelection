@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-set -x
-
 if [[ -x "$(command -v podman)" ]]; then
  CONTAINER_MANAGER="podman"
 else
@@ -15,7 +13,7 @@ CONTAINER_ID=$(${CONTAINER_MANAGER} ps -a -q --filter name=idel-couchbase)
 
 if [[ -z "${CONTAINER_ID}" ]]
 then
-    ${CONTAINER_MANAGER} run -q -p 8091-8094:8091-8094 -p 11210:11210 --name idel-couchbase  docker.io/leonidv/idel-couchbase
+    ${CONTAINER_MANAGER} run -d -q -p 8091-8094:8091-8094 -p 11210:11210 --name idel-couchbase  docker.io/leonidv/idel-couchbase
 else
     ${CONTAINER_MANAGER} start idel-couchbase
 fi
