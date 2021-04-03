@@ -23,7 +23,6 @@ global_job_config:
 
 blocks:
   - name: Couchbase building
-    dependencies: []
     run:
       when: "change_in('/deploy/couchbase/')"
     task:
