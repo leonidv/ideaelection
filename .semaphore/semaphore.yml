@@ -14,12 +14,10 @@ blocks:
           value:  /home/semaphore/ideaelection/logs
       prologue:
         commands:
-          - echo "BUILD_DIR = $BUILD_DIR"
           - checkout
-          - echo "from prologue"
-          - echo $HOME
-          - echo $SEMAPHORE_GIT_DIR
-          - echo $HOME/$SEMAPHORE_GIT_DIR
+          - .semaphore/ubuntu1804-podman-install.sh
+          - podman -v
+          - buildah -v
           - cd scripts/
           - ./couchbase-run.sh
           - sleep 5
