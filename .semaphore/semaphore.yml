@@ -12,14 +12,14 @@ global_job_config:
 
   prologue:
     commands:
-      - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
-      - podman login --get-login docker.io
       - checkout
       - .semaphore/ubuntu1804-podman-install.sh
       - podman -v
       - buildah -v
       - sem-version java 11
       - java -version
+      - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
+      - podman login --get-login docker.io
 
 blocks:
   - name: Couchbase building
