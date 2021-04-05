@@ -1,0 +1,12 @@
+FROM docker.io/bellsoft/liberica-openjdk-debian:11.0.10-9
+
+ARG PROJECT_DIR
+ARG SCRIPTS_DIR
+
+ENV LOG_DIR=/idel/logs
+
+COPY "$SCRIPTS_DIR/*" /app/
+COPY "../../backend/build/libs/idel-backend.jar" /app/
+
+
+ENTRYPOINT ["/app/run.sh"]

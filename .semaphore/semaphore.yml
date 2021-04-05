@@ -5,6 +5,8 @@ agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
+execution_time_limit:
+    minutes: 30
 
 global_job_config:
   secrets:
@@ -42,6 +44,7 @@ blocks:
           value: /home/semaphore/ideaelection
         - name: LOG_DIR
           value:  /home/semaphore/ideaelection/logs
+
       prologue:
         commands:
           - checkout
@@ -58,17 +61,15 @@ blocks:
             - cp -r $BUILD_DIR/backend-test/build/reports $LOG_DIR
             - tar -zcvf log-and-reports.tar.gz $LOG_DIR
             - artifact push job log-and-reports.tar.gz
+            -
       jobs:
         - name: Build backend application
           commands:
-            - echo "from commands"
-            - echo $HOME
-            - echo $SEMAPHORE_GIT_DIR
-            - echo $HOME/$SEMAPHORE_GIT_DIR
             - cd backend
-            - ./gradlew -v
             - ./gradlew bootJar
-            - nohup java -Dtestmode=on -Dlogging.config=$BUILD_DIR/.semaphore/logback.xml -jar build/libs/backend-*.jar &
+            - cd $BUILD_DIR/deploy
+            - ./build-backend.sh testmode
+            -  podman run --name idel-backend-testmode --network=container:idel-couchbase --replace=true leonidv/idel-backend-dev
             - sleep 10
             - cat nohup.out
             - cd ../backend-test
