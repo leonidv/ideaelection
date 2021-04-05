@@ -3,7 +3,7 @@
 testmode: false
 
 couchbase:
-  host: 127.0.0.1
+  host: localhost
   port:
   username: admin
   password: password

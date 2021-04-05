@@ -1,5 +1,7 @@
 <configuration debug="true">
 
+    <property name="LOG_DIR" value="/logs"/>
+
     <appender name="FULL_LOG_FILE" class="ch.qos.logback.core.FileAppender">
         <file>${LOG_DIR}/backend.log</file>
         <encoder>
@@ -30,7 +32,7 @@
         <appender-ref ref="IDEL_FILE"/>
     </logger>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="FULL_LOG_FILE"/>
     </root>
 
