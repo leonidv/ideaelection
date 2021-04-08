@@ -38,7 +38,7 @@ blocks:
         - name: Build Couchbase container
           commands:
             - cd deploy/
-            - build-couchbase.sh
+            - ./build-couchbase.sh
             - podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
 
   - name: Backend building
