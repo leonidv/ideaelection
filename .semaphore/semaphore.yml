@@ -14,8 +14,8 @@ global_job_config:
 
   prologue:
     commands:
-      - .semaphore/semaphoreci-cleandisk.sh
       - checkout
+      - .semaphore/semaphoreci-cleandisk.sh
       - .semaphore/ubuntu1804-podman-install.sh
       - podman -v
       - buildah -v
