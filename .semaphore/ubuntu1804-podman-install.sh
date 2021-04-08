@@ -6,5 +6,3 @@ echo "deb $PODMAN_REPO  / " | sudo tee -a /etc/apt/sources.list.d/podman.list > 
 curl -L $PODMAN_REPO/Release.key | sudo apt-key add -
 sudo apt-get -qq update
 sudo apt-get -qq install podman -y
-
-mkdir "$HOME/.config"
