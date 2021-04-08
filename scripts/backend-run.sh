@@ -8,7 +8,7 @@ MODE=${1:-testmode}
 #"dev") source initialization/init.sh ;;
 #esac
 
-podman run -d \
+podman run -d --quiet \
   --name idel-backend-${MODE} \
   --network=container:idel-couchbase \
   --replace=true \
