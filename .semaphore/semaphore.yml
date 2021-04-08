@@ -24,7 +24,8 @@ global_job_config:
       - java -version
       - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
       - podman login --get-login docker.io
-      - df -h
+      - sudo touch /mnt/test-with-sudo
+      - touch /mnt/test-wtihout-sudo
 
   epilogue:
     always:
