@@ -24,13 +24,12 @@ global_job_config:
       - java -version
       - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
       - podman login --get-login docker.io
-      - sudo touch /mnt/test-with-sudo
-      - touch /mnt/test-wtihout-sudo
 
   epilogue:
     always:
       commands:
         - cache store container_images $HOME/.local/share/containers/storage/
+        - df -h
 
 blocks:
   - name: Couchbase building
