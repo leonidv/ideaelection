@@ -18,10 +18,16 @@ global_job_config:
       - .semaphore/ubuntu1804-podman-install.sh
       - podman -v
       - buildah -v
+      - cache restore container_images
       - sem-version java 11
       - java -version
       - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
       - podman login --get-login docker.io
+
+  epilogue:
+    always:
+      commands:
+        - cache store container_images $HOME/.local/share/containers/storage/
 
 blocks:
   - name: Couchbase building
@@ -31,9 +37,9 @@ blocks:
       jobs:
         - name: Build Couchbase container
           commands:
-            - cd deploy/couchbase
-            - buildah bud -t leonidv/idel-couchbase
-            - podman push leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
+            - cd deploy/
+            - build-couchbase.sh
+            - podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
 
   - name: Backend building
     run:
@@ -50,18 +56,18 @@ blocks:
           - checkout
           - scripts/couchbase-run.sh
           - sleep 15
+          - cache restore gradleCache
 
       epilogue:
         always:
           commands:
-            - cache store m2 /home/semaphore/.m2
-            - cache store gradleCache /home/semaphore/.gradle/caches/modules-2/files-2.1
+            - cache store m2 $HOME/.m2
+            - cache store gradleCache $HOME/.gradle/caches/
         on_fail:
           commands:
             - cp -r $BUILD_DIR/backend-test/build/reports $LOG_DIR
             - tar -zcvf log-and-reports.tar.gz $LOG_DIR
             - artifact push job log-and-reports.tar.gz
-            -
       jobs:
         - name: Build backend application
           commands:
@@ -69,9 +75,10 @@ blocks:
             - ./gradlew bootJar
             - cd $BUILD_DIR/deploy
             - ./build-backend.sh testmode
-            -  podman run --name idel-backend-testmode --network=container:idel-couchbase --replace=true leonidv/idel-backend-dev
+            - cd $BUILD_DIR/scripts
+            - ./backend-run.sh testmode
             - sleep 10
-            - cat nohup.out
             - cd ../backend-test
             - ./gradlew test allureReport
+            - podman docker.io/leonidv/idel-couchbase-testmode docker.io/leonidv/idel-couchbase-testmode
 

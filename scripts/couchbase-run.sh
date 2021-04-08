@@ -14,9 +14,6 @@ if [[ -z "${CONTAINER_ID}" ]]; then
     -p 8080:8080 \
     -p 8091-8094:8091-8094 -p 11210:11210 \
     docker.io/leonidv/idel-couchbase
-    #-p 8091-8094:8091-8094 -p 11210:11210 \
-    # --pod=idel \ -- можно подключится через localhost
-    #--network idel --network-alias couchbase \
 
 else
   ${CONTAINER_MANAGER} start idel-couchbase
