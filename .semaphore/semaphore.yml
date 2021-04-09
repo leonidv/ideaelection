@@ -19,6 +19,7 @@ global_job_config:
       - .semaphore/ubuntu1804-podman-install.sh
       - podman -v
       - cache restore container_images
+      - sudo du -sh $HOME/.local/share/containers/
       - sem-version java 11
       - java -version
       - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
@@ -27,6 +28,7 @@ global_job_config:
   epilogue:
     always:
       commands:
+        - cache delete container_images
         - cache store container_images $HOME/.local/share/containers/storage/
         - df -h
 
