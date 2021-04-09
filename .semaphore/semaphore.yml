@@ -18,7 +18,6 @@ global_job_config:
       - .semaphore/semaphoreci-cleandisk.sh
       - .semaphore/ubuntu1804-podman-install.sh
       - podman -v
-      - buildah -v
       - cache restore container_images
       - sem-version java 11
       - java -version
