@@ -58,7 +58,7 @@ blocks:
       prologue:
         commands:
           - checkout
-          - scripts/couchbase-run.sh
+          - scripts/couchbase-run.sh "-p 8080:8080"
           - sleep 15
           - cache restore gradleCache
           - sudo du -sh $HOME/.gradle/caches/
@@ -85,6 +85,6 @@ blocks:
             - ./backend-run.sh testmode
             - sleep 10
             - cd ../backend-test
-            - ./gradlew test allureReport
+            - ./gradlew --console=plain test allureReport
             - podman docker.io/leonidv/idel-couchbase-testmode docker.io/leonidv/idel-couchbase-testmode
 
