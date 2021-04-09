@@ -18,8 +18,8 @@ global_job_config:
       - .semaphore/semaphoreci-cleandisk.sh
       - .semaphore/ubuntu1804-podman-install.sh
       - podman -v
-      - cache restore container_images
-      - sudo du -sh $HOME/.local/share/containers/
+      # - cache restore container_images
+      # - sudo du -sh $HOME/.local/share/containers/
       - sem-version java 11
       - java -version
       - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
@@ -28,8 +28,9 @@ global_job_config:
   epilogue:
     always:
       commands:
-        - cache delete container_images
-        - cache store container_images $HOME/.local/share/containers/storage/
+#        - cache delete container_images
+#        - cache store container_images $HOME/.local/share/containers/storage/
+        - sudo du -sh $HOME/.local/share/containers/
         - df -h
 
 blocks:
@@ -60,11 +61,13 @@ blocks:
           - scripts/couchbase-run.sh
           - sleep 15
           - cache restore gradleCache
+          - sudo du -sh $HOME/.gradle/caches/
 
       epilogue:
         always:
           commands:
             - cache store m2 $HOME/.m2
+            - cache delete gradleCache
             - cache store gradleCache $HOME/.gradle/caches/
         on_fail:
           commands:
