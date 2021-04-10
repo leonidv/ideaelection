@@ -14,8 +14,9 @@ sudo mkdir -p "${CONTAINERS_PATH}"
 sudo chown -Rv semaphore:semaphore "${CONTAINERS_PATH}"
 
 mkdir -p $HOME/.config/containers/
-echo "rootless_storage_path=\"${CONTAINERS_PATH}\"" > $HOME/.config/containers/storage.conf
+echo "[storage]"
 echo "driver = \"fuse-overlayfs\"" >> $HOME/.config/containers/storage.conf
+echo "rootless_storage_path=\"${CONTAINERS_PATH}\"" > $HOME/.config/containers/storage.conf
 
 cat $HOME/.config/containers/storage.conf
 
