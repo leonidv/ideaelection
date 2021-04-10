@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import com.couchbase.client.core.cnc.Context
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.core.error.context.ErrorContext
+import io.kotest.assertions.arrow.either.shouldBeLeft
 import io.kotest.assertions.arrow.either.shouldBeRight
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.data.forAll
@@ -30,7 +31,8 @@ class SecurityServiceSpec : DescribeSpec({
                 name = "Test group",
                 description = "",
                 logo = "",
-                entryMode = GroupEntryMode.PRIVATE
+                entryMode = GroupEntryMode.PRIVATE,
+                state = GroupState.ACTIVE
         )
 
         val groupMemberUserA = GroupMember.of(group.id, userA, GroupMemberRole.GROUP_ADMIN)
@@ -44,7 +46,10 @@ class SecurityServiceSpec : DescribeSpec({
         every {groupMemberRepository.load(group.id, userC.id)} returns Either.right(groupMemberUserC)
         every {groupMemberRepository.load(group.id, userD.id)} returns Either.left(DocumentNotFoundException(object : ErrorContext(null){}))
 
-        val securityService = SecurityService(groupMemberRepository)
+        val groupRepository = mockk<GroupRepository>()
+        every {groupRepository.exists(group.id)} returns Either.right(true)
+
+        val securityService = SecurityService(groupMemberRepository, groupRepository)
 
 
         describe("group security level") {
@@ -53,12 +58,16 @@ class SecurityServiceSpec : DescribeSpec({
                     row(userA, setOf(GroupAccessLevel.ADMIN, GroupAccessLevel.MEMBER)),
                     row(userB, setOf(GroupAccessLevel.MEMBER)),
                     row(userC, setOf(GroupAccessLevel.MEMBER)),
-                    row(userD, setOf(GroupAccessLevel.NOT_MEMBER))
             ).forAll {user, requiredLevels ->
                 it("[${user.displayName}] has levels ${requiredLevels}") {
                     val actualLevel = securityService.groupAccessLevel(group.id, user)
                     actualLevel.shouldBeRight(requiredLevels)
                 }
+            }
+
+            it("${userD.id} can't get access to document (notfound)") {
+                val actualLevels = securityService.groupAccessLevel(group.id, userD)
+                actualLevels.shouldBeLeft()
             }
         }
 
@@ -72,7 +81,6 @@ class SecurityServiceSpec : DescribeSpec({
                                 IdeaAccessLevel.ASSIGNEE, IdeaAccessLevel.AUTHOR)),
                         row(userB, setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.AUTHOR)),
                         row(userC, setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.ASSIGNEE)),
-                        row(userD, setOf(IdeaAccessLevel.DENIED))
                 ).forAll {user, requiredLevels ->
                     it("[${user.id}] has levels ${requiredLevels}") {
                         val actualLevels = securityService.ideaAccessLevels(idea, user)
@@ -80,6 +88,10 @@ class SecurityServiceSpec : DescribeSpec({
                     }
                 }
 
+                it("${userD.id} can't get access to document (notfound)") {
+                    val actualLevels = securityService.ideaAccessLevels(idea, userD)
+                    actualLevels.shouldBeLeft()
+                }
             }
 
             describe("group has idea created by [userB] and assigned to himself ([userB])") {
@@ -93,10 +105,9 @@ class SecurityServiceSpec : DescribeSpec({
 
             describe("author [userD] is not member of idea's group (was kicked or idea was moved") {
                 val idea = idea(userD, group, Option.empty())
-                val requiredLevels = setOf(IdeaAccessLevel.DENIED)
-                it("[${userD.id}] has level ${requiredLevels}") {
+                it("[${userD.id}] get document not found error ") {
                     val actualLevels = securityService.ideaAccessLevels(idea, userD);
-                    actualLevels.shouldBeRight(requiredLevels)
+                    actualLevels.shouldBeLeft()
                 }
             }
         }
@@ -109,13 +120,17 @@ class SecurityServiceSpec : DescribeSpec({
                     row(userA, setOf(GroupMemberAccessLevel.GROUP_MEMBER, GroupMemberAccessLevel.GROUP_ADMIN, GroupMemberAccessLevel.HIM_SELF)),
                     row(userB, setOf(GroupMemberAccessLevel.GROUP_MEMBER, GroupMemberAccessLevel.HIM_SELF)),
                     row(userC, setOf(GroupMemberAccessLevel.GROUP_MEMBER)),
-                    row(userD, setOf(GroupMemberAccessLevel.DENIED))
             ).forAll {user, requiredLevels ->
                 it("${user.displayName} has levels $requiredLevels") {
                     val actualLevels = securityService.groupMemberAccessLevels(groupMember, group.id, user)
                     actualLevels.shouldBeRight(requiredLevels)
                 }
 
+            }
+
+            it("${userD.id} can't get access to document (notfound)") {
+                val actualLevels = securityService.groupMemberAccessLevels(groupMember, group.id, userD)
+                actualLevels.shouldBeLeft()
             }
         }
     }
@@ -143,6 +158,6 @@ fun idea(creator: User, group: Group, assignee: Option<User>, voters: Set<User> 
             assignee = assignee.map {it.id}.getOrElse {""},
             implemented = false,
             author = creator.id,
-            voters = voters.map {it.id}.toSet()
+            voters = voters.map {it.id}
     )
 }
