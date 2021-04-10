@@ -7,16 +7,21 @@ CONTAINERS_PATH=/mnt/containers/storage
 echo "deb $PODMAN_REPO  / " | sudo tee -a /etc/apt/sources.list.d/podman.list > /dev/null
 curl -L $PODMAN_REPO/Release.key | sudo apt-key add -
 sudo apt-get -qq update
-sudo apt-get -qq install podman -y
+sudo apt-get -qq install podman fuse-overlayfs -y
 
 echo "change path of containers storage"
 sudo mkdir -p "${CONTAINERS_PATH}"
 sudo chown -Rv semaphore:semaphore "${CONTAINERS_PATH}"
 
-mkdir -p $HOME/.config/containers/
-echo "[storage]" > $HOME/.config/containers/storage.conf
-echo "driver = \"overlay\"" >> $HOME/.config/containers/storage.conf
-echo "rootless_storage_path=\"${CONTAINERS_PATH}\"" >> $HOME/.config/containers/storage.conf
+#mkdir -p $HOME/.config/containers/
+#echo "[storage]" > $HOME/.config/containers/storage.conf
+#echo "driver = \"overlay\"" >> $HOME/.config/containers/storage.conf
+#echo "rootless_storage_path=\"${CONTAINERS_PATH}\"" >> $HOME/.config/containers/storage.conf
+#cat $HOME/.config/containers/storage.conf
 
-cat $HOME/.config/containers/storage.conf
+sudo mkdir -p /etc/containers/
+echo "[storage]" | sudo tee -a /etc/containers/storage.conf > /dev/null
+echo "rootless_storage_path=\"${CONTAINERS_PATH}\"" | sudo tee -a /etc/containers/storage.conf > /dev/null
+
+cat /etc/containers/storage.conf
 
