@@ -2,7 +2,18 @@
 source /etc/os-release
 
 PODMAN_REPO="https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_18.04/"
+CONTAINERS_PATH=/mnt/containers/storage
+
 echo "deb $PODMAN_REPO  / " | sudo tee -a /etc/apt/sources.list.d/podman.list > /dev/null
 curl -L $PODMAN_REPO/Release.key | sudo apt-key add -
 sudo apt-get -qq update
 sudo apt-get -qq install podman -y
+
+echo "change path of containers storage"
+sudo mkdir -p "${CONTAINERS_PATH}"
+sudo chown -Rv semaphore:semaphore "${CONTAINERS_PATH}"
+
+mkdir -p $HOME/.config/containers/
+echo "graphroot=\"${CONTAINERS_PATH}\"" > $HOME/.config/containers/storage.conf
+
+podman info
