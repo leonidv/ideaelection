@@ -1,8 +1,4 @@
 buildscript {
-    repositories {
-        jcenter()
-    }
-
     dependencies {
         classpath("io.qameta.allure:allure-gradle:2.8.1")
     }
@@ -23,7 +19,6 @@ val jacksonVersion = "2.11.2"
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
 dependencies {
@@ -35,9 +30,7 @@ dependencies {
     testImplementation("io.rest-assured:rest-assured:4.2.0")
     testImplementation("io.rest-assured:kotlin-extensions:4.2.0")
 
-
     testImplementation("io.arrow-kt:arrow-core:0.10.4")
-
 
     testImplementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")

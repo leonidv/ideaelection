@@ -38,8 +38,10 @@ dependencies {
     implementation("org.springframework.security:spring-security-oauth2-client")
     implementation("org.springframework.security:spring-security-oauth2-jose")
 
-    implementation("com.couchbase.client:java-client:3.1.2")
-    implementation("com.couchbase.client:couchbase-transactions:1.1.5")
+    implementation("com.couchbase.client:java-client:3.1.4")
+    implementation("com.couchbase.client:couchbase-transactions:1.1.6")
+    implementation("io.projectreactor:reactor-core:3.4.3") // https://github.com/Azure/azure-sdk-for-java/issues/20106
+
 
     implementation("io.github.microutils:kotlin-logging:1.7.9")
 

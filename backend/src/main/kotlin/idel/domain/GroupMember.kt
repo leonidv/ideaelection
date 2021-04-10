@@ -26,6 +26,10 @@ class GroupMember(
     companion object {
         fun calculateId(groupId: String, userId: String) = compositeId(key = "gm", groupId, userId)
 
+        fun createAdmin(groupId: String, user: User) : GroupMember {
+            return of(groupId, user, GroupMemberRole.GROUP_ADMIN)
+        }
+
         fun of(groupId: String, user: User, role : GroupMemberRole): GroupMember {
             return GroupMember(
                     userId = user.id,
