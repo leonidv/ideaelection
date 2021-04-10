@@ -17,7 +17,7 @@ global_job_config:
       - checkout
       - .semaphore/semaphoreci-cleandisk.sh
       - .semaphore/ubuntu1804-podman-install.sh
-      - podman -v
+      - podman info
       # - cache restore container_images
       # - sudo du -sh $HOME/.local/share/containers/
       - sem-version java 11
