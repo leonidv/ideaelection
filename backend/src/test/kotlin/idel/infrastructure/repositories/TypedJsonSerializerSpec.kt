@@ -22,7 +22,7 @@ class TypedJsonSerializerSpec : DescribeSpec({
             val p = Person("a", 10)
             val result = serializer.serialize(p)
             var resultAsString = String(result)
-            val expected = """{"name":"a","age":10,"_type":"test"}"""
+            val expected = """{"_type":"test","name":"a","age":10}"""
             it("result as UTF8 string is [$expected]") {
                 assertThat(resultAsString).isEqualTo(expected)
             }

@@ -78,7 +78,7 @@ blocks:
         - name: Build backend application
           commands:
             - cd $BUILD_DIR/backend
-            - ./gradlew --console=plain bootJar
+            - ./gradlew --console=plain build bootJar
             - cd $BUILD_DIR/deploy
             - ./build-backend.sh testmode
             - cd $BUILD_DIR/scripts
