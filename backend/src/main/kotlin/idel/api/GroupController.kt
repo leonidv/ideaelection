@@ -15,11 +15,11 @@ import kotlin.IllegalArgumentException
 @RestController
 @RequestMapping("/groups")
 class GroupController(
-        private val couchbaseTransactions: CouchbaseTransactions,
-        private val groupRepository: GroupRepository,
-        private val groupMemberRepository: GroupMemberRepository,
-        private val groupService: GroupService,
-        apiSecurityFactory: ApiSecurityFactory
+    private val couchbaseTransactions: CouchbaseTransactions,
+    private val groupRepository: GroupRepository,
+    private val groupMemberRepository: GroupMemberRepository,
+    private val groupService: GroupService,
+    apiSecurityFactory: ApiSecurityFactory
 ) {
     val log = KotlinLogging.logger {}
 
@@ -29,66 +29,66 @@ class GroupController(
 
     @PostMapping
     fun create(
-            @RequestBody properties: GroupEditableProperties,
-            @AuthenticationPrincipal user: IdelOAuth2User
+        @RequestBody properties: GroupEditableProperties,
+        @AuthenticationPrincipal user: IdelOAuth2User
     ): EntityOrError<Group> {
+        val x = Either.fx<Exception, Group> {
+            val (group) = factory.createGroup(UserInfo.ofUser(user), properties)
 
-
-        val x = Either.fx<Exception,Group> {
-            val (group) = factory.createGroup(UserInfo.ofUser(user),properties)
-
-            val creatorAsAdmin = GroupMember.of(group.id,user, GroupMemberRole.GROUP_ADMIN)
-            couchbaseTransactions.transaction { ctx ->
+            val creatorAsAdmin = GroupMember.of(group.id, user, GroupMemberRole.GROUP_ADMIN)
+            couchbaseTransactions.transaction {ctx ->
                 groupRepository.add(group, ctx)
                 groupMemberRepository.add(creatorAsAdmin, ctx)
-            }
+            }.bind()
 
             group
         }
 
-        return DataOrError.fromEither(x,log)
+        return DataOrError.fromEither(x, log)
     }
 
 
     @GetMapping("/{groupId}")
-    fun load(@AuthenticationPrincipal user: IdelOAuth2User,
-             @PathVariable groupId: String) : EntityOrError<Group> {
-        return DataOrError.fromEither( groupRepository.load(groupId), log)
+    fun load(
+        @AuthenticationPrincipal user: IdelOAuth2User,
+        @PathVariable groupId: String
+    ): EntityOrError<Group> {
+        return DataOrError.fromEither(groupRepository.load(groupId), log)
     }
 
 
     @GetMapping(params = ["userId"])
     fun loadByUser(
-            @AuthenticationPrincipal user: IdelOAuth2User,
-            @RequestParam userId : String,
-            @RequestParam(required = false, defaultValue = "") order: GroupOrdering,
-            pagination: Repository.Pagination
-    ) : EntityOrError<List<Group>> {
+        @AuthenticationPrincipal user: IdelOAuth2User,
+        @RequestParam userId: String,
+        @RequestParam(required = false, defaultValue = "") order: GroupOrdering,
+        pagination: Repository.Pagination
+    ): EntityOrError<List<Group>> {
         return security.user.asHimSelf(userId, user) {
-            groupRepository.loadByUser(userId,pagination, order)
+            groupRepository.loadByUser(userId, pagination, order)
         }
     }
 
     @GetMapping(params = ["onlyAvailable"])
     fun loadAvailableForUser(
-            @AuthenticationPrincipal user : IdelOAuth2User,
-            @RequestParam(defaultValue = "true") onlyAvailable: Boolean,
-            @RequestParam(defaultValue = "") ordering: GroupOrdering,
-            pagination: Repository.Pagination
-    ) : EntityOrError<List<Group>> {
+        @AuthenticationPrincipal user: IdelOAuth2User,
+        @RequestParam(defaultValue = "true") onlyAvailable: Boolean,
+        @RequestParam(defaultValue = "") ordering: GroupOrdering,
+        pagination: Repository.Pagination
+    ): EntityOrError<List<Group>> {
         val result = groupRepository.loadOnlyAvailable(pagination, ordering)
         return DataOrError.fromEither(result, log)
     }
 
     @GetMapping("/{groupId}/members")
     fun loadUsers(
-        @AuthenticationPrincipal user : IdelOAuth2User,
+        @AuthenticationPrincipal user: IdelOAuth2User,
         @PathVariable groupId: String,
-        @RequestParam username : Optional<String>,
+        @RequestParam username: Optional<String>,
         pagination: Repository.Pagination
-    ) : EntityOrError<List<GroupMember>> {
+    ): EntityOrError<List<GroupMember>> {
         return security.group.asMember(groupId, user) {
-            groupMemberRepository.loadByGroup(groupId,pagination,username.asOption(), roleFilter = Option.empty())
+            groupMemberRepository.loadByGroup(groupId, pagination, username.asOption(), roleFilter = Option.empty())
         }
     }
 
@@ -97,10 +97,10 @@ class GroupController(
     fun updateInfo(
         @AuthenticationPrincipal user: IdelOAuth2User,
         @PathVariable groupId: String,
-        @RequestBody properties : GroupEditableProperties
-    ) : EntityOrError<Group> {
+        @RequestBody properties: GroupEditableProperties
+    ): EntityOrError<Group> {
         return security.group.asAdmin(groupId, user) {
-            groupRepository.possibleMutate(groupId) { group ->
+            groupRepository.possibleMutate(groupId) {group ->
                 group.update(properties)
             }
         }
@@ -110,7 +110,7 @@ class GroupController(
     fun archive(
         @AuthenticationPrincipal user: IdelOAuth2User,
         @PathVariable groupId: String
-    ) : EntityOrError<Group> {
+    ): EntityOrError<Group> {
         return security.group.asAdmin(groupId, user) {
             Either.fx<Exception, Group> {
                 val (group) = groupRepository.load(groupId)
@@ -123,28 +123,27 @@ class GroupController(
     }
 
 
-    data class RolePatch(val roleInGroup : GroupMemberRole)
+    data class RolePatch(val roleInGroup: GroupMemberRole)
 
     @PatchMapping("/{groupId}/members/{userId}/role-in-group")
     fun changeMemberRole(
-        @AuthenticationPrincipal user : IdelOAuth2User,
+        @AuthenticationPrincipal user: IdelOAuth2User,
         @PathVariable groupId: String,
         @PathVariable userId: String,
         @RequestBody rolePatch: RolePatch
-    ) : EntityOrError<GroupMember> {
+    ): EntityOrError<GroupMember> {
         return security.group.asAdmin(groupId, user) {
             groupService.changeRoleInGroup(groupId, userId, rolePatch.roleInGroup)
         }
     }
 
 
-
     @DeleteMapping("/{groupId}/members/{memberId}")
     fun removeMember(
-        @AuthenticationPrincipal user : IdelOAuth2User,
+        @AuthenticationPrincipal user: IdelOAuth2User,
         @PathVariable groupId: String,
-        @PathVariable memberId : String
-    ) : EntityOrError<String> {
+        @PathVariable memberId: String
+    ): EntityOrError<String> {
         return security.groupMember.asAdminOrHimSelf(groupId, memberId, user) {
             groupMemberRepository.removeFromGroup(groupId, memberId).map {"ok"}
         }
