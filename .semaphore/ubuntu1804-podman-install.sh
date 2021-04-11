@@ -19,9 +19,6 @@ sudo chown -Rv semaphore:semaphore "${CONTAINERS_PATH}"
 #echo "rootless_storage_path=\"${CONTAINERS_PATH}\"" >> $HOME/.config/containers/storage.conf
 #cat $HOME/.config/containers/storage.conf
 
-sudo mkdir -p /etc/containers/
-echo "[storage]" | sudo tee -a /etc/containers/storage.conf > /dev/null
-echo "graphroot=\"${CONTAINERS_PATH}\"" | sudo tee -a /etc/containers/storage.conf > /dev/null
-
-cat /etc/containers/storage.conf
+sudo sed -i -E "s/^graphroot.*?/graphroot = \"\/mnt\/containers\/storage\"/g" /etc/containers/storage.conf
+grep "graphroot" /etc/containers/storage.conf
 
