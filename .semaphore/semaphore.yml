@@ -86,5 +86,5 @@ blocks:
             - sleep 10
             - cd ../backend-test
             - ./gradlew --console=plain test allureReport
-            - sudo podman docker.io/leonidv/idel-couchbase-testmode docker.io/leonidv/idel-couchbase-testmode
+            - sudo podman push docker.io/leonidv/idel-couchbase-testmode docker.io/leonidv/idel-couchbase-testmode
 
