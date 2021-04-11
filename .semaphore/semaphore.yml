@@ -58,7 +58,7 @@ blocks:
       prologue:
         commands:
           - checkout
-          - scripts/couchbase-run.sh "-p 8080:8080"
+          - sudo scripts/couchbase-run.sh "-p 8080:8080"
           - sleep 15
           - cache restore gradleCache
           - sudo du -sh $HOME/.gradle/caches/
