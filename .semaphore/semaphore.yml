@@ -23,14 +23,14 @@ global_job_config:
       - sem-version java 11
       - java -version
       - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
-      - podman login --get-login docker.io
+      - sudo podman login --get-login docker.io
 
   epilogue:
     always:
       commands:
 #        - cache delete container_images
 #        - cache store container_images $HOME/.local/share/containers/storage/
-        - sudo du -sh $HOME/.local/share/containers/
+        - sudo du -sh /mnt/containers/storage
         - df -h
 
 blocks:
@@ -43,7 +43,7 @@ blocks:
           commands:
             - cd deploy/
             - sudo ./build-couchbase.sh
-            - podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
+            - sudo podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
 
   - name: Backend building
     run:
@@ -80,11 +80,11 @@ blocks:
             - cd $BUILD_DIR/backend
             - ./gradlew --console=plain build bootJar
             - cd $BUILD_DIR/deploy
-            - ./build-backend.sh testmode
+            - sudo ./build-backend.sh testmode
             - cd $BUILD_DIR/scripts
-            - ./backend-run.sh testmode
+            - sudo ./backend-run.sh testmode
             - sleep 10
             - cd ../backend-test
             - ./gradlew --console=plain test allureReport
-            - podman docker.io/leonidv/idel-couchbase-testmode docker.io/leonidv/idel-couchbase-testmode
+            - sudo podman docker.io/leonidv/idel-couchbase-testmode docker.io/leonidv/idel-couchbase-testmode
 
