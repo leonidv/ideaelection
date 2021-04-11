@@ -22,7 +22,7 @@ global_job_config:
       # - sudo du -sh $HOME/.local/share/containers/
       - sem-version java 11
       - java -version
-      - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
+      - echo $DOCKERHUB_PASSWORD | sudo podman login --username "$DOCKERHUB_USERNAME" --password-stdin
       - sudo podman login --get-login docker.io
 
   epilogue:
