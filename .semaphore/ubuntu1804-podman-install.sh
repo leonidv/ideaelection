@@ -20,5 +20,7 @@ sudo chown -Rv semaphore:semaphore "${CONTAINERS_PATH}"
 #cat $HOME/.config/containers/storage.conf
 
 sudo sed -i -E "s/^graphroot.*?/graphroot = \"\/mnt\/containers\/storage\"/g" /etc/containers/storage.conf
+sudo sed -i -E "s/^mountopt.*?/graphroot = \"nodev,metacopy=off\"/g" /etc/containers/storage.conf
 grep "graphroot" /etc/containers/storage.conf
+grep "mountopt" /etc/containers/storage.conf
 
