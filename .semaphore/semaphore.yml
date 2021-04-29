@@ -90,7 +90,7 @@ blocks:
 
   - name: Deploy to test
     task:
-      secretes:
+      secrets:
         - name: SAEDI_KUBECTL
       jobs:
         - name: Apply deployment
