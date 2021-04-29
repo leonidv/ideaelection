@@ -15,6 +15,7 @@ group = "ideaelection"
 version = "1.0"
 
 val kotestVersion="4.2.4"
+val springDocVersion = "1.5.8"
 
 repositories {
     mavenCentral()
@@ -34,6 +35,9 @@ dependencies {
 
     implementation("org.springframework.security:spring-security-web")
     implementation("org.springframework.security:spring-security-config")
+    implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
+    implementation("org.springdoc:springdoc-openapi-security:$springDocVersion")
+    implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")
 
     implementation("org.springframework.security:spring-security-oauth2-client")
     implementation("org.springframework.security:spring-security-oauth2-jose")

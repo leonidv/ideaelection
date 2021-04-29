@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: saedi-testmode-service
+  labels:
+    project: saedi
+    environment: test
+spec:
+  selector:
+    app: saedi-testmode
+  ports:
+    - port: 8080
+      name: backend-api
+    - port: 8091
+      name: couchbase-ui
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saedi-testmode
+  labels:
+    project: saedi
+    environment: test
+spec:
+  selector:
+    matchLabels:
+      app: saedi-testmode
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: saedi-testmode
+        project: saedi
+        environment: test
+    spec:
+      containers:
+        - name: saedi-couchbase
+          image: docker.io/leonidv/idel-couchbase
+          ports:
+            - containerPort: 8091
+            - containerPort: 8092
+            - containerPort: 8093
+            - containerPort: 8094
+            - containerPort: 11210
+
+        - name: saedi-backend
+          image: docker.io/leonidv/idel-backend-testmode
+          ports:
+            - containerPort: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: saedi-testmode-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+  labels:
+    project: saedi
+    environment: test
+spec:
+  rules:
+    - host: couchbase.test.saedi.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: saedi-testmode-service
+                port:
+                  name: couchbase-ui
+
+    - host: api.test.saedi.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: saedi-testmode-service
+                port:
+                  name: backend-api
