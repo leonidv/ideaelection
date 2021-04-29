@@ -5,6 +5,7 @@ import arrow.core.extensions.either.monad.flatten
 import arrow.core.extensions.fx
 import idel.domain.*
 import idel.infrastructure.security.IdelOAuth2User
+import io.swagger.v3.oas.annotations.Operation
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.http.HttpStatus
