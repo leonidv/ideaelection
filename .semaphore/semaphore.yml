@@ -89,14 +89,13 @@ blocks:
             - sudo podman push docker.io/leonidv/idel-backend-testmode docker.io/leonidv/idel-backend-testmode
 
   - name: Deploy to test
-      task:
-        secretes:
-          - name: SAEDI_KUBECTL
-        jobs:
-          - name: Apply deployment
-            commands:
-              - kubectl config view
-              - kubectl apply -f  deployment/test-deployment.yaml
-              #- kubectl rollout history deployment/saedi-testmode
-              #- kubectl rollout status -w depl saedi-testmode
-
+    task:
+      secretes:
+        - name: SAEDI_KUBECTL
+      jobs:
+        - name: Apply deployment
+          commands:
+            - kubectl config view
+            - kubectl apply -f  deployment/test-deployment.yaml
+            #- kubectl rollout history deployment/saedi-testmode
+            #- kubectl rollout status -w depl saedi-testmode
