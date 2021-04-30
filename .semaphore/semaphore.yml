@@ -23,6 +23,7 @@ global_job_config:
 #      - echo $DOCKERHUB_PASSWORD | sudo podman login --username "$DOCKERHUB_USERNAME" --password-stdin
 #      - sudo podman login --get-login docker.io
 
+blocks:
   - name: Deploy to test
     task:
       secrets:
