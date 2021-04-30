@@ -18,8 +18,8 @@ global_job_config:
 #      - .semaphore/semaphoreci-cleandisk.sh
 #      - .semaphore/ubuntu1804-podman-install.sh
 #      - sudo podman info
-#      - sem-version java 11
-#      - java -version
+      - sem-version java 11
+      - java -version
 #      - echo $DOCKERHUB_PASSWORD | sudo podman login --username "$DOCKERHUB_USERNAME" --password-stdin
 #      - sudo podman login --get-login docker.io
 
