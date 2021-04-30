@@ -31,10 +31,9 @@ blocks:
       jobs:
         - name: Apply deployment
           commands:
-            - cat $HOME/.kube/config
             - kubectl config view
             - kubectl get deployments
-            - kubectl apply -f  deployment/test-deployment.yaml
+            - kubectl apply -f  deploy/test-deployment.yaml
             #- kubectl rollout history deployment/saedi-testmode
             #- kubectl rollout status -w depl saedi-testmode
 
