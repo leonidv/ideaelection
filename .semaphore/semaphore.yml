@@ -14,14 +14,14 @@ global_job_config:
 
   prologue:
     commands:
-#      - checkout
-#      - .semaphore/semaphoreci-cleandisk.sh
-#      - .semaphore/ubuntu1804-podman-install.sh
-#      - sudo podman info
+      - checkout
+      - .semaphore/semaphoreci-cleandisk.sh
+      - .semaphore/ubuntu1804-podman-install.sh
+      - sudo podman info
       - sem-version java 11
       - java -version
-#      - echo $DOCKERHUB_PASSWORD | sudo podman login --username "$DOCKERHUB_USERNAME" --password-stdin
-#      - sudo podman login --get-login docker.io
+      - echo $DOCKERHUB_PASSWORD | sudo podman login --username "$DOCKERHUB_USERNAME" --password-stdin
+      - sudo podman login --get-login docker.io
 
 blocks:
   - name: Deploy to test
@@ -34,7 +34,7 @@ blocks:
             - cat $HOME/.kube/config
             - kubectl config view
             - kubectl get deployments
-            #- kubectl apply -f  deployment/test-deployment.yaml
+            - kubectl apply -f  deployment/test-deployment.yaml
             #- kubectl rollout history deployment/saedi-testmode
             #- kubectl rollout status -w depl saedi-testmode
 
