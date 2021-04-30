@@ -33,7 +33,7 @@ blocks:
           commands:
             - kubectl config view
             - kubectl get deployments
-            #- kubectl apply -f  deploy/test-deployment.yaml
-            - kubectl rollout history deployment/saedi-testmode
-            - kubectl rollout status -w depl saedi-testmode
+            - kubectl replace -f  deploy/test-deployment.yaml
+            #- kubectl rollout history deployment/saedi-testmode
+            #- kubectl rollout status -w deployment/saedi-testmode
 
