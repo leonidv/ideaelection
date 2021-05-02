@@ -95,7 +95,8 @@ blocks:
       secrets:
         - name: SAEDI_KUBECTL
       prologue:
-        -  .semaphore/install-kustomize.sh
+        commands:
+          - .semaphore/install-kustomize.sh
       jobs:
         - name: Apply deployment
           commands:
