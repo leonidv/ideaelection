@@ -23,3 +23,10 @@ spring:
           google:
             client-id: 115577720302-jtm4mampbkbq62rerrb3thdcj5qq3egb.apps.googleusercontent.com
             client-secret: yLVkDuyUGMnM6J2iHtJ7t1a-
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+

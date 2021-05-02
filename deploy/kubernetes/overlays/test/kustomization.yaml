@@ -1,0 +1,8 @@
+resources:
+  - ../../base/
+
+namespace: saedi-test
+namePrefix: test-
+commonLabels:
+  app: saedi-test
+  environment: test

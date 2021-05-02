@@ -4,6 +4,7 @@ import idel.domain.UserRepository
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -29,8 +30,7 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
     override fun configure(http: HttpSecurity) {
         http
             .authorizeRequests()
-            .anyRequest()
-            .authenticated()
+            .anyRequest().authenticated()
 
         http.anonymous().disable()
 
@@ -68,3 +68,11 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
 
 }
 
+@Configuration
+@Order(1)
+class Probes: WebSecurityConfigurerAdapter() {
+    override fun configure(http: HttpSecurity) {
+        http.antMatcher("/probes/**").anonymous()
+
+    }
+}

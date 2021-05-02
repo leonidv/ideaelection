@@ -11,7 +11,7 @@ plugins {
 
 apply(plugin = "io.spring.dependency-management")
 
-group = "ideaelection"
+group = "saedi"
 version = "1.0"
 
 val kotestVersion="4.2.4"
@@ -32,15 +32,17 @@ idea {
 dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     implementation("org.springframework.security:spring-security-web")
     implementation("org.springframework.security:spring-security-config")
+    implementation("org.springframework.security:spring-security-oauth2-client")
+    implementation("org.springframework.security:spring-security-oauth2-jose")
+
     implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
     implementation("org.springdoc:springdoc-openapi-security:$springDocVersion")
     implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")
 
-    implementation("org.springframework.security:spring-security-oauth2-client")
-    implementation("org.springframework.security:spring-security-oauth2-jose")
 
     implementation("com.couchbase.client:java-client:3.1.4")
     implementation("com.couchbase.client:couchbase-transactions:1.1.6")
@@ -90,5 +92,16 @@ tasks {
     bootJar {
         archiveFileName.set("idel-backend.jar")
 
+    }
+}
+
+springBoot {
+    buildInfo {
+       properties {
+           additional = mapOf(
+               "commit" to "${System.getenv("GIT_COMMIT")}",
+               "branch" to "${System.getenv("GIT_BRANCH")}"
+           )
+       }
     }
 }

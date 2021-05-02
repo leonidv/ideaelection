@@ -18,22 +18,88 @@ global_job_config:
       - .semaphore/semaphoreci-cleandisk.sh
       - .semaphore/ubuntu1804-podman-install.sh
       - sudo podman info
+      # - cache restore container_images
+      # - sudo du -sh $HOME/.local/share/containers/
       - sem-version java 11
       - java -version
       - echo $DOCKERHUB_PASSWORD | sudo podman login --username "$DOCKERHUB_USERNAME" --password-stdin
       - sudo podman login --get-login docker.io
 
+  epilogue:
+    always:
+      commands:
+#        - cache delete container_images
+#        - cache store container_images $HOME/.local/share/containers/storage/
+        - sudo du -sh /mnt/containers/storage
+        - df -h
+
 blocks:
+  - name: Couchbase building
+    run:
+      when: "change_in('/deploy/couchbase/')"
+    task:
+      jobs:
+        - name: Build Couchbase container
+          commands:
+            - cd deploy/
+            - sudo ./build-couchbase.sh
+            - sudo podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
+
+  - name: Backend building
+    run:
+      when: "change_in(['/backend/', '/backend-test/'])"
+    task:
+      env_vars:
+        - name:  BUILD_DIR
+          value: /home/semaphore/ideaelection
+        - name: LOG_DIR
+          value:  /home/semaphore/ideaelection/logs
+
+      prologue:
+        commands:
+          - checkout
+          - sudo scripts/couchbase-run.sh "-p 8080:8080"
+          - sleep 15
+          - cache restore gradleCache
+          - sudo du -sh $HOME/.gradle/caches/
+
+      epilogue:
+        always:
+          commands:
+            - cache store m2 $HOME/.m2
+            - cache delete gradleCache
+            - cache store gradleCache $HOME/.gradle/caches/
+        on_fail:
+          commands:
+            - cp -r $BUILD_DIR/backend-test/build/reports $LOG_DIR
+            - tar -zcvf log-and-reports.tar.gz $LOG_DIR
+            - artifact push job log-and-reports.tar.gz
+      jobs:
+        - name: Build backend application
+          commands:
+            - export GIT_COMMIT=$SEMAPHORE_GIT_SHA
+            - export GIT_BRANCH=$SEMAPHORE_GIT_BRANCH
+            - cd $BUILD_DIR/backend
+            - ./gradlew --console=plain build bootJar
+            - cd $BUILD_DIR/deploy
+            - sudo ./build-backend.sh testmode
+            - cd $BUILD_DIR/scripts
+            - sudo ./backend-run.sh testmode
+            - sleep 10
+            - cd ../backend-test
+            - ./gradlew --console=plain test allureReport
+            - sudo podman push docker.io/leonidv/idel-backend-testmode docker.io/leonidv/idel-backend-testmode
+
   - name: Deploy to test
     task:
       secrets:
         - name: SAEDI_KUBECTL
+      prologue:
+        -  .semaphore/install-kustomize.sh
       jobs:
         - name: Apply deployment
           commands:
             - kubectl config view
             - kubectl get deployments
-            - kubectl replace -f  deploy/test-deployment.yaml
-            #- kubectl rollout history deployment/saedi-testmode
-            #- kubectl rollout status -w deployment/saedi-testmode
-
+            - kustomize build kubernetes/overlays/test/ | kubectl replace --force -f -
+            - kubectl  rollout status -w deployment/test-saedi
