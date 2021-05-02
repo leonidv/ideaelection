@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saedi
+
+spec:
+  selector:
+    matchLabels:
+      app: saedi
+  replicas: 1
+  template:
+    metadata:
+
+    spec:
+      containers:
+        - name: saedi-couchbase
+          image: docker.io/leonidv/idel-couchbase
+          ports:
+            - containerPort: 8091
+            - containerPort: 8092
+            - containerPort: 8093
+            - containerPort: 8094
+            - containerPort: 11210
+
+        - name: saedi-backend
+          image: docker.io/leonidv/idel-backend-testmode
+          ports:
+            - containerPort: 8080
