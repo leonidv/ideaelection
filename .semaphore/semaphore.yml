@@ -102,5 +102,5 @@ blocks:
           commands:
             - kubectl config view
             - kubectl get deployments
-            - kustomize build kubernetes/overlays/test/ | kubectl replace --force -f -
+            - kustomize build deploy/kubernetes/overlays/test/ | kubectl replace --force -f -
             - kubectl  rollout status -w deployment/test-saedi
