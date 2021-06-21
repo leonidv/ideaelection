@@ -1,7 +1,6 @@
 package idel.tests.scenario
 
 import arrow.core.Some
-import idel.tests.*
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
@@ -11,7 +10,7 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class JoinToPublicGroupScenario : DescribeSpec({
-    val couchbase = Couchbase()
+    val couchbase = EntityStorage()
     beforeSpec {
         couchbase.clearAll()
     }
@@ -25,9 +24,12 @@ class JoinToPublicGroupScenario : DescribeSpec({
         registryUsers(userA, userB, userC, userD)
 
         lateinit var groupId: String
+        lateinit var joiningKey: String
 
         describe("$userA adds new PUBLIC group without admins") {
-            groupId = initGroup(groupAdmin = userA, entryMode = GroupsApi.PUBLIC, members = setOf())
+            val groupInfo = createGroup(groupAdmin = userA, entryMode = GroupsApi.PUBLIC, members = setOf())
+            groupId = groupInfo.groupId
+            joiningKey = groupInfo.joiningKey
         }
 
         describe("$userB sees group in the list of available") {
@@ -50,7 +52,7 @@ class JoinToPublicGroupScenario : DescribeSpec({
         }
 
         describe("$userB joins to the group") {
-            val joinRequestResponse = userB.joinRequests.create(groupId)
+            val joinRequestResponse = userB.joinRequests.create(joiningKey)
 
             checkIsOk(
                 joinRequestResponse,
@@ -64,7 +66,7 @@ class JoinToPublicGroupScenario : DescribeSpec({
         }
 
         describe("$userC joins to the group") {
-            val response = userC.joinRequests.create(groupId)
+            val response = userC.joinRequests.create(joiningKey)
 
             checkIsOk(
                 response,

@@ -7,7 +7,7 @@ import idel.tests.infrastructure.JsonNodeExtensions.dataId
 import io.kotest.core.spec.style.DescribeSpec
 
 class IdeaAssigneeSpec : DescribeSpec({
-    val couchbase = Couchbase()
+    val couchbase = EntityStorage()
     beforeSpec {
         couchbase.clearAll()
     }
@@ -25,7 +25,7 @@ class IdeaAssigneeSpec : DescribeSpec({
         describe("init") {
             registryUsers(userA, userB, userC, userD)
 
-            groupId = initGroup(groupAdmin = userA, members = setOf(userB, userC))
+            groupId = createGroup(groupAdmin = userA, members = setOf(userB, userC)).groupId
 
             describe("$userB create an idea") {
                 val response = userB.ideas.add(groupId, summary = "idea for assignee spec")

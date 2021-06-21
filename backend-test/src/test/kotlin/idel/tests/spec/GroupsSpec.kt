@@ -14,7 +14,7 @@ import java.util.*
 @Suppress("JoinDeclarationAndAssignment")
 class GroupsSpec : DescribeSpec({
 
-    val couchbase = Couchbase()
+    val couchbase = EntityStorage()
     beforeSpec {
         couchbase.clearAll()
     }
@@ -41,10 +41,13 @@ class GroupsSpec : DescribeSpec({
                 describe("group with entry mode $entryMode") {
                     val name = "test $entryMode"
                     val description = "test $entryMode description"
+                    val entryQuestion = "question $entryMode"
                     val response = userA.groups.create(
                         name = name,
                         entryMode = entryMode,
-                        description = description
+                        entryQuestion = entryQuestion,
+                        description = description,
+                        domainRestrictions = arrayOf("gmail.com","facebook.com")
                     )
 
                     checkIsOk(
@@ -62,7 +65,7 @@ class GroupsSpec : DescribeSpec({
             lateinit var groupId: String
 
             describe("$userA creates PUBLIC group with members $userB, $userC") {
-                groupId = initGroup(userA, setOf(userB, userC))
+                groupId = createGroup(userA, setOf(userB, userC)).groupId
                 userB.role = "member"
                 userC.role = "member"
             }
@@ -157,7 +160,7 @@ class GroupsSpec : DescribeSpec({
             lateinit var groupId: String
 
             describe("$userA creates PUBLIC group with members $userB, $userC, $userE") {
-                groupId = initGroup(userA, setOf(userB, userC, userE))
+                groupId = createGroup(userA, setOf(userB, userC, userE)).groupId
                 userB.role = "member"
                 userC.role = "member"
                 userE.role = "member"
@@ -224,7 +227,7 @@ class GroupsSpec : DescribeSpec({
             lateinit var groupId: String
 
             describe("$userA creates PUBLIC group with members $userB") {
-                groupId = initGroup(userA, setOf(userB))
+                groupId = createGroup(userA, setOf(userB)).groupId
                 userA.role = "admin"
                 userB.role = "member"
             }
@@ -285,25 +288,33 @@ class GroupsSpec : DescribeSpec({
 
         describe("change properties") {
             lateinit var groupId: String
-            groupId = initGroup(userA, members = setOf(userB))
+            groupId = createGroup(userA, members = setOf(userB)).groupId
 
             describe("admin can change properties") {
                 val nextName = "abc1"
                 val nextDescription = "edf1"
+                val nextEntryQuestion = "neq2"
+                val nextDomainRestrictions = arrayOf("dom.ai", "company.com")
 
                 describe("change response should return new data") {
                     val response = userA.groups.changeProperties(
                         groupId = groupId,
                         name = nextName,
                         description = nextDescription,
-                        entryMode = GroupsApi.PRIVATE
+                        entryMode = GroupsApi.PRIVATE,
+                        entryQuestion = nextEntryQuestion,
+                        domainRestrictions = nextDomainRestrictions
                     )
 
                     checkIsOk(
                         response,
                         groupHasName(nextName),
                         groupHasDescription(nextDescription),
-                        groupHasEntryMode(GroupsApi.PRIVATE)
+                        groupHasEntryMode(GroupsApi.PRIVATE),
+                        groupHasEntryQuestion(nextEntryQuestion) ,
+                        groupHasDomainRestrictionsCount(nextDomainRestrictions.size),
+                        groupHasDomainRestriction(nextDomainRestrictions[0]),
+                        groupHasDomainRestriction(nextDomainRestrictions[1])
                     )
                 }
 
@@ -327,7 +338,9 @@ class GroupsSpec : DescribeSpec({
                             name = "1",
                             description = "",
                             logo = "http://image.io",
-                            entryMode = GroupsApi.PUBLIC
+                            entryMode = GroupsApi.PUBLIC,
+                            domainRestrictions = arrayOf(),
+                            entryQuestion = "ok"
                         )
 
                         checkValidationErrors(
@@ -339,14 +352,16 @@ class GroupsSpec : DescribeSpec({
                     }
 
                     describe("big values") {
-                        val logoPattern = "YWFh".repeat(40000) //aaa in base64
+                        val logoPattern = "YWFh".repeat(40000) //YWFh is aaa in base64
 
                         val response = userA.groups.changeProperties(
                             groupId = groupId,
                             name = "n".repeat(256),
                             description = "d".repeat(301),
                             logo = "data:image/png;base64,$logoPattern",
-                            entryMode = GroupsApi.PUBLIC
+                            entryMode = GroupsApi.PUBLIC,
+                            domainRestrictions = arrayOf(),
+                            entryQuestion = "q".repeat(201)
                         )
 
                         checkValidationErrors(
@@ -354,6 +369,7 @@ class GroupsSpec : DescribeSpec({
                             ValidationError.mostCharacters(".name", 255),
                             ValidationError.mostCharacters(".description", 300),
                             ValidationError.mostCharacters(".logo", 150000),
+                            ValidationError.mostCharacters(".entryQuestion",200)
                         )
                     }
                 }
@@ -367,7 +383,7 @@ class GroupsSpec : DescribeSpec({
 
             describe("init group with idea") {
 
-                groupId = initGroup(userA, members = setOf(userB))
+                groupId = createGroup(userA, members = setOf(userB)).groupId
                 userE.role = "non member"
 
                 val addIdeaResponse = userA.ideas.quickAdd(groupId,"1")
@@ -426,7 +442,14 @@ class GroupsSpec : DescribeSpec({
 
                 describe("$userA can't change group properties") {
                     val response =
-                        userA.groups.changeProperties(groupId, "next name", "next description", GroupsApi.PUBLIC)
+                        userA.groups.changeProperties(
+                            groupId,
+                            name =  "next name",
+                            description =  "next description",
+                            entryMode = GroupsApi.PUBLIC,
+                            entryQuestion = "some new question",
+                            domainRestrictions = arrayOf()
+                        )
                     checkIsNotFound(response)
                 }
 

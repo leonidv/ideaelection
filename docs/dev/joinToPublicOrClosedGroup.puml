@@ -1,5 +1,12 @@
 @startuml
 
+
+'actor User order 1
+'participant groups order 2
+'participant joinrequests order 3
+'participant ideas order 4
+'actor Admin order 5
+
 skinparam monochrome true
 skinparam shadowing false
 
@@ -13,31 +20,31 @@ skinparam Sequence {
 
 
 actor User
-User -> "groups" : GET ?onlyAvailable=true
+User -> "groups" : GET onlyAvailable=true
 activate "groups"
 User <-- "groups" : list of groups
 deactivate "groups"
 
-User -> "joinrequests" : POST groupId
+User -> "joinrequests" : POST joiningKey
 activate "joinrequests"
 
-alt user can join without approving
+
+
+alt PUBLIC (user can join without approving)
     User <-- "joinrequests" : status=APPROVED
-    User ->  "groups"  : GET /{groupId}
-    User <-- "groups" : group info
-else admin should approve
+else CLOSED (admin should approve)
     User <-- "joinrequests" : status=UNRESOLVED
     actor Admin
     Admin ->  "joinrequests" : GET ?groupId={groupId}
-    Admin <-- "joinrequests" : joinrequestsId
+    Admin <-- "joinrequests" : list of group's join requests
     Admin ->  "joinrequests" : POST /{joinrequestsId}/status APPROVED
     deactivate "joinrequests"
 end
 
-User -> "groups" : GET
-activate "groups"
-User <-- "groups" : [... groupId ...]
-deactivate "groups"
+User ->  "ideas"  : GET /?groupId={groupId}
+activate "ideas"
+User <-- "ideas" : list of group's idea
+deactivate "ideas"
 
 @enduml
 

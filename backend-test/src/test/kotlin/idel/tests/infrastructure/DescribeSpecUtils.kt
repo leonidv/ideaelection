@@ -1,11 +1,6 @@
 package idel.tests.infrastructure
 
-import arrow.core.Some
-import idel.tests.*
-import idel.tests.apiobject.GroupsApi
-import idel.tests.apiobject.User
-import idel.tests.apiobject.joinRequestIsApproved
-import idel.tests.infrastructure.JsonNodeExtensions.dataId
+import idel.tests.apiobject.*
 import io.kotest.core.spec.style.scopes.DescribeScope
 
 
@@ -19,24 +14,53 @@ suspend fun DescribeScope.registryUsers(vararg users: User) {
     }
 }
 
-suspend fun DescribeScope.initGroup(groupAdmin: User, members: Set<User>, entryMode : String = GroupsApi.PUBLIC): String {
+data class GroupInfo(
+    val groupId : String,
+    val joiningKey : String
+)
+
+suspend fun DescribeScope.createGroup(
+    groupAdmin: User,
+    members: Set<User>,
+    entryMode: String = GroupsApi.PUBLIC
+): GroupInfo {
 
     lateinit var groupId: String
+    lateinit var joiningKey: String
 
-    describe("$groupAdmin creates the $entryMode group") {
-        val response = groupAdmin.groups.create("assignee spec group", entryMode)
 
-        checkIsOk(response)
+    describe("$groupAdmin creates group with entryMode = [$entryMode]") {
+        val createGroupResponse = groupAdmin.groups.create("assignee spec group", entryMode)
 
-        groupId = (response.body().dataId() as Some).t
+        checkIsOk(createGroupResponse)
+
+        groupId = createGroupResponse.extractId()
+        joiningKey = createGroupResponse.extractField(GroupsApi.Fields.JOINING_KEY)
     }
 
     members.forEach {user ->
         describe("$user join to group") {
-            checkIsOk(user.joinRequests.create(groupId), joinRequestIsApproved)
+            val joinRequestResponse = user.joinRequests.create(joiningKey)
+
+            if (entryMode == GroupsApi.PRIVATE || entryMode == GroupsApi.CLOSED) {
+                describe("join request is unresolved") {
+                    checkIsOk(joinRequestResponse, joinRequestIsUnresolved)
+                }
+
+                describe("admin approve join request") {
+                    var joinRequestId = joinRequestResponse.extractId()
+                    val approveRequest = groupAdmin.joinRequests.changeStatus(joinRequestId, JoinRequestsApi.APPROVED)
+                    checkIsOk(approveRequest, joinRequestIsApproved)
+                }
+            } else {
+                describe("join request is automatically approved") {
+                    checkIsOk(joinRequestResponse, joinRequestIsApproved)
+                }
+            }
         }
     }
 
-    return groupId
+    return GroupInfo(groupId, joiningKey)
 }
+
 

@@ -14,7 +14,7 @@ import io.kotest.data.table
 class IdeaLoadingSpec : DescribeSpec({
 
     beforeSpec {
-        Couchbase().clearAll()
+        EntityStorage().clearAll()
     }
 
     val userA = User("userA", "group admin")
@@ -32,7 +32,7 @@ class IdeaLoadingSpec : DescribeSpec({
         lateinit var groupId: String
 
         describe("init group") {
-            groupId = initGroup(userA, members = setOf(userB))
+            groupId = createGroup(userA, members = setOf(userB)).groupId
         }
 
         describe("add idea by $userA") {
@@ -59,7 +59,7 @@ class IdeaLoadingSpec : DescribeSpec({
     describe("filter by text") {
         lateinit var groupId: String
         describe("init group") {
-            groupId = initGroup(userA, members = setOf())
+            groupId = createGroup(userA, members = setOf()).groupId
         }
 
         describe("add idea with summary [my best idea] and description [the best description]") {
@@ -109,7 +109,7 @@ class IdeaLoadingSpec : DescribeSpec({
         lateinit var ideaIds: Array<String>
         lateinit var ideasForVoting: Array<String>
         describe("init") {
-            groupId = initGroup(userA, members = voters.toSet())
+            groupId = createGroup(userA, members = voters.toSet()).groupId
 
             describe("add 20 ideas") {
                 ideaIds = (1..20).map {i ->

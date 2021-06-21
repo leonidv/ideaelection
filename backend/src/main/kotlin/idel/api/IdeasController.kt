@@ -132,10 +132,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
         }
     }
 
-    @GetMapping(
-            path = [""],
-            produces = ["application/json"]
-    )
+    @GetMapping
     @ResponseBody
     fun load(
         @AuthenticationPrincipal user: IdelOAuth2User,

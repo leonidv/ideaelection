@@ -87,7 +87,8 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         log.trace {"\nquery:  [$query], \nparams:  [$params]"}
     }
 
-    protected fun <X> safelyKeyOperation(id: String, action: () -> X): Either<Exception, X> {
+    protected fun <X>
+            safelyKeyOperation(id: String, action: () -> X): Either<Exception, X> {
         return try {
             Either.right(action())
         } catch (e: DocumentNotFoundException) {

@@ -15,15 +15,15 @@ class JoinRequestController(val groupMembershipService: GroupMembershipService,
     private val log = KotlinLogging.logger {}
 
     data class JoinRequestParams(
-        val groupId: String,
+        val joiningKey: String,
         val message: String
     );
 
 
     @PostMapping
-    fun add(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody joinRequestParams: JoinRequestParams): EntityOrError<JoinRequest> {
+    fun create(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody joinRequestParams: JoinRequestParams): EntityOrError<JoinRequest> {
         val eJoinRequest = groupMembershipService.requestMembership(
-            groupId = joinRequestParams.groupId,
+            joiningKey = joinRequestParams.joiningKey,
             userId = user.id,
             message = joinRequestParams.message)
         return DataOrError.fromEither(eJoinRequest, log)

@@ -12,7 +12,7 @@ import java.util.*
 fun newVersion() = UUID.randomUUID().toString().subSequence(0, 8)
 
 class IdeaEditSpec : DescribeSpec({
-    val couchbase = Couchbase()
+    val couchbase = EntityStorage()
     beforeSpec {
         couchbase.clearAll()
     }
@@ -30,7 +30,7 @@ class IdeaEditSpec : DescribeSpec({
         describe("initialization") {
             registryUsers(userAdmin, userB, userC, userD, userX)
 
-            groupId = initGroup(groupAdmin = userAdmin, members = setOf(userB, userC, userD))
+            groupId = createGroup(groupAdmin = userAdmin, members = setOf(userB, userC, userD)).groupId
         }
 
         describe("security checks") {

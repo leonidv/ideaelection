@@ -104,6 +104,7 @@ class BodyElementIsPresent(
 }
 
 val hasId = BodyElementIsPresent("id is present", "$.data.id")
+fun entityIdIs(id : String) = BodyFieldValueChecker("id is $id","$.data.id", id)
 fun dataListSize(size: Int) = BodyArraySize("data has $size elements", "$.data", size)
 
 

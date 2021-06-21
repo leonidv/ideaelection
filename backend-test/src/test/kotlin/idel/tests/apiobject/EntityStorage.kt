@@ -14,7 +14,7 @@ import java.net.http.HttpResponse
 import java.time.Duration
 
 
-class Couchbase(val idelUrl  : String = Idel.URL) {
+class EntityStorage(val idelUrl  : String = Idel.URL) {
 
     val log = KotlinLogging.logger {}
 
@@ -72,14 +72,5 @@ class Couchbase(val idelUrl  : String = Idel.URL) {
 
     fun clearGroupMembers() {
         this.deleteEntity("groupMember")
-    }
-
-    /**
-     * Wait until couchbase make document ready for searching.
-     *
-     * It's just sleep :)
-     */
-    fun waitFlush() {
-        Thread.sleep(500)
     }
 }
