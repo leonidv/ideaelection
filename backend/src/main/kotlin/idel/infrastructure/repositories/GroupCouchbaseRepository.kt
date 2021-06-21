@@ -80,6 +80,27 @@ class GroupCouchbaseRepository(
         return super.load(filterQueryParts, orderingValue, params, pagination, useFulltextSearch = false)
     }
 
+    override fun loadByJoiningKey(key: String): Either<Exception, Group> {
+        return try {
+            val query = """
+            select * from `$bucketName` as ie where _type="${this.type}" and 
+            joiningKey = ${'$'}key and $NOT_DELETED_CONDITION
+        """.trimIndent()
+
+            val params = JsonObject.create().put("key", key)
+            traceRawQuery(query, params)
+
+            val queryResult = cluster.query(query, queryOptions(params).readonly(true)).rowsAs(typedClass)
+            if (queryResult.isNotEmpty()) {
+                Either.right(queryResult.first())
+            } else {
+                Either.left(EntityNotFound(type, "by key=$key"))
+            }
+        } catch (e : Exception) {
+            Either.left(e)
+        }
+    }
+
     fun addMember(groupId: String, member: GroupMember): Either<Exception, String> {
         return try {
             val pMember = "\$member"

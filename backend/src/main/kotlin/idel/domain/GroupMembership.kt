@@ -39,22 +39,30 @@ enum class GroupMembershipRequestOrdering {
  * It's like application service.
  */
 class GroupMembershipService(
-        private val groupRepository: GroupRepository,
-        private val userRepository: UserRepository,
-        private val joinRequestRepository: JoinRequestRepository,
-        private val inviteRepository: InviteRepository,
-        private val groupMemberRepository: GroupMemberRepository
+    private val groupRepository: GroupRepository,
+    private val userRepository: UserRepository,
+    private val joinRequestRepository: JoinRequestRepository,
+    private val inviteRepository: InviteRepository,
+    private val groupMemberRepository: GroupMemberRepository
 
 ) {
     private val log = KotlinLogging.logger {}
 
-    data class Entities(val groupEntryMode: GroupEntryMode, val user: User)
+    data class Entities(val group: Group, val user: User)
 
-    private fun loadEntities(groupId: String, userId: UserId): Either<Exception, Entities> {
+    private fun loadEntities(groupId: String, userId: String): Either<Exception, Entities> {
         return Either.fx {
             val (group) = groupRepository.load(groupId)
             val (user) = userRepository.load(userId)
-            Entities(group.entryMode, user)
+            Entities(group, user)
+        }
+    }
+
+    private fun loadEntitiesByJoiningKey(groupJoiningKey: String, userId: String): Either<Exception, Entities> {
+        return Either.fx {
+            val (group) = groupRepository.loadByJoiningKey(groupJoiningKey)
+            val (user) = userRepository.load(userId)
+            Entities(group, user)
         }
     }
 
@@ -74,14 +82,17 @@ class GroupMembershipService(
      *
      * Check that group and user are exists.
      */
-    fun requestMembership(groupId: String, userId: UserId, message : String): Either<Exception, JoinRequest> {
+    fun requestMembership(joiningKey: String, userId: UserId, message: String): Either<Exception, JoinRequest> {
         return try {
-            loadEntities(groupId = groupId, userId = userId).flatMap {(entryMode: GroupEntryMode, user: User) ->
-                when (entryMode) {
+            loadEntitiesByJoiningKey(
+                groupJoiningKey = joiningKey,
+                userId = userId
+            ).flatMap {(group: Group, user: User) ->
+                val groupId = group.id
+                when (group.entryMode) {
                     GroupEntryMode.PUBLIC -> {
                         val request = JoinRequest.createApproved(groupId, userId, message)
                         val newMember = GroupMember.of(groupId, user, GroupMemberRole.MEMBER)
-                        //groupRepository.addMember(groupId, newMember).map {request}
                         groupMemberRepository.add(newMember).map {request}
 
                     }

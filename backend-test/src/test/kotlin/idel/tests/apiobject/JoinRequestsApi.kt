@@ -19,10 +19,10 @@ class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : Abstract
     }
 
 
-    fun create(groupId : String, message : String = "I want to joint into $groupId") : HttpResponse<JsonNode> {
+    fun create(joiningKey : String, message : String = "I want to join with $joiningKey") : HttpResponse<JsonNode> {
         val body = """
             {
-                "groupId" : "$groupId",
+                "joiningKey" : "$joiningKey",
                 "message" : "$message"
             }
         """.trimIndent()

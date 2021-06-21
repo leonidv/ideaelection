@@ -8,6 +8,9 @@ import idel.tests.infrastructure.*
 import mu.KotlinLogging
 import java.net.http.HttpResponse
 
+interface GroupsFields {
+    val JOINING_KEY : String
+}
 
 class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi(username, idelUrl, "groups") {
     private val log = KotlinLogging.logger {}
@@ -22,19 +25,31 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
 
         const val DELETED = "DELETED"
         const val ACTIVE = "ACTIVE"
+
+        val Fields = object : GroupsFields{
+            override val JOINING_KEY: String = "joiningKey"
+        }
     }
+
 
     fun create(
         name: String,
         entryMode: String,
-        description: String = "$name, $entryMode"
+        description: String = "$name, $entryMode",
+        entryQuestion: String = "",
+        domainRestrictions : Array<String> = emptyArray()
     ): HttpResponse<JsonNode> {
+
+        val domainRestrictionsJson = domainRestrictions.toJsonArray()
+
         val body = """
             {
                 "name": "$name",
                 "description": "$description",
                 "logo": "data:image/png;base64,dGVzdA==",
-                "entryMode" : "$entryMode"
+                "entryMode" : "$entryMode",
+                "entryQuestion" : "$entryQuestion",
+                "domainRestrictions": $domainRestrictionsJson
             }
         """.trimIndent()
 
@@ -45,6 +60,8 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
      * Load group by id
      */
     fun load(groupId : String) : HttpResponse<JsonNode> = get("/$groupId")
+
+    fun loadByLinkToJoin(groupId: String, joiningKey : String) = get("/?key=$joiningKey")
 
     fun delete(groupId: String) : HttpResponse<JsonNode> = super.delete("/$groupId","")
 
@@ -101,13 +118,18 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
         name: String,
         description: String,
         entryMode: String,
+        entryQuestion: String,
+        domainRestrictions: Array<String>,
         logo: String = "data:image/png;base64,dGVzdA=="
     ): HttpResponse<JsonNode> {
+        val domainRestrictionsJson = domainRestrictions.toJsonArray()
         val body = """ {
                 "name": "$name",
                 "description": "$description",
                 "logo": "$logo",
-                "entryMode" : "$entryMode"
+                "entryMode" : "$entryMode",
+                "entryQuestion" : "$entryQuestion",
+                "domainRestrictions": $domainRestrictionsJson
         }    
         """.trimMargin()
 
@@ -119,7 +141,16 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
 fun groupHasName(name: String) = BodyFieldValueChecker.forField("name", name)
 fun groupHasDescription(description: String) = BodyFieldValueChecker.forField("description", description)
 fun groupHasEntryMode(entryMode: String) = BodyFieldValueChecker.forField("entryMode", entryMode)
+fun groupHasEntryQuestion(question : String) = BodyFieldValueChecker.forField("entryQuestion", question)
 fun groupHasCreator(user: User) = BodyFieldValueChecker.forField("creator.id", user.id)
+fun groupHasDomainRestrictionsCount(restrictionCount : Int) = BodyArraySize(
+    "has $restrictionCount domain restriction count",
+    "$.data.domainRestrictions",restrictionCount)
+fun groupHasDomainRestriction(domain : String) = BodyArrayElementExists("has domain restriction [${domain}]", "$.data.domainRestrictions", domain)
+
+
+// Как сделать проверку массива? также как voters в idea?
+
 
 fun groupHasMemberWithRole(user: User, role: String) =
     BodyContainsObject(

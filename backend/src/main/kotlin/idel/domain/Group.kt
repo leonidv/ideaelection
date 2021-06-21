@@ -19,14 +19,18 @@ interface IGroupEditableProperties {
     val name: String
     val description: String
     val entryMode: GroupEntryMode
+    val entryQuestion: String
+    val domainRestrictions: List<String>
     val logo: String
 }
 
 class GroupEditableProperties(
     override val name: String,
     override val description: String,
+    override val logo: String,
     override val entryMode: GroupEntryMode,
-    override val logo: String
+    override val entryQuestion: String,
+    override val domainRestrictions: List<String>
 ) : IGroupEditableProperties {
 }
 
@@ -58,6 +62,7 @@ enum class GroupState {
      */
     DELETED
 }
+
 /**
  * Group is binding between users and ideas.
  *
@@ -82,7 +87,7 @@ class Group(
     /**
      * State of group (active, archived, etc).
      */
-    val state : GroupState,
+    val state: GroupState,
 
     /**
      * Name of group.
@@ -104,7 +109,26 @@ class Group(
      */
     override val entryMode: GroupEntryMode,
 
+    /**
+     * Question for which a user should answer if want to join to the group
+     */
+    override val entryQuestion: String,
+
+    /**
+     * Restrictions by domain
+     */
+    override val domainRestrictions: List<String>,
+
+    /**
+     * Link for join to private groups.
+     */
+    val joiningKey: String,
+
     ) : IGroupEditableProperties, Identifiable {
+
+    companion object {
+        fun generateJoiningKey() = generateId()
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -121,38 +145,42 @@ class Group(
         return id.hashCode()
     }
 
-    override fun toString(): String {
-        return "Group(id='" + id +
-                "', ctime=" + ctime + ", creator=" + creator + ", name='" + name + "', description='" + description +
-                "', logo='" + logo + "', entryMode=" + entryMode + ")"
-    }
 
     private fun clone(
-        state : GroupState = this.state,
-        entryMode: GroupEntryMode = this.entryMode,
+        name: String = this.name,
+        logo: String = this.logo,
         description: String = this.description,
-        logo : String = this.logo,
-        name : String = this.name
-    ) : Group {
+        state: GroupState = this.state,
+        entryMode: GroupEntryMode = this.entryMode,
+        entryQuestion: String = this.entryQuestion,
+        domainRestrictions: List<String> = this.domainRestrictions,
+        joiningKey: String = this.joiningKey
+
+    ): Group {
         return Group(
             id = this.id,
             creator = this.creator,
             ctime = this.ctime,
-            state =state,
-            entryMode = entryMode,
-            description = description,
+            state = state,
+            name = name,
             logo = logo,
-            name = name
+            description = description,
+            entryMode = entryMode,
+            entryQuestion = entryQuestion,
+            domainRestrictions = domainRestrictions,
+            joiningKey = joiningKey
         )
     }
 
-    fun update(properties: IGroupEditableProperties) : Either<ValidationException, Group> {
+    fun update(properties: IGroupEditableProperties): Either<ValidationException, Group> {
         return GroupValidation.ifValid(properties) {
             clone(
-                entryMode = properties.entryMode,
-                description = properties.description,
+                name = properties.name,
                 logo = properties.logo,
-                name = properties.name
+                description = properties.description,
+                entryMode = properties.entryMode,
+                entryQuestion = properties.entryQuestion,
+                domainRestrictions = properties.domainRestrictions
             )
         }
     }
@@ -160,12 +188,25 @@ class Group(
     /**
      * Logical delete. Change status to [[GroupState.DELETED]] which is mean that user can't work with group.
      */
-    fun delete() : Group {
+    fun delete(): Group {
         return this.clone(state = GroupState.DELETED)
     }
 
-    fun isDeleted() : Boolean {
+    fun isDeleted(): Boolean {
         return state == GroupState.DELETED
+    }
+
+    /**
+     * Replace link to join with new.
+     */
+    fun regenerateLinkToJoin() : Group {
+        return clone(joiningKey = generateJoiningKey())
+    }
+
+    override fun toString(): String {
+        return "Group(id='$id', ctime=$ctime, creator=$creator, state=$state, name='$name', " +
+                "description='$description', logo='${logo.subSequence(0, 100)}', " +
+                "entryMode=$entryMode, entryQuestion='$entryQuestion')"
     }
 }
 
@@ -184,7 +225,11 @@ class GroupValidation {
                 maxLength(300)
             }
 
-            IGroupEditableProperties::logo {
+            IGroupEditableProperties::entryQuestion {
+                maxLength(200)
+            }
+
+            IGroupEditableProperties::logo  {
                 maxLength(150_000) // approx 100kb in base64
                 isImageBase64(allowEmptyValue = false)
             }
@@ -208,7 +253,10 @@ class GroupFactory {
                 name = properties.name,
                 description = properties.description,
                 logo = properties.logo,
-                entryMode = properties.entryMode
+                entryMode = properties.entryMode,
+                entryQuestion = properties.entryQuestion,
+                domainRestrictions = properties.domainRestrictions,
+                joiningKey = Group.generateJoiningKey()
             )
         }
     }
@@ -239,6 +287,11 @@ interface GroupRepository : BaseRepository<Group>, CouchbaseTransactionBaseRepos
      */
     fun loadOnlyAvailable(pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>>
 
+    /**
+     * Load group by link to join.
+     */
+    fun loadByJoiningKey(key: String): Either<Exception, Group>
+
 }
 
 
@@ -267,8 +320,8 @@ class GroupService(val groupMemberRepository: GroupMemberRepository) {
             }
 
             if (canChange) {
-                  val (member) = groupMemberRepository.load(groupId, userId )
-                  groupMemberRepository.changeRole(member.changeRole(nextRole))
+                val (member) = groupMemberRepository.load(groupId, userId)
+                groupMemberRepository.changeRole(member.changeRole(nextRole))
             } else {
                 Either.left(InvalidOperation("Group should contains at least one admin, you try to remove last admin"))
             }

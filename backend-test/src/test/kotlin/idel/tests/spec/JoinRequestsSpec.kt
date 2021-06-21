@@ -14,7 +14,7 @@ import java.util.*
 class JoinRequestsSpec : DescribeSpec({
 
     beforeSpec {
-        Couchbase().clearAll()
+        EntityStorage().clearAll()
     }
 
     val userA = User("userA", "group creator")
@@ -25,7 +25,7 @@ class JoinRequestsSpec : DescribeSpec({
     }
 
     describe("negative scenarios") {
-        describe("group id is not exists") {
+        describe("joining key is not exists") {
             val response = userA.joinRequests.create(UUID.randomUUID().toString())
 
             it("should be 102 error (entity not exists)") {
@@ -39,9 +39,12 @@ class JoinRequestsSpec : DescribeSpec({
         describe("creating join requests to public group") {
             describe("basic checks") {
                 lateinit var groupId : String
-                groupId = initGroup(userA, entryMode = GroupsApi.PUBLIC, members = setOf())
+                lateinit var joiningKey : String
+                val groupInfo = createGroup(userA, entryMode = GroupsApi.PUBLIC, members = setOf())
+                groupId = groupInfo.groupId
+                joiningKey = groupInfo.joiningKey
 
-                val response  = userB.joinRequests.create(groupId = groupId, message = "msg")
+                val response  = userB.joinRequests.create(joiningKey = joiningKey, message = "msg")
 
                 checkIsOk(
                     response,
@@ -62,10 +65,10 @@ class JoinRequestsSpec : DescribeSpec({
                     row(GroupsApi.PRIVATE, JoinRequestsApi.UNRESOLVED)
                 ).forAll {entryMode: String, status: String ->
                     describe("for $entryMode group status should be $status") {
-                        lateinit var groupId : String
-                        groupId = initGroup(userA, entryMode = entryMode, members = setOf())
+                        lateinit var joiningKey : String
+                        joiningKey = createGroup(userA, entryMode = entryMode, members = setOf()).joiningKey
 
-                        val response = userB.joinRequests.create(groupId)
+                        val response = userB.joinRequests.create(joiningKey)
                         checkIsOk(
                             response,
                             joinRequestHasStatus(status)

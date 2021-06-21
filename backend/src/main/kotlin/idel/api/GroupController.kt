@@ -1,6 +1,7 @@
 package idel.api
 
 import arrow.core.*
+import arrow.core.extensions.either.monad.flatten
 import arrow.core.extensions.fx
 import idel.domain.*
 import idel.infrastructure.repositories.CouchbaseTransactions
@@ -53,7 +54,20 @@ class GroupController(
         @AuthenticationPrincipal user: IdelOAuth2User,
         @PathVariable groupId: String
     ): EntityOrError<Group> {
-        return DataOrError.fromEither(groupRepository.load(groupId), log)
+        val result = Either.fx<Exception,Either<Exception, Group>> {
+            val (group) = groupRepository.load(groupId)
+            if (group.entryMode == GroupEntryMode.PRIVATE) {
+                val (isMember) = groupMemberRepository.isMember(groupId, user.id)
+                if (isMember) {
+                    Either.right(group)
+                } else {
+                    Either.left(EntityNotFound("group", groupId))
+                }
+            } else {
+                Either.right(group)
+            }
+        }.flatten()
+        return DataOrError.fromEither(result, log)
     }
 
 
@@ -77,6 +91,15 @@ class GroupController(
         pagination: Repository.Pagination
     ): EntityOrError<List<Group>> {
         val result = groupRepository.loadOnlyAvailable(pagination, ordering)
+        return DataOrError.fromEither(result, log)
+    }
+
+    @GetMapping(params = ["key"])
+    fun loadByJoiningKey(
+        @AuthenticationPrincipal user : IdelOAuth2User,
+        @RequestParam key : String
+    ) : EntityOrError<Group> {
+        val result = groupRepository.loadByJoiningKey(key)
         return DataOrError.fromEither(result, log)
     }
 

@@ -1,6 +1,6 @@
 package idel.tests.spec
 
-import idel.tests.apiobject.Couchbase
+import idel.tests.apiobject.EntityStorage
 import idel.tests.apiobject.User
 import idel.tests.apiobject.ideaHasVoter
 import idel.tests.apiobject.ideaHasVoterCount
@@ -10,7 +10,7 @@ import io.kotest.core.spec.style.DescribeSpec
 class IdeaVotingSpec : DescribeSpec({
 
     beforeSpec {
-        Couchbase().clearAll()
+        EntityStorage().clearAll()
     }
 
     val userA = User("userA", "admin")
@@ -23,7 +23,7 @@ class IdeaVotingSpec : DescribeSpec({
 
     describe("init") {
         registryUsers(userA, userB, userC)
-        groupId = initGroup(userA, members = setOf(userB))
+        groupId = createGroup(userA, members = setOf(userB)).groupId
 
 
         describe("$userA adds idea") {

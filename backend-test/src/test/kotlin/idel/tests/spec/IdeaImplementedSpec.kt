@@ -5,12 +5,12 @@ import idel.tests.apiobject.*
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
 import idel.tests.infrastructure.checkIsForbidden
 import idel.tests.infrastructure.checkIsOk
-import idel.tests.infrastructure.initGroup
+import idel.tests.infrastructure.createGroup
 import idel.tests.infrastructure.registryUsers
 import io.kotest.core.spec.style.DescribeSpec
 
 class IdeaImplementedSpec : DescribeSpec({
-    val couchbase = Couchbase()
+    val couchbase = EntityStorage()
     beforeSpec {
         couchbase.clearAll()
     }
@@ -28,7 +28,7 @@ class IdeaImplementedSpec : DescribeSpec({
         describe("init") {
             registryUsers(userA, userB, userC, userD, userE)
 
-            groupId = initGroup(userA, setOf(userB, userC, userE))
+            groupId = createGroup(userA, setOf(userB, userC, userE)).groupId
 
             describe("$userB create an idea, by default idea is not implemented") {
                 val response = userB.ideas.add(groupId, summary = "idea for assignee spec")
