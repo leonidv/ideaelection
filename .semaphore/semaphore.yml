@@ -61,7 +61,7 @@ blocks:
           - sudo scripts/couchbase-run.sh "-p 8080:8080"
           - sleep 15
           - cache restore gradleCache
-          - sudo du -sh $HOME/.gradle/caches/
+#          - sudo du -sh $HOME/.gradle/caches/
 
       epilogue:
         always:
