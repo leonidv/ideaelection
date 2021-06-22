@@ -2,7 +2,6 @@ package idel.infrastructure.repositories
 
 import arrow.core.Either
 import arrow.core.Option
-import arrow.core.Some
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.json.JsonObject

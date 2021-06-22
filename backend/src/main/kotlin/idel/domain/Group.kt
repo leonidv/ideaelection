@@ -199,7 +199,7 @@ class Group(
     /**
      * Replace link to join with new.
      */
-    fun regenerateLinkToJoin() : Group {
+    fun regenerateJoiningKey() : Group {
         return clone(joiningKey = generateJoiningKey())
     }
 

@@ -54,7 +54,7 @@ class GroupController(
         @AuthenticationPrincipal user: IdelOAuth2User,
         @PathVariable groupId: String
     ): EntityOrError<Group> {
-        val result = Either.fx<Exception,Either<Exception, Group>> {
+        val result = Either.fx<Exception, Either<Exception, Group>> {
             val (group) = groupRepository.load(groupId)
             if (group.entryMode == GroupEntryMode.PRIVATE) {
                 val (isMember) = groupMemberRepository.isMember(groupId, user.id)
@@ -96,9 +96,9 @@ class GroupController(
 
     @GetMapping(params = ["key"])
     fun loadByJoiningKey(
-        @AuthenticationPrincipal user : IdelOAuth2User,
-        @RequestParam key : String
-    ) : EntityOrError<Group> {
+        @AuthenticationPrincipal user: IdelOAuth2User,
+        @RequestParam key: String
+    ): EntityOrError<Group> {
         val result = groupRepository.loadByJoiningKey(key)
         return DataOrError.fromEither(result, log)
     }
@@ -141,6 +141,18 @@ class GroupController(
                     group.delete()
                 }
                 nextGroup
+            }
+        }
+    }
+
+    @DeleteMapping("/{groupId}/joining-key")
+    fun resetJoingingKey(
+        @AuthenticationPrincipal user: IdelOAuth2User,
+        @PathVariable groupId: String
+    ) : EntityOrError<Group> {
+        return security.group.asAdmin(groupId, user) {
+            groupRepository.mutate(groupId) {entity: Group ->
+                entity.regenerateJoiningKey()
             }
         }
     }
