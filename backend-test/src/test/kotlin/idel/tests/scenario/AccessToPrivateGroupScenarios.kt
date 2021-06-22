@@ -51,7 +51,7 @@ class AccessToPrivateGroupScenarios : DescribeSpec({
         }
 
         describe("$userC can load group info by invite link") {
-            val groupResponse = userC.groups.loadByLinkToJoin(groupId, joiningKey)
+            val groupResponse = userC.groups.loadByLinkToJoin(joiningKey)
             checkIsOk(groupResponse, entityIdIs(groupId))
         }
 

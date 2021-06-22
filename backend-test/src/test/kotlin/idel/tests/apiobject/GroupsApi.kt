@@ -61,7 +61,7 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
      */
     fun load(groupId : String) : HttpResponse<JsonNode> = get("/$groupId")
 
-    fun loadByLinkToJoin(groupId: String, joiningKey : String) = get("/?key=$joiningKey")
+    fun loadByLinkToJoin(joiningKey : String) = get("/?key=$joiningKey")
 
     fun delete(groupId: String) : HttpResponse<JsonNode> = super.delete("/$groupId","")
 
@@ -135,6 +135,10 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
 
         return patch("/$groupId", body)
     }
+
+    fun regenerateJoiningKey(groupId: String) : HttpResponse<JsonNode> {
+        return delete("/$groupId/joining-key","")
+    }
 }
 
 
@@ -147,7 +151,7 @@ fun groupHasDomainRestrictionsCount(restrictionCount : Int) = BodyArraySize(
     "has $restrictionCount domain restriction count",
     "$.data.domainRestrictions",restrictionCount)
 fun groupHasDomainRestriction(domain : String) = BodyArrayElementExists("has domain restriction [${domain}]", "$.data.domainRestrictions", domain)
-
+fun groupHasJoiningKey(joiningKey: String) = BodyFieldValueChecker.forField("joiningKey", joiningKey)
 
 // Как сделать проверку массива? также как voters в idea?
 

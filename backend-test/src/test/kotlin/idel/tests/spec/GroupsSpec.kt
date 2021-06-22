@@ -9,6 +9,7 @@ import io.kotest.data.forAll
 import io.kotest.data.headers
 import io.kotest.data.row
 import io.kotest.data.table
+import io.kotest.matchers.shouldNotBe
 import java.util.*
 
 @Suppress("JoinDeclarationAndAssignment")
@@ -47,7 +48,7 @@ class GroupsSpec : DescribeSpec({
                         entryMode = entryMode,
                         entryQuestion = entryQuestion,
                         description = description,
-                        domainRestrictions = arrayOf("gmail.com","facebook.com")
+                        domainRestrictions = arrayOf("gmail.com", "facebook.com")
                     )
 
                     checkIsOk(
@@ -241,9 +242,8 @@ class GroupsSpec : DescribeSpec({
             }
 
             describe("$userA makes $userB a group administrator") {
-                val response = userA.groups.changeRoleInGroup(groupId, userB.id, GroupsApi.ADMIN)
-
                 describe("change role response") {
+                    val response = userA.groups.changeRoleInGroup(groupId, userB.id, GroupsApi.ADMIN)
                     checkIsOk(response)
 
                     userB.role = "admin"
@@ -311,7 +311,7 @@ class GroupsSpec : DescribeSpec({
                         groupHasName(nextName),
                         groupHasDescription(nextDescription),
                         groupHasEntryMode(GroupsApi.PRIVATE),
-                        groupHasEntryQuestion(nextEntryQuestion) ,
+                        groupHasEntryQuestion(nextEntryQuestion),
                         groupHasDomainRestrictionsCount(nextDomainRestrictions.size),
                         groupHasDomainRestriction(nextDomainRestrictions[0]),
                         groupHasDomainRestriction(nextDomainRestrictions[1])
@@ -369,7 +369,7 @@ class GroupsSpec : DescribeSpec({
                             ValidationError.mostCharacters(".name", 255),
                             ValidationError.mostCharacters(".description", 300),
                             ValidationError.mostCharacters(".logo", 150000),
-                            ValidationError.mostCharacters(".entryQuestion",200)
+                            ValidationError.mostCharacters(".entryQuestion", 200)
                         )
                     }
                 }
@@ -377,16 +377,71 @@ class GroupsSpec : DescribeSpec({
             }
         }
 
+        describe("joining key") {
+            lateinit var groupId: String
+            val groupInfo = createGroup(userA, members = setOf(userB))
+            userB.role = "member"
+            userC.role = "not member"
+
+            groupId = groupInfo.groupId
+            val initialJoiningKey = groupInfo.joiningKey
+
+            describe("is changed") {
+                val regenerateResponse = userA.groups.regenerateJoiningKey(groupId)
+                checkIsOk(regenerateResponse)
+                val changedJoiningKey = regenerateResponse.extractField(GroupsApi.Fields.JOINING_KEY)
+                describe("response of regenerate contains new joiningKey") {
+                    it("response joining key is different from original") {
+                        changedJoiningKey.shouldNotBe(initialJoiningKey)
+                    }
+                }
+
+                describe("response of load contains new joiningKey") {
+                    val loadResponse = userA.groups.load(groupId)
+
+                    checkIsOk(loadResponse, groupHasJoiningKey(changedJoiningKey))
+                }
+
+                describe("$userC can load group info by changed joiningKey") {
+                    val loadResponse = userC.groups.loadByLinkToJoin(changedJoiningKey)
+                    checkIsOk(loadResponse, entityIdIs(groupId))
+                }
+
+                describe("$userC can't load group info by original joiningKey") {
+                    val loadResponse = userC.groups.loadByLinkToJoin(initialJoiningKey)
+                    checkIsNotFound(loadResponse)
+                }
+
+            }
+
+            describe("security checks") {
+                describe("$userA can regeneration joiningKey") {
+                    val response = userA.groups.regenerateJoiningKey(groupId)
+                    checkIsOk(response)
+                }
+
+                describe("$userB can't regenerate joiningKey") {
+                    val response = userB.groups.regenerateJoiningKey(groupId)
+                    checkIsForbidden(response)
+                }
+
+                describe("$userC can't regenerate joiningKey") {
+                    val response = userC.groups.regenerateJoiningKey(groupId)
+                    checkIsForbidden(response)
+                }
+            }
+        }
+
         describe("delete group") {
-            lateinit var groupId : String
-            lateinit var ideaId : String
+            lateinit var groupId: String
+            lateinit var ideaId: String
 
             describe("init group with idea") {
 
                 groupId = createGroup(userA, members = setOf(userB)).groupId
                 userE.role = "non member"
 
-                val addIdeaResponse = userA.ideas.quickAdd(groupId,"1")
+                val addIdeaResponse = userA.ideas.quickAdd(groupId, "1")
                 ideaId = addIdeaResponse.extractId()
 
             }
@@ -444,8 +499,8 @@ class GroupsSpec : DescribeSpec({
                     val response =
                         userA.groups.changeProperties(
                             groupId,
-                            name =  "next name",
-                            description =  "next description",
+                            name = "next name",
+                            description = "next description",
                             entryMode = GroupsApi.PUBLIC,
                             entryQuestion = "some new question",
                             domainRestrictions = arrayOf()

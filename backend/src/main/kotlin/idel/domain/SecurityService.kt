@@ -2,8 +2,6 @@ package idel.domain
 
 import arrow.core.Either
 import arrow.core.extensions.fx
-import com.couchbase.client.core.error.DocumentNotFoundException
-import mu.KLogger
 import mu.KotlinLogging
 
 
