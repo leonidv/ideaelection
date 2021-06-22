@@ -34,6 +34,7 @@ class SecurityServiceSpec : DescribeSpec({
                 entryMode = GroupEntryMode.PRIVATE,
                 entryQuestion = "",
                 domainRestrictions = emptyList(),
+                joiningKey = generateId(),
                 state = GroupState.ACTIVE
         )
 
