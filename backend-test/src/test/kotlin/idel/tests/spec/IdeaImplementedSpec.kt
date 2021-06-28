@@ -15,7 +15,6 @@ class IdeaImplementedSpec : DescribeSpec({
         couchbase.clearAll()
     }
     context("userA is admin, userB is author, userC is member, userD is not member, userE is assignee") {
-        val userAdmin = User("userAdmin")
         val userA = User("userA")
         val userB = User("userB")
         val userC = User("userC")

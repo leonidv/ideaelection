@@ -18,25 +18,54 @@ class GroupCouchbaseRepository(
 ) : AbstractTypedCouchbaseRepository<Group>(cluster, collection, type = "group", Group::class.java), GroupRepository {
 
     companion object {
-        val NOT_DELETED_CONDITION: String = """state != "${GroupState.DELETED}" """;
+        val NOT_DELETED_CONDITION: String = """grp.state != "${GroupState.DELETED}" """;
+
+        fun generateBaseQueryPart(
+            bucketName: String,
+            type: String,
+            additionalFields: String = "",
+            ansiJoin: String = ""
+        ): String {
+            val templatedQuery = """
+                    | SELECT OBJECT_CONCAT(grp, {
+                    |    "membersCount" : (select raw count(*) from n as x where x._type="groupMember")[0],
+                    |    "ideasCount" : (select raw count(*) from n as x where x._type="idea")[0]
+                    | }) AS ie
+                    | FROM `$bucketName` as grp --#ansiJoin
+                    | INNER NEST `$bucketName` as n
+                    | ON n.groupId == grp.id
+                    | where grp._type = "$type" """.trimMargin()
+            return templatedQuery
+                .replaceFirst("--#ansiJoin", ansiJoin)
+        }
     }
+
+    private val baseQueryPart = generateBaseQueryPart(bucketName, type)
+
 
     override val log = KotlinLogging.logger {}
 
     override fun collection(): Collection = collection
 
     override fun load(id: String): Either<Exception, Group> {
-        val result = super.load(id)
+        val baseQueryPart = "$baseQueryPart AND $NOT_DELETED_CONDITION AND grp.id=\$groupId "
+        val params = JsonObject.create();
+        params.put("groupId", id)
 
-        return if (result is Either.Right && result.b.isDeleted()) {
-            Either.left(EntityNotFound(type, id))
-        } else {
-            result
-        }
+        val result = rawLoad(
+            basePart = baseQueryPart,
+            params = params,
+            filterQueryParts = emptyList(),
+            ordering = "",
+            pagination = Repository.ONE_ELEMENT,
+        )
+
+        return extractFirstGroup(result, id)
     }
 
+
     override fun exists(id: String): Either<Exception, Boolean> {
-        return load(id).map {!it.isDeleted()}
+        return load(id).map {true}
     }
 
     override fun loadByUser(
@@ -44,21 +73,25 @@ class GroupCouchbaseRepository(
         pagination: Repository.Pagination,
         ordering: GroupOrdering
     ): Either<Exception, List<Group>> {
-        val selectPart = """
-                SELECT ie  from `$bucketName` gm JOIN `$bucketName` ie  ON KEYS gm.groupId
-                WHERE gm._type = "groupMember" and ie._type ="$type" and ie.$NOT_DELETED_CONDITION   
-            """.trimIndent()
+        val selectPart = generateBaseQueryPart(
+            bucketName = bucketName,
+            type = type,
+            ansiJoin = """${'\n'} join $bucketName as grpMember on (grp.id = grpMember.groupId) """
+        )
 
-        val filterParts = listOf("gm.userId = \$userId")
+        val filterParts = listOf(
+            """grpMember._type = "groupMember" """,
+            "grpMember.userId = \$userId",
+            NOT_DELETED_CONDITION)
         val params = JsonObject.create();
         params.put("userId", userId)
 
-        val orderingPart = "ie.${Repository.enumAsOrdering(ordering)}"
+        val orderingPart = "grp.${Repository.enumAsOrdering(ordering)}"
 
         return rawLoad(
             basePart = selectPart,
             filterQueryParts = filterParts,
-            orderingPart = orderingPart,
+            ordering = orderingPart,
             params, pagination
         )
     }
@@ -69,35 +102,51 @@ class GroupCouchbaseRepository(
         ordering: GroupOrdering
     ): Either<Exception, List<Group>> {
         val params = JsonObject.create()
+        val orderingValue = "grp.${Repository.enumAsOrdering(ordering)}"
 
-        val orderingValue = Repository.enumAsOrdering(ordering)
-
-        var filterQueryParts = listOf(
-            """entryMode IN ["${GroupEntryMode.PUBLIC}","${GroupEntryMode.CLOSED}"]""",
+        val filterQueryParts = listOf(
+            """grp.entryMode IN ["${GroupEntryMode.PUBLIC}","${GroupEntryMode.CLOSED}"]""",
             NOT_DELETED_CONDITION,
         )
 
-        return super.load(filterQueryParts, orderingValue, params, pagination, useFulltextSearch = false)
+        return rawLoad(
+            basePart = baseQueryPart,
+            filterQueryParts = filterQueryParts,
+            ordering = orderingValue,
+            params = params,
+            pagination = pagination,
+            useFulltextSearch = false
+        )
     }
 
-    override fun loadByJoiningKey(key: String): Either<Exception, Group> {
-        return try {
-            val query = """
-            select * from `$bucketName` as ie where _type="${this.type}" and 
-            joiningKey = ${'$'}key and $NOT_DELETED_CONDITION
-        """.trimIndent()
+    override fun loadByJoiningKey(joiningKey: String): Either<Exception, Group> {
+        val filters = listOf("grp.joiningKey = \$joiningKey", NOT_DELETED_CONDITION)
+        val params = JsonObject.create().put("joiningKey", joiningKey)
 
-            val params = JsonObject.create().put("key", key)
-            traceRawQuery(query, params)
+        val queryResult = super.rawLoad(
+            basePart = baseQueryPart,
+            filterQueryParts = filters,
+            ordering = "",
+            params = params,
+            pagination = Repository.ONE_ELEMENT,
+            useFulltextSearch = false
+        )
 
-            val queryResult = cluster.query(query, queryOptions(params).readonly(true)).rowsAs(typedClass)
-            if (queryResult.isNotEmpty()) {
-                Either.right(queryResult.first())
+        return extractFirstGroup(queryResult, "joiningKey=$joiningKey")
+
+    }
+
+    private fun extractFirstGroup(
+        queryResult: Either<Exception, List<Group>>,
+        notFoundMessage: String
+    ) = when (queryResult) {
+        is Either.Left -> queryResult
+        is Either.Right -> {
+            if (queryResult.b.isEmpty()) {
+                Either.left(EntityNotFound(type, notFoundMessage))
             } else {
-                Either.left(EntityNotFound(type, "by key=$key"))
+                Either.right(queryResult.b[0])
             }
-        } catch (e : Exception) {
-            Either.left(e)
         }
     }
 

@@ -39,10 +39,10 @@ fun Repository.Pagination.queryPart(): String {
  * Contains support function for using [TypedJsonSerializer]
  */
 abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
-        protected val cluster: Cluster,
-        protected val collection: Collection,
-        protected val type: String,
-        protected val typedClass: Class<T>
+    protected val cluster: Cluster,
+    protected val collection: Collection,
+    protected val type: String,
+    protected val typedClass: Class<T>
 ) : BaseRepository<T> {
 
     abstract val log: KLogger
@@ -53,10 +53,11 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
 
 
     protected val jsonSerializer = TypedJsonSerializer(
-            mapper = mapper,
-            rootName = "ie",
-            type = type,
-            typedClass = typedClass)
+        mapper = mapper,
+        rootName = "ie",
+        type = type,
+        typedClass = typedClass
+    )
 
     protected val transcoder: JsonTranscoder = JsonTranscoder.create(jsonSerializer)
 
@@ -66,12 +67,12 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     protected fun initMapper(): ObjectMapper {
         val timeModule = JavaTimeModule()
         timeModule.addSerializer(
-                LocalDateTime::class.java,
-                LocalDateTimeSerializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            LocalDateTime::class.java,
+            LocalDateTimeSerializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
         timeModule.addDeserializer(
-                LocalDateTime::class.java,
-                LocalDateTimeDeserializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            LocalDateTime::class.java,
+            LocalDateTimeDeserializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
 
         return jacksonObjectMapper()
@@ -83,7 +84,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
 
     }
 
-    protected fun traceRawQuery(query : String, params : JsonObject) {
+    protected fun traceRawQuery(query: String, params: JsonObject) {
         log.trace {"\nquery:  [$query], \nparams:  [$params]"}
     }
 
@@ -118,20 +119,20 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
      * Return QueryOptions with [[params]], 2-seconds timeout and [transcoder]
      */
     protected fun queryOptions(params: JsonObject): QueryOptions =
-            QueryOptions
-                .queryOptions()
-                .parameters(params)
-                .timeout(Duration.ofSeconds(2))
-                .scanConsistency(QueryScanConsistency.REQUEST_PLUS)
-                .serializer(jsonSerializer)
+        QueryOptions
+            .queryOptions()
+            .parameters(params)
+            .timeout(Duration.ofSeconds(2))
+            .scanConsistency(QueryScanConsistency.REQUEST_PLUS)
+            .serializer(jsonSerializer)
 
     /**
      * Return [InsertOptions] with [transcoder]
      */
     protected fun insertOptions(): InsertOptions =
-            InsertOptions
-                .insertOptions()
-                .transcoder(transcoder)
+        InsertOptions
+            .insertOptions()
+            .transcoder(transcoder)
 
     /**
      * Return [ReplaceOptions] with [transcoder]
@@ -152,13 +153,13 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
                 val originEntity = getResult.contentAs(typedClass)
                 val replaceOptions = replaceOptions().cas(getResult.cas())
                 canUpdate =
-                        try {
-                            val newEntity = mutation(originEntity)
-                            collection.replace(id, newEntity, replaceOptions)
-                            Either.right(newEntity)
-                        } catch (e: CasMismatchException) {
-                            Either.left(e)
-                        }
+                    try {
+                        val newEntity = mutation(originEntity)
+                        collection.replace(id, newEntity, replaceOptions)
+                        Either.right(newEntity)
+                    } catch (e: CasMismatchException) {
+                        Either.left(e)
+                    }
             } catch (e: Exception) {
                 return Either.left(e)
             }
@@ -168,7 +169,11 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         return canUpdate
     }
 
-    override fun possibleMutate(id: String, maxAttempts: Int, mutation: (entity: T) -> Either<Exception, T>): Either<Exception, T> {
+    override fun possibleMutate(
+        id: String,
+        maxAttempts: Int,
+        mutation: (entity: T) -> Either<Exception, T>
+    ): Either<Exception, T> {
         lateinit var eUpdatedEntity: Either<Exception, T>
         var attempts = 0
 
@@ -245,18 +250,19 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         }
     }
 
-    protected fun load(filterQueryParts: List<String>,
-                       ordering: String, params: JsonObject,
-                       pagination: Repository.Pagination,
-                       useFulltextSearch: Boolean = false
+    protected fun load(
+        filterQueryParts: List<String>,
+        ordering: String, params: JsonObject,
+        pagination: Repository.Pagination,
+        useFulltextSearch: Boolean = false
     ): Either<Exception, List<T>> {
         return rawLoad(
-                basePart = """select * from `$bucketName` as ie where _type="${this.type}" """,
-                filterQueryParts = filterQueryParts,
-                orderingPart = "$ordering",
-                params = params,
-                pagination = pagination,
-                useFulltextSearch
+            basePart = """select * from `$bucketName` as ie where _type="${this.type}" """,
+            filterQueryParts = filterQueryParts,
+            ordering = ordering,
+            params = params,
+            pagination = pagination,
+            useFulltextSearch
         )
     }
 
@@ -267,18 +273,18 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     protected fun rawLoad(
         basePart: String,
         filterQueryParts: List<String>,
-        orderingPart: String,
+        ordering: String,
         params: JsonObject,
         pagination: Repository.Pagination,
         useFulltextSearch: Boolean = false
     ): Either<Exception, List<T>> {
         return try {
             val filterQuery =
-                    if (filterQueryParts.isNotEmpty()) {
-                        filterQueryParts.joinToString(prefix = " and ", separator = " and ", postfix = " ")
-                    } else {
-                        " "
-                    }
+                if (filterQueryParts.isNotEmpty()) {
+                    filterQueryParts.joinToString(prefix = " and ", separator = " and ", postfix = " ")
+                } else {
+                    " "
+                }
 
             val options = queryOptions(params).readonly(true)
 
@@ -287,10 +293,14 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
                 log.trace {"use fts index, QueryScanConsistency is ${QueryScanConsistency.NOT_BOUNDED}"}
             }
 
+            val orderingPart = if (ordering.isNotEmpty()) {
+                " order by $ordering "
+            } else {
+                ""
+            }
 
-            val queryString = basePart + filterQuery +
-                    "order by $orderingPart " + pagination.queryPart()
-         traceRawQuery(queryString, params)
+            val queryString = "$basePart \n $filterQuery \n $orderingPart \n ${pagination.queryPart()}"
+            traceRawQuery(queryString, params)
 
             Either.right(cluster.query(queryString, options).rowsAs(typedClass))
         } catch (e: Exception) {

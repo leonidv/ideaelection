@@ -152,7 +152,7 @@ class GroupMemberCouchbaseRepository(cluster: Cluster, collection: Collection) :
         return rawLoad(
             basePart = selectPart,
             filterQueryParts = filterParts,
-            orderingPart = orderingPart,
+            ordering = orderingPart,
             params = params,
             pagination = pagination
         )

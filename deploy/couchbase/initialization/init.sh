@@ -65,7 +65,11 @@ checkCurlExec $? "Default bucket ideaelection is created"
 sleep 3
 
 curl -G -XPOST ${CURL_COMMON} http://${CB_HOST}:8093/query/service \
-        --data-urlencode statement='CREATE INDEX `ideas` ON `ideaelection`(`_type`)'
+        --data-urlencode statement='CREATE INDEX `index_type` ON `ideaelection`(`_type`)'
+checkCurlExec $? "Index on type created"
+
+curl -G -XPOST ${CURL_COMMON} http://${CB_HOST}:8093/query/service \
+        --data-urlencode statement='CREATE INDEX `index_groupid` ON `ideaelection`(`groupId`)'
 checkCurlExec $? "Index on type created"
 
 curl -G -XPOST ${CURL_COMMON} http://${CB_HOST}:8093/query/service \
