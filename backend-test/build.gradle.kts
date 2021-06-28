@@ -23,6 +23,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.30")
 
     testImplementation("com.typesafe:config:1.4.0")
 

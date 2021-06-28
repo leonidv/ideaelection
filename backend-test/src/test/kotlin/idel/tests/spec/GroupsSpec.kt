@@ -56,7 +56,9 @@ class GroupsSpec : DescribeSpec({
                         groupHasName(name),
                         groupHasEntryMode(entryMode),
                         groupHasCreator(userA),
-                        groupHasDescription(description)
+                        groupHasDescription(description),
+                        groupHasMembersCount(1),
+                        groupHasIdeasCount(0)
                     )
                 }
             }

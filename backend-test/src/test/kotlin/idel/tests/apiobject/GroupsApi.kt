@@ -153,8 +153,8 @@ fun groupHasDomainRestrictionsCount(restrictionCount : Int) = BodyArraySize(
 fun groupHasDomainRestriction(domain : String) = BodyArrayElementExists("has domain restriction [${domain}]", "$.data.domainRestrictions", domain)
 fun groupHasJoiningKey(joiningKey: String) = BodyFieldValueChecker.forField("joiningKey", joiningKey)
 
-// Как сделать проверку массива? также как voters в idea?
-
+fun groupHasMembersCount(count : Int) = BodyFieldValueChecker.forField("membersCount",count.toString())
+fun groupHasIdeasCount(count: Int) = BodyFieldValueChecker.forField("ideasCount", count.toString())
 
 fun groupHasMemberWithRole(user: User, role: String) =
     BodyContainsObject(

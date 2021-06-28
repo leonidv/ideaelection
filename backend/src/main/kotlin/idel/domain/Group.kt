@@ -67,6 +67,12 @@ enum class GroupState {
  * Group is binding between users and ideas.
  *
  * Group allows to share ideas between specific users.
+ *
+ * ## Implementations notes
+ *
+ * [membersCount] and [ideasCount] are calculated fields. [GroupFactory] always init them in constant values
+ * (see field's doc for details). Real values calculated in Repository, based on database.
+ *
  */
 class Group(
     /**
@@ -120,6 +126,20 @@ class Group(
     override val domainRestrictions: List<String>,
 
     /**
+     * Count of group's members.
+     *
+     * Calculated field. New group always have one member - creator, due this initial value is 1
+     * (it's set in [GroupFactory.createGroup])
+     */
+    val membersCount : Int,
+
+    /**
+     * Count of group's ideas.
+     *
+     * New group never has any ideas. Initial value is 0 (it's set in [GroupFactory.createGroup]).
+     */
+    val ideasCount : Int,
+    /**
      * Link for join to private groups.
      */
     val joiningKey: String,
@@ -168,7 +188,9 @@ class Group(
             entryMode = entryMode,
             entryQuestion = entryQuestion,
             domainRestrictions = domainRestrictions,
-            joiningKey = joiningKey
+            joiningKey = joiningKey,
+            membersCount = this.membersCount,
+            ideasCount = this.ideasCount
         )
     }
 
@@ -256,7 +278,9 @@ class GroupFactory {
                 entryMode = properties.entryMode,
                 entryQuestion = properties.entryQuestion,
                 domainRestrictions = properties.domainRestrictions,
-                joiningKey = Group.generateJoiningKey()
+                joiningKey = Group.generateJoiningKey(),
+                membersCount = 1, // because creator is always member of group
+                ideasCount = 0
             )
         }
     }
@@ -268,6 +292,7 @@ enum class GroupOrdering {
     TITLE_ASC,
     TITLE_DESC
 }
+
 
 interface GroupRepository : BaseRepository<Group>, CouchbaseTransactionBaseRepository<Group> {
 
@@ -293,6 +318,18 @@ interface GroupRepository : BaseRepository<Group>, CouchbaseTransactionBaseRepos
     fun loadByJoiningKey(key: String): Either<Exception, Group>
 
 }
+
+/**
+ * Read-only calculated metrics of group
+ */
+data class GroupMetrics(
+    val groupId: String,
+    val userId: String,
+    val totalGroupsIdeas : Int,
+    val totalGroupsMembers : Int,
+    val userHasInvite : Boolean,
+    val userHasJoinRequest: Boolean
+)
 
 
 /**

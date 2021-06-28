@@ -140,6 +140,7 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
         }
 
         fun <T> response(body: T): DataOrError<T> {
+            requireNotNull(body)
             return DataOrError(Optional.of(body), Optional.empty())
         }
 
