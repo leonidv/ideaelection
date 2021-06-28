@@ -26,7 +26,11 @@ class JoinAndLeaveToClosedAndPrivateGroupScenarios : DescribeSpec({
         lateinit var joiningKey: String
         describe("create group with entryMode $entryMode") {
             val createGroupResponse = userA.groups.create("$entryMode group", entryMode)
-            checkIsOk(createGroupResponse, hasId)
+            checkIsOk(
+                createGroupResponse,
+                hasId,
+                groupHasMembersCount(1)
+            )
             groupId = createGroupResponse.extractId()
             joiningKey = createGroupResponse.extractField(GroupsApi.Fields.JOINING_KEY)
         }
@@ -88,6 +92,11 @@ class JoinAndLeaveToClosedAndPrivateGroupScenarios : DescribeSpec({
                 checkIsOk(response, joinRequestIsApproved)
             }
 
+            describe("$userA see in the group info that the group's has 2 members") {
+                val loadGroupResponse = userA.groups.load(groupId)
+                checkIsOk(loadGroupResponse, groupHasMembersCount(2))
+            }
+
             describe("$userB see the group in the list of his groups") {
                 val response = userB.groups.loadForUser()
                 checkIsOk(
@@ -122,6 +131,11 @@ class JoinAndLeaveToClosedAndPrivateGroupScenarios : DescribeSpec({
             describe("$userB can't see members of group anymore") {
                 val response = userB.groups.loadMembers(groupId)
                 checkIsForbidden(response)
+            }
+
+            describe("$userA see in the group info that the group's has 1 members") {
+                val loadGroupResponse = userA.groups.load(groupId)
+                checkIsOk(loadGroupResponse, groupHasMembersCount(1))
             }
 
             describe("$userA don't see $userB in the list of group's members") {

@@ -35,7 +35,9 @@ class SecurityServiceSpec : DescribeSpec({
                 entryQuestion = "",
                 domainRestrictions = emptyList(),
                 joiningKey = generateId(),
-                state = GroupState.ACTIVE
+                state = GroupState.ACTIVE,
+                membersCount = 3,
+                ideasCount = 0
         )
 
         val groupMemberUserA = GroupMember.of(group.id, userA, GroupMemberRole.GROUP_ADMIN)

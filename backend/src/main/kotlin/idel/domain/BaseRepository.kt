@@ -65,6 +65,10 @@ object Repository {
         val limit = last - first
     }
 
+    val ONE_ELEMENT = Pagination(0,1)
+
+
+
 
     /**
      * Simple conversion that based on enum value name: <FIELD>_<ASC|DESC>.

@@ -27,9 +27,9 @@ object ResponseMatchers {
     }
 
     fun hasDataPayload() = object : Matcher<HttpResponse<JsonNode>> {
-        override fun test(response: HttpResponse<JsonNode>): MatcherResult =
+        override fun test(value: HttpResponse<JsonNode>): MatcherResult =
             MatcherResult(
-                passed = response.hasDataPayload(),
+                passed = value.hasDataPayload(),
                 failureMessage = "Payload should be data",
                 negatedFailureMessage = "Payload should be error"
             )
@@ -37,8 +37,8 @@ object ResponseMatchers {
     }
 
     fun hasError(code: Int) = object : Matcher<HttpResponse<JsonNode>> {
-        override fun test(response: HttpResponse<JsonNode>): MatcherResult {
-            val oCode = response.body().queryInt("$.error.code")
+        override fun test(value: HttpResponse<JsonNode>): MatcherResult {
+            val oCode = value.body().queryInt("$.error.code")
             val codeIsCorrect = oCode.map {it == code}.getOrElse {false}
 
             return MatcherResult(
@@ -49,42 +49,42 @@ object ResponseMatchers {
         }
     }
 
-    fun hasStringValue(jsonPath: String, value: String) = object : Matcher<JsonNode> {
-        override fun test(node: JsonNode): MatcherResult {
-            val oValue = node.queryString(jsonPath)
+    fun hasStringValue(jsonPath: String, expected: String) = object : Matcher<JsonNode> {
+        override fun test(value: JsonNode): MatcherResult {
+            val oValue = value.queryString(jsonPath)
             return when (oValue) {
                 is Some -> MatcherResult(
-                    passed = oValue.t == value,
-                    failureMessage = "Should has [$value] at [$jsonPath], actual value = [${oValue.t}]",
-                    negatedFailureMessage = "Should not has [$value] at [$jsonPath], actual value = [${oValue.t}]"
+                    passed = oValue.t == expected,
+                    failureMessage = "Should has [$expected] at [$jsonPath], actual value = [${oValue.t}]",
+                    negatedFailureMessage = "Should not has [$expected] at [$jsonPath], actual value = [${oValue.t}]"
                 )
                 is None -> MatcherResult(
                     passed = false,
-                    failureMessage = "Should has [$value] at [$jsonPath], but path is not found",
-                    negatedFailureMessage = "Should has not [$value] at [$jsonPath], but path is not found"
+                    failureMessage = "Should has [$expected] at [$jsonPath], but path is not found",
+                    negatedFailureMessage = "Should has not [$expected] at [$jsonPath], but path is not found"
                 )
             }
         }
     }
 
-    fun hasIntValue(jsonPath: String, value: Int) = object : Matcher<JsonNode> {
-        override fun test(node: JsonNode): MatcherResult {
-            val oValue = node.queryInt(jsonPath)
-            val codeIsCorrect = oValue.map {it == value}.getOrElse {false}
+    fun hasIntValue(jsonPath: String, expected: Int) = object : Matcher<JsonNode> {
+        override fun test(value: JsonNode): MatcherResult {
+            val oValue = value.queryInt(jsonPath)
+            val codeIsCorrect = oValue.map {it == expected}.getOrElse {false}
 
             return MatcherResult(
                 passed = codeIsCorrect,
-                failureMessage = "Should has $value at $jsonPath, actual value = $oValue",
-                negatedFailureMessage = "Should not has $value at $jsonPath, actual value = $oValue"
+                failureMessage = "Should has $expected at $jsonPath, actual value = $oValue",
+                negatedFailureMessage = "Should not has $expected at $jsonPath, actual value = $oValue"
             )
         }
 
     }
 
     fun hasJsonPath(jsonPath: String) = object : Matcher<JsonNode> {
-        override fun test(node: JsonNode): MatcherResult {
+        override fun test(value: JsonNode): MatcherResult {
             return MatcherResult(
-                passed = node.hasPath(jsonPath),
+                passed = value.hasPath(jsonPath),
                 failureMessage = "Json should contain a property with a path $jsonPath",
                 negatedFailureMessage = "Json should not contains a property with a path $jsonPath"
             )
@@ -92,10 +92,10 @@ object ResponseMatchers {
         }
     }
 
-    fun hasArrayElement(arrayPath: String, elementValue: String) = object : Matcher<JsonNode> {
+    fun hasArrayElement(arrayPath: String, expectedElement: String) = object : Matcher<JsonNode> {
         override fun test(value: JsonNode): MatcherResult {
-            val hasElement = value.hasArrayElement(arrayPath, elementValue)
-            val msg = """contains element of array at path $arrayPath with value [$elementValue]"""
+            val hasElement = value.hasArrayElement(arrayPath, expectedElement)
+            val msg = """contains element of array at path $arrayPath with value [$expectedElement]"""
             return MatcherResult(
                 passed = hasElement,
                 failureMessage = "Json should $msg",
@@ -117,14 +117,14 @@ object ResponseMatchers {
         }
     }
 
-    fun hasArrayObjectsOrder(arrayPath: String, field: String, values: Array<String>) = object : Matcher<JsonNode> {
+    fun hasArrayObjectsOrder(arrayPath: String, field: String, expectedValues: Array<String>) = object : Matcher<JsonNode> {
         override fun test(value: JsonNode): MatcherResult {
-            val incorrectIndex = value.hasArrayObjectsOrder(arrayPath, field, values)
+            val incorrectIndex = value.hasArrayObjectsOrder(arrayPath, field, expectedValues)
             val failureMsg = if (incorrectIndex == -1) {
                 ""
             } else {
                 "order is incorrect, first incorrect index is $incorrectIndex," +
-                        " incorrect value = [${values[incorrectIndex]}], expected order = [$values]"
+                        " incorrect value = [${expectedValues[incorrectIndex]}], expected order = [$expectedValues]"
             }
 
             return MatcherResult(
