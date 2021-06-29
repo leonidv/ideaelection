@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.Exception
 
 data class ExceptionDescription(
         val msg: String,
@@ -72,7 +71,8 @@ data class ErrorDescription(val code: Int,
                             val validationErrors: Collection<ValidationError> = emptySet(),
                             val exception: Optional<ExceptionDescription> = Optional.empty()
 ) {
-    val timestamp = LocalDateTime.now()
+    @Suppress("unused")
+    val timestamp : LocalDateTime = LocalDateTime.now()
 
     companion object {
         fun incorrectArgument(argument: String, reason: String): ErrorDescription {
@@ -136,7 +136,7 @@ typealias EntityOrError<T> = ResponseEntity<DataOrError<T>>
 data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription>) {
     companion object {
         fun <T> error(description: ErrorDescription): DataOrError<T> {
-            return DataOrError<T>(Optional.empty(), Optional.of(description))
+            return DataOrError(Optional.empty(), Optional.of(description))
         }
 
         fun <T> response(body: T): DataOrError<T> {
@@ -203,14 +203,14 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
          */
         fun <T> fromEither(operationResult: Either<Exception, T>, log: KLogger): ResponseEntity<DataOrError<T>> {
             return when (operationResult) {
-                is Either.Right -> ok(operationResult.b)
-                is Either.Left -> when (val ex = operationResult.a) {
+                is Either.Right -> ok(operationResult.value)
+                is Either.Left -> when (val ex = operationResult.value) {
                     is EntityNotFound -> notFound(ex)
                     is EntityAlreadyExists -> conflict(ex)
                     is OperationNotPermitted -> forbidden("operation is not permitted")
                     is ValidationException -> invalid(ex.errors)
                     is InvalidOperation -> invalidOperation(ex.message!!)
-                    else -> internal(operationResult.a, log)
+                    else -> internal(operationResult.value, log)
                 }
             }
         }

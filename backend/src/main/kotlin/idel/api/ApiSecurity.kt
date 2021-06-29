@@ -1,8 +1,8 @@
 package idel.api
 
 import arrow.core.Either
-import arrow.core.extensions.either.monad.flatten
-import arrow.core.extensions.fx
+import arrow.core.computations.either
+import arrow.core.flatten
 import idel.domain.*
 import idel.infrastructure.security.IdelOAuth2User
 import mu.KLogger
@@ -61,13 +61,12 @@ class GroupSecurity(
     ): EntityOrError<T> {
 
 
-        val result: Either<Exception, Either<Exception, T>> = Either.fx {
-            //val (group) = groupRepository.load(groupId)
-            val (accessLevels) = securityService.groupAccessLevel(groupId, user)
+        val result: Either<Exception, Either<Exception, T>> = either.eager<Exception, Either<Exception, T>> {
+            val accessLevels = securityService.groupAccessLevel(groupId, user).bind()
             if (accessLevels.intersect(requiredLevels).isNotEmpty()) {
                 action()
             } else {
-                Either.left(OperationNotPermitted())
+                Either.Left(OperationNotPermitted())
             }
         }
 
@@ -86,9 +85,9 @@ class GroupSecurity(
      * Check that user is member of group.
      */
     fun isMember(groupId: String, userId: String): Either<Exception, Boolean> {
-        return Either.fx<Exception, Boolean> {
-            val (user) = userRepository.load(userId)
-            val (levels) = securityService.groupAccessLevel(groupId, user)
+        return either.eager {
+            val user = userRepository.load(userId).bind()
+            val levels = securityService.groupAccessLevel(groupId, user).bind()
             levels.contains(GroupAccessLevel.MEMBER)
         }
     }
@@ -110,14 +109,14 @@ class IdeaSecurity(private val securityService: SecurityService,
             requiredLevels: Set<IdeaAccessLevel>,
             action: IdeaAction<T>
     ): EntityOrError<T> {
-        val result: Either<Exception, Either<Exception, T>> = Either.fx {
-            val (idea) = ideaRepository.load(ideaId)
+        val result: Either<Exception, Either<Exception, T>> = either.eager {
+            val idea = ideaRepository.load(ideaId).bind()
             //val (group) = groupRepository.load(idea.groupId)
-            val (levels) = securityService.ideaAccessLevels(idea, user)
+            val levels = securityService.ideaAccessLevels(idea, user).bind()
             if (levels.intersect(requiredLevels).isNotEmpty()) {
                 action(idea)
             } else {
-                Either.left(OperationNotPermitted())
+                Either.Left(OperationNotPermitted())
             }
         }
 
@@ -125,10 +124,10 @@ class IdeaSecurity(private val securityService: SecurityService,
     }
 
     fun <T> withLevels(ideaId: String, user: IdelOAuth2User, action: IdeaActionWithLevels<T>): EntityOrError<T> {
-        val result: Either<Exception, Either<Exception, T>> = Either.fx {
-            val (idea) = ideaRepository.load(ideaId)
+        val result: Either<Exception, Either<Exception, T>> = either.eager {
+            val idea = ideaRepository.load(ideaId).bind()
             //val (group) = groupRepository.load(idea.groupId)
-            val (levels) = securityService.ideaAccessLevels(idea, user)
+            val levels = securityService.ideaAccessLevels(idea, user).bind()
             action(idea, levels)
         }
 

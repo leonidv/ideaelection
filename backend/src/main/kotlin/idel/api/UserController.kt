@@ -1,6 +1,7 @@
 package idel.api
 
-import arrow.core.*
+import arrow.core.Either
+import arrow.core.flatMap
 import com.couchbase.client.core.error.DocumentExistsException
 import idel.domain.OperationNotPermitted
 import idel.domain.Roles
@@ -69,7 +70,7 @@ class UserController(val userRepository: UserRepository) {
             rolesAreNotMisspelled(roles) {
                 val eUser = userRepository.load(userId).flatMap {user ->
                     if (user.roles == roles) {
-                        Either.right(user)
+                        Either.Right(user)
                     } else {
                         val pUser = PersistsUser.of(user).copy(roles = roles)
                         userRepository.update(pUser)
@@ -132,10 +133,10 @@ class UserSecurity(private val controllerLog : KLogger) {
      */
     fun <T> asHimSelf(userId : String, user: IdelOAuth2User, action : () -> Either<Exception,T>) : EntityOrError<T>  {
        val result = if (userId == user.id) {
-            action()
-        } else {
-            Either.left(OperationNotPermitted())
-        }
+           action()
+       } else {
+           Either.Left(OperationNotPermitted())
+       }
 
         return DataOrError.fromEither(result, controllerLog)
     }

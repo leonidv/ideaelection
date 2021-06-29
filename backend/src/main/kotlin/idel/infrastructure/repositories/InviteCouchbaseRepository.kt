@@ -4,7 +4,6 @@ import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import idel.domain.Invite
 import idel.domain.InviteRepository
-import mu.KLogger
 import mu.KotlinLogging
 
 class InviteCouchbaseRepository(cluster : Cluster, collection : Collection) :

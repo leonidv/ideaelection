@@ -14,14 +14,16 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/init")
 class FirstSetupController(val userRepository: UserRepository)  {
-
-    val HTML_TEMPLATE =
+    companion object {
+        const val HTML_TEMPLATE =
             "<html><title>Idea election initialization</title><html><body>#{content}</body>"
 
-    val HTML_ALREADY_INITIALIZED_CONTENT = HTML_TEMPLATE.replace("#{content}","Already initialized. Use the admin panel for configuration.")
+        val HTML_ALREADY_INITIALIZED_CONTENT =
+            this.HTML_TEMPLATE.replace("#{content}", "Already initialized. Use the admin panel for configuration.")
 
-    val HTML_OK_CONTENT = "#{name}, all is ok! You are super user of installation."
+        const val HTML_OK_CONTENT = "#{name}, all is ok! You are super user of installation."
 
+    }
     @GetMapping("", produces = arrayOf(MediaType.TEXT_HTML_VALUE))
     @ResponseBody
     fun init(authentication: Authentication) : String  {

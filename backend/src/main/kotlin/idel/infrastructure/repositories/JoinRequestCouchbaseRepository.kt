@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.json.JsonObject
-import idel.domain.Repository
 import idel.domain.*
 import mu.KotlinLogging
 

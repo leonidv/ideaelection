@@ -69,7 +69,8 @@ class TypedJsonSerializer<T>(
 
 
         val json = serializeToObjectNode(input)
-        val x = mapperForUnwrappedJson.writeValueAsBytes(json) // for debug
+        @Suppress("UnnecessaryVariable") // for debug
+        val x = mapperForUnwrappedJson.writeValueAsBytes(json)
         return x;
     }
 

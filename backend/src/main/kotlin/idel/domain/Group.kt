@@ -1,11 +1,11 @@
 package idel.domain
 
 
-import arrow.core.*
-import arrow.core.extensions.either.monad.flatten
-import arrow.core.extensions.fx
-
-import io.konform.validation.*
+import arrow.core.Either
+import arrow.core.Some
+import arrow.core.computations.either
+import arrow.core.flatten
+import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minLength
 import java.time.LocalDateTime
@@ -343,24 +343,24 @@ class GroupService(val groupMemberRepository: GroupMemberRepository) {
         val admins = groupMemberRepository.loadByGroup(
             groupId,
             pagination,
-            roleFilter = Option.just(GroupMemberRole.GROUP_ADMIN)
+            roleFilter = Some(GroupMemberRole.GROUP_ADMIN)
         )
 
         return admins.map {it.size > 1}
     }
 
     fun changeRoleInGroup(groupId: String, userId: String, nextRole: GroupMemberRole): Either<Exception, GroupMember> {
-        return Either.fx<Exception, Either<Exception, GroupMember>> {
-            val (canChange) = when (nextRole) {
-                GroupMemberRole.GROUP_ADMIN -> Either.right(true)
+        return either.eager<Exception, Either<Exception, GroupMember>> {
+            val canChange = when (nextRole) {
+                GroupMemberRole.GROUP_ADMIN -> Either.Right(true)
                 GroupMemberRole.MEMBER -> checkNoLastAdmin(groupId)
-            }
+            }.bind()
 
             if (canChange) {
-                val (member) = groupMemberRepository.load(groupId, userId)
+                val member = groupMemberRepository.load(groupId, userId).bind()
                 groupMemberRepository.changeRole(member.changeRole(nextRole))
             } else {
-                Either.left(InvalidOperation("Group should contains at least one admin, you try to remove last admin"))
+                Either.Left(InvalidOperation("Group should contains at least one admin, you try to remove last admin"))
             }
 
         }.flatten()

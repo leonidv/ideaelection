@@ -1,14 +1,15 @@
 package idel.infrastructure.security
 
-import arrow.core.*
+import arrow.core.Either
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.Some
 import idel.domain.EntityNotFound
 import idel.domain.UserRepository
 import mu.KotlinLogging
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationToken
-import org.springframework.security.oauth2.core.user.OAuth2User
-import java.lang.IllegalStateException
 
 class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationProvider,
                                          private val userRepository: UserRepository) : AuthenticationProvider {
@@ -51,7 +52,7 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
         val oauth2token: OAuth2LoginAuthenticationToken = token
 
         val registrationId = oauth2token.clientRegistration.registrationId
-        val attributesNames = attributesPerProvider.getOption(registrationId)
+        val attributesNames = Option.fromNullable(attributesPerProvider[registrationId])
         return when (attributesNames) {
             is Some ->
                 makeIdelOAuth2User(oauth2token, attributesNames, userRepository)
@@ -79,25 +80,25 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
 
         // create user because user.id is required.
         val idelUser = IdelOAuth2User(
-                authorities = mutableListOf(IdelAuthorities.USER_AUTHORITY),
-                attributes = principal.attributes,
-                provider = oauth2token.clientRegistration.registrationId,
-                attributesNames = attributesNames.t
+            authorities = mutableListOf(IdelAuthorities.USER_AUTHORITY),
+            attributes = principal.attributes,
+            provider = oauth2token.clientRegistration.registrationId,
+            attributesNames = attributesNames.value
         )
 
 
         val userFromRepository = when (val eUser = userRepository.load(idelUser.id)) {
-            is Either.Left -> when(val ex = eUser.a) {
-                is EntityNotFound -> Option.empty()
+            is Either.Left -> when (val ex = eUser.value) {
+                is EntityNotFound -> None
                 else -> throw ex
             }
-            is Either.Right -> Option.just(eUser.b)
+            is Either.Right -> Some(eUser.value)
         }
 
 
         val authorities = when (userFromRepository) {
             is Some -> {
-                val userRoles = userFromRepository.t.roles
+                val userRoles = userFromRepository.value.roles
                 val authorities = IdelAuthorities.from(userRoles).toMutableList()
                 // update user info from actual provider information. For example, change avatar.
                 userRepository.update(idelUser.copy(authorities))

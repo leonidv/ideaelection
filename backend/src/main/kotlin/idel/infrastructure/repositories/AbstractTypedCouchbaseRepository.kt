@@ -1,8 +1,8 @@
 package idel.infrastructure.repositories
 
 import arrow.core.Either
-import arrow.core.extensions.either.monad.flatten
 import arrow.core.flatMap
+import arrow.core.flatten
 import com.couchbase.client.core.error.CasMismatchException
 import com.couchbase.client.core.error.DocumentExistsException
 import com.couchbase.client.core.error.DocumentNotFoundException
@@ -47,7 +47,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
 
     abstract val log: KLogger
 
-    protected val bucketName = collection.bucketName()
+    protected val bucketName : String = collection.bucketName()
 
     protected val mapper = initMapper();
 
@@ -91,13 +91,13 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     protected fun <X>
             safelyKeyOperation(id: String, action: () -> X): Either<Exception, X> {
         return try {
-            Either.right(action())
+            Either.Right(action())
         } catch (e: DocumentNotFoundException) {
-            Either.left(EntityNotFound(type, id))
+            Either.Left(EntityNotFound(type, id))
         } catch (e: DocumentExistsException) {
-            Either.left(EntityAlreadyExists(type, id))
+            Either.Left(EntityAlreadyExists(type, id))
         } catch (e: Exception) {
-            Either.left(e)
+            Either.Left(e)
         }
     }
 
@@ -106,7 +106,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
             return action();
 
         } catch (e: Exception) {
-            Either.left(e)
+            Either.Left(e)
         }
     }
 
@@ -156,12 +156,12 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
                     try {
                         val newEntity = mutation(originEntity)
                         collection.replace(id, newEntity, replaceOptions)
-                        Either.right(newEntity)
+                        Either.Right(newEntity)
                     } catch (e: CasMismatchException) {
-                        Either.left(e)
+                        Either.Left(e)
                     }
             } catch (e: Exception) {
-                return Either.left(e)
+                return Either.Left(e)
             }
 
             attempts++
@@ -186,14 +186,14 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
                 mutation(originEntity).flatMap {newEntity: T ->
                     try {
                         collection.replace(id, newEntity, replaceOptions)
-                        Either.right(newEntity)
+                        Either.Right(newEntity)
                     } catch (e: CasMismatchException) {
-                        Either.left(e)
+                        Either.Left(e)
                     }
                 }
             }.flatten()
 
-            val casError = (eUpdatedEntity is Either.Left) && (eUpdatedEntity.a is CasMismatchException)
+            val casError = (eUpdatedEntity is Either.Left) && (eUpdatedEntity.value is CasMismatchException)
 
         } while (attempts >= maxAttempts && casError)
         return eUpdatedEntity
@@ -302,9 +302,9 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
             val queryString = "$basePart \n $filterQuery \n $orderingPart \n ${pagination.queryPart()}"
             traceRawQuery(queryString, params)
 
-            Either.right(cluster.query(queryString, options).rowsAs(typedClass))
+            Either.Right(cluster.query(queryString, options).rowsAs(typedClass))
         } catch (e: Exception) {
-            Either.left(e)
+            Either.Left(e)
         }
     }
 

@@ -2,9 +2,7 @@ package idel.api
 
 import com.couchbase.client.java.Cluster
 import idel.infrastructure.repositories.CouchbaseProperties
-import mu.KLogger
 import mu.KotlinLogging
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus

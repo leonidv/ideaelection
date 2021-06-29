@@ -77,19 +77,19 @@ class UserCouchbaseRepository(
         val users = mutableListOf<UserInfo>()
         for (id in ids) {
             when (val eUser = load(id)) {
-                is Either.Left -> when (val ex = eUser.a) {
+                is Either.Left -> when (val ex = eUser.value) {
                     is EntityNotFound -> {
                         log.debug {ex.message}
                     } // ignore users which are not found
                     else -> return eUser
                 }
                 is Either.Right -> {
-                    val userInfo = UserInfo.ofUser(eUser.b)
+                    val userInfo = UserInfo.ofUser(eUser.value)
                     users.add(userInfo)
                 }
             }
         }
-        return Either.right(users)
+        return Either.Right(users)
     }
 
 

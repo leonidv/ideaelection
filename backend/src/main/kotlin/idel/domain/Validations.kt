@@ -45,9 +45,9 @@ interface Validator<T> {
         return when (validationResult) {
             is Invalid -> {
                 val errors = validationResult.errors
-                Either.left(ValidationException("properties is invalid", errors))
+                Either.Left(ValidationException("properties is invalid", errors))
             }
-            is Valid -> Either.right(action())
+            is Valid -> Either.Right(action())
         }
     }
 }

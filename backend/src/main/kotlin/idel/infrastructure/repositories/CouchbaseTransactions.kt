@@ -16,12 +16,12 @@ class CouchbaseTransactions(val cluster: Cluster) {
         return try {
             val txResult = transaction.run {ctx -> operations(ctx)}
             log.trace {"transaction result: ${txResult}"}
-            Either.right(Unit)
-        } catch(e : TransactionFailed) {
+            Either.Right(Unit)
+        } catch (e: TransactionFailed) {
             log.warn {"transaction failed, ${e.result().log().logs().joinToString(separator = "\n")}"}
-            Either.left(e)
-        } catch (e : Exception) {
-            Either.left(e)
+            Either.Left(e)
+        } catch (e: Exception) {
+            Either.Left(e)
         }
     }
 

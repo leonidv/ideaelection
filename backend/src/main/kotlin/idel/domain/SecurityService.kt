@@ -1,7 +1,7 @@
 package idel.domain
 
 import arrow.core.Either
-import arrow.core.extensions.fx
+import arrow.core.computations.either
 import mu.KotlinLogging
 
 
@@ -120,26 +120,26 @@ class SecurityService(
         val eGroupExists = groupRepository.exists(groupId)
 
         // check that the group is not logically deleted. By design, for logical deleted group member is exists.
-        return if (eGroupExists is Either.Right && eGroupExists.b) {
+        return if (eGroupExists is Either.Right && eGroupExists.value) {
             if (user.roles.contains(Roles.SUPER_USER)) {
-                return Either.right(GROUP_LEVELS_ADMIN)
+                return Either.Right(GROUP_LEVELS_ADMIN)
             }
 
             val eUser = groupMemberRepository.load(groupId, user.id)
 
             when (eUser) {
                 is Either.Left ->
-                    if (eUser.a is EntityNotFound) {
+                    if (eUser.value is EntityNotFound) {
                         log.info {"SECURITY ${user.id} try to get access into group ${groupId} "}
-                        Either.right(GROUP_LEVELS_NOT_MEMBER)
+                        Either.Right(GROUP_LEVELS_NOT_MEMBER)
                     } else {
                         eUser
                     }
 
                 is Either.Right ->
-                    when (eUser.b.roleInGroup) {
-                        GroupMemberRole.GROUP_ADMIN -> Either.right(GROUP_LEVELS_ADMIN)
-                        GroupMemberRole.MEMBER -> Either.right(GROUP_LEVELS_MEMBER)
+                    when (eUser.value.roleInGroup) {
+                        GroupMemberRole.GROUP_ADMIN -> Either.Right(GROUP_LEVELS_ADMIN)
+                        GroupMemberRole.MEMBER -> Either.Right(GROUP_LEVELS_MEMBER)
                     }
             }
         } else {
@@ -183,11 +183,11 @@ class SecurityService(
         user: User
     ): Either<Exception, Set<GroupMemberAccessLevel>> {
         return if (groupMember.userId == user.id) {
-            Either.right(GROUP_MEMBER_HIM_SELF)
+            Either.Right(GROUP_MEMBER_HIM_SELF)
         } else {
-            Either.fx {
+            either.eager<Exception, Set<GroupMemberAccessLevel>> {
                 // it has a second call to a repository, but the operation is rarely so we don't optimize it
-                val (groupAccessLevel) = groupAccessLevel(groupId, user)
+                val groupAccessLevel = groupAccessLevel(groupId, user).bind()
                 when {
                     groupAccessLevel.contains(GroupAccessLevel.ADMIN) -> GROUP_MEMBER_LEVELS_FOR_ADMIN
                     groupAccessLevel.contains(GroupAccessLevel.MEMBER) -> GROUP_MEMBER_LEVELS_FOR_MEMBER

@@ -8,7 +8,6 @@ import com.couchbase.client.java.codec.JacksonJsonSerializer
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.query.QueryOptions
 import com.fasterxml.jackson.databind.node.ObjectNode
-import idel.domain.Repository
 import idel.domain.*
 import mu.KotlinLogging
 
@@ -142,10 +141,10 @@ class GroupCouchbaseRepository(
     ) = when (queryResult) {
         is Either.Left -> queryResult
         is Either.Right -> {
-            if (queryResult.b.isEmpty()) {
-                Either.left(EntityNotFound(type, notFoundMessage))
+            if (queryResult.value.isEmpty()) {
+                Either.Left(EntityNotFound(type, notFoundMessage))
             } else {
-                Either.right(queryResult.b[0])
+                Either.Right(queryResult.value[0])
             }
         }
     }
@@ -180,10 +179,10 @@ class GroupCouchbaseRepository(
             log.trace {"query: [$query], params: [$params]"}
 
             cluster.query(query, options)
-            Either.right("OK")
+            Either.Right("OK")
 
         } catch (e: Exception) {
-            Either.left(e)
+            Either.Left(e)
         }
     }
 
@@ -215,10 +214,10 @@ class GroupCouchbaseRepository(
             log.trace {"query: [$query], params: [$params]"}
 
             cluster.query(query, options)
-            Either.right("ok")
+            Either.Right("ok")
 
         } catch (e: Exception) {
-            Either.left(e)
+            Either.Left(e)
         }
 
     }

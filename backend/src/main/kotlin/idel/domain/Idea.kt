@@ -1,6 +1,8 @@
 package idel.domain
 
-import arrow.core.*
+import arrow.core.Either
+import arrow.core.Option
+import arrow.core.Some
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minLength
@@ -161,17 +163,17 @@ class Idea(
         }
 
         return if (newAssignee != NOT_ASSIGNED && canAssign) {
-            Either.right(this.clone(assignee = newAssignee))
+            Either.Right(this.clone(assignee = newAssignee))
         } else {
-            Either.left(OperationNotPermitted())
+            Either.Left(OperationNotPermitted())
         }
     }
 
     fun removeAssign(changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
         return if (isAssignee(changerLevels) || isAdmin(changerLevels)) {
-            Either.right(this.clone(assignee = NOT_ASSIGNED))
+            Either.Right(this.clone(assignee = NOT_ASSIGNED))
         } else {
-            Either.left(OperationNotPermitted())
+            Either.Left(OperationNotPermitted())
         }
     }
 
@@ -182,17 +184,17 @@ class Idea(
 
     fun implement(changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
         return if (isAdmin(changerLevels) || isAssignee(changerLevels)) {
-            Either.right(this.clone(implemented = true))
+            Either.Right(this.clone(implemented = true))
         } else {
-            Either.left(OperationNotPermitted())
+            Either.Left(OperationNotPermitted())
         }
     }
 
     fun notImplement(changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
         return if (isAdmin(changerLevels) || isAssignee(changerLevels)) {
-            Either.right(this.clone(implemented = false))
+            Either.Right(this.clone(implemented = false))
         } else {
-            Either.left(OperationNotPermitted())
+            Either.Left(OperationNotPermitted())
         }
     }
 
@@ -224,7 +226,7 @@ class Idea(
                 )
             }
         } else {
-            Either.left(OperationNotPermitted())
+            Either.Left(OperationNotPermitted())
         }
     }
 
@@ -331,7 +333,7 @@ enum class IdeaOrdering {
 
 fun requireNoneOrNotEmptyValue(opt: Option<String>, field: String) {
     if (opt is Some) {
-        require(!opt.t.isNullOrBlank()) {"$field is empty string, but should be Optional.empty()"}
+        require(opt.value.isNotBlank()) {"$field is empty string, but should be Optional.empty()"}
     }
 }
 

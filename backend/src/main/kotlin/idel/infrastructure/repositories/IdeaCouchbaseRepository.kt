@@ -1,11 +1,13 @@
 package idel.infrastructure.repositories
 
-import arrow.core.*
+import arrow.core.Either
+import arrow.core.Some
+import arrow.core.getOrElse
 import com.couchbase.client.core.error.DecodingFailureException
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
-import com.couchbase.client.java.codec.*
+import com.couchbase.client.java.codec.JsonTranscoder
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.kv.GetOptions
 import idel.domain.*
@@ -35,13 +37,13 @@ class IdeaCouchbaseRepository(
         val params = JsonObject.create();
 
         val filters = listOf(
-                Option.just("groupId" to groupId),
-                filtering.assignee.map {"assignee" to it},
-                filtering.offeredBy.map {"offeredBy" to it},
-                filtering.implemented.map {"implemented" to it}
+            Some("groupId" to groupId),
+            filtering.assignee.map {"assignee" to it},
+            filtering.offeredBy.map {"offeredBy" to it},
+            filtering.implemented.map {"implemented" to it}
         )
             .filter {it.isDefined()}
-            .map {(it as Some).t}
+            .map {(it as Some).value}
 
         filters.forEach {(field, value) ->
             params.put(field, value)
@@ -53,7 +55,7 @@ class IdeaCouchbaseRepository(
         }
 
         if (filtering.text is Some) {
-            val filterValue = filtering.text.t
+            val filterValue = filtering.text.value
             params.put("text", filterValue)
             filterQueryParts = filterQueryParts + """SEARCH(ie, ${'$'}text, {"index":"idea_fts"})"""
         }

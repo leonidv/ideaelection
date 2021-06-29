@@ -6,7 +6,7 @@ import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import java.lang.IllegalArgumentException
+import java.util.*
 
 @RestController
 @RequestMapping("/joinrequests")
@@ -67,14 +67,17 @@ class JoinRequestController(val groupMembershipService: GroupMembershipService,
 }
 
 class StringToGroupMembershipRequestOrderingConverter : Converter<String, GroupMembershipRequestOrdering> {
-    val DEFAULT = GroupMembershipRequestOrdering.CTIME_DESC
+    companion object {
+        val DEFAULT = GroupMembershipRequestOrdering.CTIME_DESC
+    }
 
     override fun convert(source: String): GroupMembershipRequestOrdering {
+        @Suppress("UselessCallOnNotNull")
         return if (source.isNullOrBlank()) {
             DEFAULT
         } else {
             try {
-                GroupMembershipRequestOrdering.valueOf(source.toUpperCase())
+                GroupMembershipRequestOrdering.valueOf(source.uppercase(Locale.getDefault()))
             } catch (ex: IllegalArgumentException) {
                 DEFAULT
             }

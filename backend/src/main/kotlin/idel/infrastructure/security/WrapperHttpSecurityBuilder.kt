@@ -3,7 +3,6 @@ package idel.infrastructure.security
 import idel.domain.UserRepository
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.SecurityConfigurer
-import org.springframework.security.config.annotation.SecurityConfigurerAdapter
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.core.userdetails.UserDetailsService

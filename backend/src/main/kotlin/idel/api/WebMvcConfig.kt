@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
-import java.lang.Exception
 
 @Configuration
 class WebMvcConfig : WebMvcConfigurer {

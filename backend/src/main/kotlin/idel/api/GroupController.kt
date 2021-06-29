@@ -1,8 +1,9 @@
 package idel.api
 
-import arrow.core.*
-import arrow.core.extensions.either.monad.flatten
-import arrow.core.extensions.fx
+import arrow.core.Either
+import arrow.core.None
+import arrow.core.computations.either
+import arrow.core.flatten
 import idel.domain.*
 import idel.infrastructure.repositories.CouchbaseTransactions
 import idel.infrastructure.security.IdelOAuth2User
@@ -10,8 +11,7 @@ import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import java.util.Optional
-import kotlin.IllegalArgumentException
+import java.util.*
 
 @RestController
 @RequestMapping("/groups")
@@ -33,8 +33,8 @@ class GroupController(
         @RequestBody properties: GroupEditableProperties,
         @AuthenticationPrincipal user: IdelOAuth2User
     ): EntityOrError<Group> {
-        val x = Either.fx<Exception, Group> {
-            val (group) = factory.createGroup(UserInfo.ofUser(user), properties)
+        val x = either.eager<Exception, Group>({
+            val group = factory.createGroup(UserInfo.ofUser(user), properties).bind()
 
             val creatorAsAdmin = GroupMember.of(group.id, user, GroupMemberRole.GROUP_ADMIN)
             couchbaseTransactions.transaction {ctx ->
@@ -43,7 +43,7 @@ class GroupController(
             }.bind()
 
             group
-        }
+        })
 
         return DataOrError.fromEither(x, log)
     }
@@ -54,17 +54,17 @@ class GroupController(
         @AuthenticationPrincipal user: IdelOAuth2User,
         @PathVariable groupId: String
     ): EntityOrError<Group> {
-        val result = Either.fx<Exception, Either<Exception, Group>> {
-            val (group) = groupRepository.load(groupId)
+        val result = either.eager<Exception, Either<Exception, Group>> {
+            val group = groupRepository.load(groupId).bind()
             if (group.entryMode == GroupEntryMode.PRIVATE) {
-                val (isMember) = groupMemberRepository.isMember(groupId, user.id)
+                val isMember = groupMemberRepository.isMember(groupId, user.id).bind()
                 if (isMember) {
-                    Either.right(group)
+                    Either.Right(group)
                 } else {
-                    Either.left(EntityNotFound("group", groupId))
+                    Either.Left(EntityNotFound("group", groupId))
                 }
             } else {
-                Either.right(group)
+                Either.Right(group)
             }
         }.flatten()
         return DataOrError.fromEither(result, log)
@@ -111,7 +111,7 @@ class GroupController(
         pagination: Repository.Pagination
     ): EntityOrError<List<GroupMember>> {
         return security.group.asMember(groupId, user) {
-            groupMemberRepository.loadByGroup(groupId, pagination, username.asOption(), roleFilter = Option.empty())
+            groupMemberRepository.loadByGroup(groupId, pagination, username.asOption(), roleFilter = None)
         }
     }
 
@@ -135,11 +135,11 @@ class GroupController(
         @PathVariable groupId: String
     ): EntityOrError<Group> {
         return security.group.asAdmin(groupId, user) {
-            Either.fx<Exception, Group> {
-                val (group) = groupRepository.load(groupId)
-                val (nextGroup) = groupRepository.mutate(groupId) {
+            either.eager {
+                val group = groupRepository.load(groupId).bind()
+                val nextGroup = groupRepository.mutate(groupId) {
                     group.delete()
-                }
+                }.bind()
                 nextGroup
             }
         }
@@ -186,14 +186,17 @@ class GroupController(
 }
 
 class StringToGroupSortingConverter : Converter<String, GroupOrdering> {
-    val DEFAULT = GroupOrdering.CTIME_DESC
+    companion object {
+        val DEFAULT = GroupOrdering.CTIME_DESC
+    }
 
     override fun convert(source: String): GroupOrdering {
+        @Suppress("UselessCallOnNotNull")
         return if (source.isNullOrBlank()) {
             DEFAULT
         } else {
             try {
-                GroupOrdering.valueOf(source.toUpperCase())
+                GroupOrdering.valueOf(source.uppercase(Locale.getDefault()))
             } catch (ex: IllegalArgumentException) {
                 DEFAULT
             }

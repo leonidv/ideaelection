@@ -60,7 +60,7 @@ interface UserRepository {
     /**
      * Update user and return new updated value.
      *
-     * @return [Left] if some exception was occurred
+     * @return [Either.Left] if some exception was occurred
      *         [Right] with updated user (usually same as input [user])
      */
     fun update(user : User) : Either<Exception,User>

@@ -1,8 +1,6 @@
 package idel.domain
 
-import arrow.core.Either
-import arrow.core.Option
-import arrow.core.getOrElse
+import arrow.core.*
 import com.couchbase.client.core.cnc.Context
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.core.error.context.ErrorContext
@@ -25,19 +23,19 @@ class SecurityServiceSpec : DescribeSpec({
         val userD = user("userD")
 
         val group = Group(
-                id = "testGroup",
-                ctime = LocalDateTime.now(),
-                creator = UserInfo.ofUser(userB),
-                name = "Test group",
-                description = "",
-                logo = "",
-                entryMode = GroupEntryMode.PRIVATE,
-                entryQuestion = "",
-                domainRestrictions = emptyList(),
-                joiningKey = generateId(),
-                state = GroupState.ACTIVE,
-                membersCount = 3,
-                ideasCount = 0
+            id = "testGroup",
+            ctime = LocalDateTime.now(),
+            creator = UserInfo.ofUser(userB),
+            name = "Test group",
+            description = "",
+            logo = "",
+            entryMode = GroupEntryMode.PRIVATE,
+            entryQuestion = "",
+            domainRestrictions = emptyList(),
+            joiningKey = generateId(),
+            state = GroupState.ACTIVE,
+            membersCount = 3,
+            ideasCount = 0
         )
 
         val groupMemberUserA = GroupMember.of(group.id, userA, GroupMemberRole.GROUP_ADMIN)
@@ -46,23 +44,24 @@ class SecurityServiceSpec : DescribeSpec({
 
         val groupMemberRepository = mockk<GroupMemberRepository>()
 
-        every {groupMemberRepository.load(group.id, userA.id)} returns Either.right(groupMemberUserA)
-        every {groupMemberRepository.load(group.id, userB.id)} returns Either.right(groupMemberUserB)
-        every {groupMemberRepository.load(group.id, userC.id)} returns Either.right(groupMemberUserC)
-        every {groupMemberRepository.load(group.id, userD.id)} returns Either.left(DocumentNotFoundException(object : ErrorContext(null){}))
+        every {groupMemberRepository.load(group.id, userA.id)} returns Either.Right(groupMemberUserA)
+        every {groupMemberRepository.load(group.id, userB.id)} returns Either.Right(groupMemberUserB)
+        every {groupMemberRepository.load(group.id, userC.id)} returns Either.Right(groupMemberUserC)
+        every {groupMemberRepository.load(group.id, userD.id)} returns Either.Left(DocumentNotFoundException(object :
+            ErrorContext(null) {}))
 
         val groupRepository = mockk<GroupRepository>()
-        every {groupRepository.exists(group.id)} returns Either.right(true)
+        every {groupRepository.exists(group.id)} returns Either.Right(true)
 
         val securityService = SecurityService(groupMemberRepository, groupRepository)
 
 
         describe("group security level") {
             table(
-                    headers("user", "levels"),
-                    row(userA, setOf(GroupAccessLevel.ADMIN, GroupAccessLevel.MEMBER)),
-                    row(userB, setOf(GroupAccessLevel.MEMBER)),
-                    row(userC, setOf(GroupAccessLevel.MEMBER)),
+                headers("user", "levels"),
+                row(userA, setOf(GroupAccessLevel.ADMIN, GroupAccessLevel.MEMBER)),
+                row(userB, setOf(GroupAccessLevel.MEMBER)),
+                row(userC, setOf(GroupAccessLevel.MEMBER)),
             ).forAll {user, requiredLevels ->
                 it("[${user.displayName}] has levels ${requiredLevels}") {
                     val actualLevel = securityService.groupAccessLevel(group.id, user)
@@ -78,14 +77,18 @@ class SecurityServiceSpec : DescribeSpec({
 
         describe("idea security level") {
             describe("group has idea created by [userB], idea assigned to [userC]") {
-                val idea = idea(userB, group, Option.just(userC))
+                val idea = idea(userB, group, Some(userC))
 
                 table(
-                        headers("user", "idea access levels"),
-                        row(userA, setOf(IdeaAccessLevel.GROUP_ADMIN, IdeaAccessLevel.GROUP_MEMBER,
-                                IdeaAccessLevel.ASSIGNEE, IdeaAccessLevel.AUTHOR)),
-                        row(userB, setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.AUTHOR)),
-                        row(userC, setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.ASSIGNEE)),
+                    headers("user", "idea access levels"),
+                    row(
+                        userA, setOf(
+                            IdeaAccessLevel.GROUP_ADMIN, IdeaAccessLevel.GROUP_MEMBER,
+                            IdeaAccessLevel.ASSIGNEE, IdeaAccessLevel.AUTHOR
+                        )
+                    ),
+                    row(userB, setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.AUTHOR)),
+                    row(userC, setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.ASSIGNEE)),
                 ).forAll {user, requiredLevels ->
                     it("[${user.id}] has levels ${requiredLevels}") {
                         val actualLevels = securityService.ideaAccessLevels(idea, user)
@@ -100,8 +103,9 @@ class SecurityServiceSpec : DescribeSpec({
             }
 
             describe("group has idea created by [userB] and assigned to himself ([userB])") {
-                val idea = idea(userB, group, Option.just(userB))
-                val requiredLevels = setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.AUTHOR, IdeaAccessLevel.ASSIGNEE)
+                val idea = idea(userB, group, Some(userB))
+                val requiredLevels =
+                    setOf(IdeaAccessLevel.GROUP_MEMBER, IdeaAccessLevel.AUTHOR, IdeaAccessLevel.ASSIGNEE)
                 it("[${userB.id}] has levels $requiredLevels") {
                     val actualLevels = securityService.ideaAccessLevels(idea, userB)
                     actualLevels.shouldBeRight(requiredLevels)
@@ -109,7 +113,7 @@ class SecurityServiceSpec : DescribeSpec({
             }
 
             describe("author [userD] is not member of idea's group (was kicked or idea was moved") {
-                val idea = idea(userD, group, Option.empty())
+                val idea = idea(userD, group, None)
                 it("[${userD.id}] get document not found error ") {
                     val actualLevels = securityService.ideaAccessLevels(idea, userD);
                     actualLevels.shouldBeLeft()
@@ -121,10 +125,17 @@ class SecurityServiceSpec : DescribeSpec({
             val groupMember = GroupMember.of(group.id, userB, GroupMemberRole.MEMBER)
 
             table(
-                    headers("user", "accessLevels"),
-                    row(userA, setOf(GroupMemberAccessLevel.GROUP_MEMBER, GroupMemberAccessLevel.GROUP_ADMIN, GroupMemberAccessLevel.HIM_SELF)),
-                    row(userB, setOf(GroupMemberAccessLevel.GROUP_MEMBER, GroupMemberAccessLevel.HIM_SELF)),
-                    row(userC, setOf(GroupMemberAccessLevel.GROUP_MEMBER)),
+                headers("user", "accessLevels"),
+                row(
+                    userA,
+                    setOf(
+                        GroupMemberAccessLevel.GROUP_MEMBER,
+                        GroupMemberAccessLevel.GROUP_ADMIN,
+                        GroupMemberAccessLevel.HIM_SELF
+                    )
+                ),
+                row(userB, setOf(GroupMemberAccessLevel.GROUP_MEMBER, GroupMemberAccessLevel.HIM_SELF)),
+                row(userC, setOf(GroupMemberAccessLevel.GROUP_MEMBER)),
             ).forAll {user, requiredLevels ->
                 it("${user.displayName} has levels $requiredLevels") {
                     val actualLevels = securityService.groupMemberAccessLevels(groupMember, group.id, user)

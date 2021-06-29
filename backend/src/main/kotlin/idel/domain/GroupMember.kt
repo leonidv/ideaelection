@@ -1,6 +1,7 @@
 package idel.domain
 
 import arrow.core.Either
+import arrow.core.None
 import arrow.core.Option
 import java.time.LocalDateTime
 
@@ -96,8 +97,8 @@ interface GroupMemberRepository : BaseRepository<GroupMember>, CouchbaseTransact
     fun loadByGroup(
         groupId: String,
         pagination: Repository.Pagination,
-        usernameFilter: Option<String> = Option.empty(),
-        roleFilter : Option<GroupMemberRole> = Option.empty()
+        usernameFilter: Option<String> = None,
+        roleFilter: Option<GroupMemberRole> = None
     ): Either<Exception, List<GroupMember>>
 
 }

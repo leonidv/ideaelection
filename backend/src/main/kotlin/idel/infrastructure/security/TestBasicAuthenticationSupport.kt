@@ -3,6 +3,7 @@ package idel.infrastructure.security
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
+import java.util.*
 
 class TestUser(authorities: MutableCollection<out GrantedAuthority>,
                attributes: MutableMap<String, Any>,
@@ -30,33 +31,33 @@ class TestUser(authorities: MutableCollection<out GrantedAuthority>,
  */
 class TestUsersDetailsService : UserDetailsService {
   override fun loadUserByUsername(username: String): TestUser {
-        val role = username.split("__").last()
+      val role = username.split("__").last()
 
-        val authorities =  when(role.toLowerCase()) {
-            "super_user" -> mutableSetOf(IdelAuthorities.SUPER_USER_AUTHORITY)
-            else -> mutableSetOf(IdelAuthorities.USER_AUTHORITY)
-        }
+      val authorities = when (role.lowercase(Locale.getDefault())) {
+          "super_user" -> mutableSetOf(IdelAuthorities.SUPER_USER_AUTHORITY)
+          else -> mutableSetOf(IdelAuthorities.USER_AUTHORITY)
+      }
 
       val attributesNames = IdelOAuth2User.AttributesNames(
-              externalId = "providerId",
-              displayName = "displayName",
-              email = "email",
-              avatar = "avatar"
+          externalId = "providerId",
+          displayName = "displayName",
+          email = "email",
+          avatar = "avatar"
       )
 
-        val attributes = mutableMapOf<String,Any>(
-                attributesNames.externalId to username,
-                attributesNames.displayName to "${username} ${username}",
-                attributesNames.email to "${username}@mail",
-                attributesNames.avatar to ""
-        )
+      val attributes = mutableMapOf<String, Any>(
+          attributesNames.externalId to username,
+          attributesNames.displayName to "${username} ${username}",
+          attributesNames.email to "${username}@mail",
+          attributesNames.avatar to ""
+      )
 
-        return TestUser(
-                authorities = authorities,
-                attributes = attributes,
-                username = username,
-                password = username,
-                attributesNames = attributesNames
-        )
-    }
+      return TestUser(
+          authorities = authorities,
+          attributes = attributes,
+          username = username,
+          password = username,
+          attributesNames = attributesNames
+      )
+  }
 }

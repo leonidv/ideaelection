@@ -5,6 +5,7 @@ import com.couchbase.client.java.Collection
 import com.couchbase.transactions.AttemptContext
 import com.fasterxml.jackson.databind.node.ObjectNode
 import mu.KLogger
+import java.util.*
 
 interface BaseRepository<T : Identifiable> {
     /**
@@ -49,9 +50,9 @@ interface CouchbaseTransactionBaseRepository<T : Identifiable> {
             log.trace {"transaction add start: ${ctx.transactionId()}, entity: ${jsonObject.toPrettyString()}"}
             ctx.insert(collection(), entity.id, jsonObject)
             log.trace {"transaction add finished: ${ctx.transactionId()}, entity: ${jsonObject.toPrettyString()}"}
-            Either.right(Unit)
-        } catch(e : Exception) {
-            Either.left(e)
+            Either.Right(Unit)
+        } catch (e: Exception) {
+            Either.Left(e)
         }
     }
 }
@@ -65,16 +66,14 @@ object Repository {
         val limit = last - first
     }
 
-    val ONE_ELEMENT = Pagination(0,1)
-
-
+    val ONE_ELEMENT = Pagination(0, 1)
 
 
     /**
      * Simple conversion that based on enum value name: <FIELD>_<ASC|DESC>.
      * For example, "CTIME_ASC" will be converted to "ctime asc"
      */
-    fun <E : Enum<E>> enumAsOrdering(e: E): String = e.name.toLowerCase().replace('_', ' ')
+    fun <E : Enum<E>> enumAsOrdering(e: E): String = e.name.lowercase(Locale.getDefault()).replace('_', ' ')
 
 }
 

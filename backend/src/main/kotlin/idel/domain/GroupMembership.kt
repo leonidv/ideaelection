@@ -1,9 +1,9 @@
 package idel.domain
 
-import arrow.core.*
-import arrow.core.extensions.fx
+import arrow.core.Either
+import arrow.core.computations.either
+import arrow.core.flatMap
 import mu.KotlinLogging
-import kotlin.Exception
 
 
 /**
@@ -51,17 +51,17 @@ class GroupMembershipService(
     data class Entities(val group: Group, val user: User)
 
     private fun loadEntities(groupId: String, userId: String): Either<Exception, Entities> {
-        return Either.fx {
-            val (group) = groupRepository.load(groupId)
-            val (user) = userRepository.load(userId)
+        return either.eager {
+            val group = groupRepository.load(groupId).bind()
+            val user = userRepository.load(userId).bind()
             Entities(group, user)
         }
     }
 
     private fun loadEntitiesByJoiningKey(groupJoiningKey: String, userId: String): Either<Exception, Entities> {
-        return Either.fx {
-            val (group) = groupRepository.loadByJoiningKey(groupJoiningKey)
-            val (user) = userRepository.load(userId)
+        return either.eager {
+            val group = groupRepository.loadByJoiningKey(groupJoiningKey).bind()
+            val user = userRepository.load(userId).bind()
             Entities(group, user)
         }
     }
@@ -104,23 +104,23 @@ class GroupMembershipService(
                 }
             }
         } catch (ex: Exception) {
-            Either.left(ex)
+            Either.Left(ex)
         }
     }
 
     fun resolveRequest(requestId: String, status: AcceptStatus): Either<Exception, JoinRequest> {
         return joinRequestRepository.load(requestId).flatMap {joinRequest ->
             when (status) {
-                AcceptStatus.UNRESOLVED -> Either.left(IllegalArgumentException("Can't resolve to UNRESOLVED"))
+                AcceptStatus.UNRESOLVED -> Either.Left(IllegalArgumentException("Can't resolve to UNRESOLVED"))
                 AcceptStatus.APPROVED -> {
-                    Either.fx {
-                        val (user) = userRepository.load(joinRequest.userId)
+                    either.eager({
+                        val user = userRepository.load(joinRequest.userId).bind()
                         val groupMember = GroupMember.of(joinRequest.groupId, user, GroupMemberRole.MEMBER)
                         groupMemberRepository.add(groupMember).bind()
                         val nextJoinRequest = joinRequest.resolve(AcceptStatus.APPROVED)
                         joinRequestRepository.replace(nextJoinRequest)
                         nextJoinRequest
-                    }
+                    })
                 }
                 AcceptStatus.DECLINED -> {
                     val rejectedRequest = joinRequest.resolve(AcceptStatus.DECLINED)

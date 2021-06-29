@@ -3,7 +3,6 @@ package idel.api
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.query.QueryOptions
-import com.couchbase.client.java.search.SearchOptions
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController

@@ -1,11 +1,11 @@
-val kotlinVersion = "1.5.10"
-val jacksonVersion = "2.11.2"
+val kotlinVersion = "1.5.20"
+val jacksonVersion = "2.12.2"
 
 
 plugins {
-    id("org.springframework.boot") version "2.4.4"
-    kotlin("jvm") version "1.4.30"
-    kotlin("plugin.spring") version "1.4.30"
+    id("org.springframework.boot") version "2.5.2"
+    kotlin("jvm") version "1.5.20"
+    kotlin("plugin.spring") version "1.5.20"
     id("idea")
 }
 
@@ -14,7 +14,7 @@ apply(plugin = "io.spring.dependency-management")
 group = "saedi"
 version = "1.0"
 
-val kotestVersion="4.2.4"
+val kotestVersion="4.6.0"
 val springDocVersion = "1.5.8"
 
 repositories {
@@ -49,14 +49,14 @@ dependencies {
     implementation("io.projectreactor:reactor-core:3.4.3") // https://github.com/Azure/azure-sdk-for-java/issues/20106
 
 
-    implementation("io.github.microutils:kotlin-logging:1.7.9")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.8")
 
-    implementation("io.konform:konform-jvm:0.2.0")
+    implementation("io.konform:konform-jvm:0.3.0")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
-    implementation("io.arrow-kt:arrow-core:0.10.4")
+    implementation("io.arrow-kt:arrow-core:0.13.2")
 
     implementation("org.apache.commons:commons-lang3:3.10")
 
@@ -67,8 +67,8 @@ dependencies {
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion") // for kotest framework
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion") // for kotest core jvm assertions
-    testImplementation("io.kotest:kotest-assertions-arrow-jvm:$kotestVersion")
-    testImplementation("io.kotest:kotest-assertions-konform-jvm:$kotestVersion")
+    testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.0.2")
+    testImplementation("io.kotest:kotest-assertions-konform-jvm:4.4.3")
     testImplementation("io.mockk:mockk:1.10.2")
 
 }
@@ -82,7 +82,7 @@ tasks {
 
     compileKotlin {
         kotlinOptions.jvmTarget = "11"
-        kotlinOptions.freeCompilerArgs = listOf("-Xjsr305=strict")
+        kotlinOptions.freeCompilerArgs = listOf("-Xjsr305=strict", "-version")
     }
 
     compileTestKotlin {
