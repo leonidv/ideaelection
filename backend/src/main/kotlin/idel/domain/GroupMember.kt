@@ -20,7 +20,6 @@ class GroupMember(
     override val email: String,
     override val roles: Set<String>
 
-
 ) : Identifiable, User {
     override val id = calculateId(groupId, userId)
 

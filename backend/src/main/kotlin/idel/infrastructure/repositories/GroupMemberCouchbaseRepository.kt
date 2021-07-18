@@ -46,10 +46,14 @@ class GroupMemberCouchbaseRepository(cluster: Cluster, collection: Collection) :
     AbstractTypedCouchbaseRepository<GroupMember>(
         cluster,
         collection,
-        type = "groupMember",
+        type = TYPE,
         typedClass = GroupMember::class.java
     ),
     GroupMemberRepository, CouchbaseTransactionBaseRepository<GroupMember> {
+
+    companion object {
+        const val TYPE = "groupMember"
+    }
 
     private val userType = UserCouchbaseRepository.TYPE;
 

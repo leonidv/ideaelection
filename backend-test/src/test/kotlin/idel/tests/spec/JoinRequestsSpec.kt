@@ -82,4 +82,22 @@ class JoinRequestsSpec : DescribeSpec({
             }
         }
     }
+
+    describe("security") {
+        describe("$userB can't create join request for group with domain = [company]") {
+            arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE).forEach {entryMode ->
+                val groupInfo = createGroup(
+                    groupAdmin = userA,
+                    entryMode = entryMode,
+                    members = setOf(),
+                    domainRestrictions = arrayOf("company")
+                )
+
+                describe("$userB can't create join request to $entryMode") {
+                    val joinRequestResponse = userB.joinRequests.create(groupInfo.joiningKey)
+                    checkIsNotFound(joinRequestResponse)
+                }
+            }
+        }
+    }
 })

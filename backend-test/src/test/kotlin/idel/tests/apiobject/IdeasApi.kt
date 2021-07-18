@@ -1,13 +1,15 @@
 package idel.tests.apiobject
 
+import arrow.core.None
 import arrow.core.Option
+import arrow.core.Some
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
 import idel.tests.infrastructure.*
 import java.net.http.HttpResponse
 
-class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi(username, idelUrl, "ideas") {
+class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "ideas") {
 
     companion object {
         const val ORDER_CTIME_ASC = "ctime_asc"
@@ -90,14 +92,14 @@ class IdeasApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi
     }
 
     fun list(groupId: String,
-             ordering : Option<String> = Option.empty(),
-             offeredBy : Option<String> = Option.empty(),
-             assignee: Option<String> = Option.empty(),
-             implemented: Option<String> = Option.empty(),
-             text : Option<String> = Option.empty()
+             ordering : Option<String> = None,
+             offeredBy : Option<String> = None,
+             assignee: Option<String> = None,
+             implemented: Option<String> = None,
+             text : Option<String> = None
     ): HttpResponse<JsonNode> {
         val params = listOf(
-            Option.just("groupId=$groupId"),
+            Some("groupId=$groupId"),
             ordering.map {"ordering=$it"},
             offeredBy.map {"offered-by=$it"},
             assignee.map {"assignee=$it"},

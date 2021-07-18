@@ -62,7 +62,7 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
     override fun configure(auth: AuthenticationManagerBuilder) {
         val authProvider = DaoAuthenticationProvider()
         authProvider.setPasswordEncoder(NoOpPasswordEncoder.getInstance())
-        authProvider.setUserDetailsService(TestUsersDetailsService())
+        authProvider.setUserDetailsService(TestUsersDetailsService(userRepository))
         auth.authenticationProvider(authProvider)
     }
 

@@ -5,6 +5,7 @@ import idel.tests.infrastructure.JsonNodeExtensions.queryArraySize
 import io.kotest.assertions.arrow.option.shouldBeSome
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.scopes.DescribeScope
+import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
 import java.net.HttpURLConnection
 import java.net.http.HttpResponse
 
@@ -108,7 +109,7 @@ fun entityIdIs(id : String) = BodyFieldValueChecker("id is $id","$.data.id", id)
 fun dataListSize(size: Int) = BodyArraySize("data has $size elements", "$.data", size)
 
 
-suspend fun DescribeScope.checkIsOk(response: HttpResponse<JsonNode>, vararg fieldChecks: ResponseChecker) {
+suspend fun DescribeSpecContainerContext.checkIsOk(response: HttpResponse<JsonNode>, vararg fieldChecks: ResponseChecker) {
     val body = response.body()
 
     body.toPrettyString().asClue {
@@ -128,7 +129,7 @@ suspend fun DescribeScope.checkIsOk(response: HttpResponse<JsonNode>, vararg fie
     }
 }
 
-suspend fun DescribeScope.checkIsForbidden(response: HttpResponse<JsonNode>) {
+suspend fun DescribeSpecContainerContext.checkIsForbidden(response: HttpResponse<JsonNode>) {
     val body = response.body()
     body.toPrettyString().asClue {
         it("response is 403 with code 103") {
@@ -138,7 +139,7 @@ suspend fun DescribeScope.checkIsForbidden(response: HttpResponse<JsonNode>) {
     }
 }
 
-suspend fun DescribeScope.checkIsNotFound(response: HttpResponse<JsonNode>) {
+suspend fun DescribeSpecContainerContext.checkIsNotFound(response: HttpResponse<JsonNode>) {
     val body = response.body()
     body.toPrettyString().asClue {
         it("response is 404 with error.code 102") {
@@ -149,12 +150,12 @@ suspend fun DescribeScope.checkIsNotFound(response: HttpResponse<JsonNode>) {
 }
 
 
-suspend fun DescribeScope.checkIsBadRequest(response: HttpResponse<JsonNode>, error : Int) {
+suspend fun DescribeSpecContainerContext.checkIsBadRequest(response: HttpResponse<JsonNode>, error : Int) {
     val body = response.body()
     body.toPrettyString().asClue {
-        it("response is 400 with error.code $error") {
+        it("response is 400 with error.code = [$error]") {
             response.shouldHasStatus(HttpURLConnection.HTTP_BAD_REQUEST)
-            response.shouldBeError(109)
+            response.shouldBeError(error)
         }
     }
 }

@@ -1,6 +1,7 @@
 package idel.tests.spec
 
 import arrow.core.Option
+import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
@@ -95,7 +96,7 @@ class IdeaLoadingSpec : DescribeSpec({
             row("another", arrayOf(idea2Summary))
         ).forAll {filter: String, ideasSummary: Array<String> ->
             describe("text = [$filter]") {
-                val response = userA.ideas.list(groupId = groupId, text = Option.just(filter))
+                val response = userA.ideas.list(groupId = groupId, text = Some(filter))
 
                 val containsIdeaChecks = ideasSummary.map {containsIdeaWithSummary(it)}.toTypedArray()
 
@@ -131,19 +132,19 @@ class IdeaLoadingSpec : DescribeSpec({
         }
 
         describe("$userA load ideas sorted by votes") {
-            val response = userA.ideas.list(groupId, ordering = Option.just(IdeasApi.ORDER_VOTES_DESC))
+            val response = userA.ideas.list(groupId, ordering = Some(IdeasApi.ORDER_VOTES_DESC))
             val expectedOrder = ideasForVoting.copyOf(voters.size).map {it!!}.toTypedArray()
             checkIsOk(response, ideasOrder(expectedOrder))
         }
 
         describe("$userA load latest 10 ideas (ctime desc)") {
-            val response = userA.ideas.list(groupId, ordering = Option.just(IdeasApi.ORDER_CTIME_DESC))
+            val response = userA.ideas.list(groupId, ordering = Some(IdeasApi.ORDER_CTIME_DESC))
             val expectedOrder = ideaIds.reversedArray().copyOf(10).map {it!!}.toTypedArray()
             checkIsOk(response, ideasOrder(expectedOrder))
         }
 
         describe("$userA load earliest 10 ideas (ctime asc)") {
-            val response = userA.ideas.list(groupId, ordering = Option.just(IdeasApi.ORDER_CTIME_ASC))
+            val response = userA.ideas.list(groupId, ordering = Some(IdeasApi.ORDER_CTIME_ASC))
             val expectedOrder = ideaIds.copyOf(10).map {it!!}.toTypedArray()
             checkIsOk(response, ideasOrder(expectedOrder))
         }

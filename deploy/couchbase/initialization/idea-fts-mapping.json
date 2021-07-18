@@ -3,10 +3,10 @@
 {
   "type": "fulltext-index",
   "name": "idea_fts",
-  "uuid": "",
+  "uuid": "62eedfffcab6f432",
   "sourceType": "couchbase",
   "sourceName": "ideaelection",
-  "sourceUUID": "",
+  "sourceUUID": "4140ccdc949f532ad744c76567363d5d",
   "planParams": {
     "maxPartitionsPerPIndex": 171,
     "indexPartitions": 6
@@ -21,6 +21,15 @@
     "mapping": {
       "analysis": {
         "analyzers": {
+          "EN": {
+            "token_filters": [
+              "to_lower",
+              "stop_en",
+              "stemmer_en_snowball"
+            ],
+            "tokenizer": "unicode",
+            "type": "custom"
+          },
           "RU": {
             "token_filters": [
               "stemmer_ru_snowball",
@@ -38,7 +47,7 @@
           }
         }
       },
-      "default_analyzer": "RU",
+      "default_analyzer": "EN",
       "default_datetime_parser": "dateTimeOptional",
       "default_field": "_all",
       "default_mapping": {
@@ -51,6 +60,40 @@
       "store_dynamic": false,
       "type_field": "_type",
       "types": {
+        "group": {
+          "dynamic": false,
+          "enabled": true,
+          "properties": {
+            "description": {
+              "dynamic": false,
+              "enabled": true,
+              "fields": [
+                {
+                  "docvalues": true,
+                  "include_in_all": true,
+                  "include_term_vectors": true,
+                  "index": true,
+                  "name": "description",
+                  "type": "text"
+                }
+              ]
+            },
+            "name": {
+              "dynamic": false,
+              "enabled": true,
+              "fields": [
+                {
+                  "docvalues": true,
+                  "include_in_all": true,
+                  "include_term_vectors": true,
+                  "index": true,
+                  "name": "name",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
         "idea": {
           "dynamic": false,
           "enabled": true,

@@ -17,7 +17,11 @@ import java.util.*
 class IdeaCouchbaseRepository(
         cluster: Cluster,
         collection: Collection
-) : AbstractTypedCouchbaseRepository<Idea>(cluster, collection, "idea", Idea::class.java), IdeaRepository {
+) : AbstractTypedCouchbaseRepository<Idea>(cluster, collection, TYPE, Idea::class.java), IdeaRepository {
+
+    companion object {
+        const val TYPE = "idea"
+    }
 
     override val log = KotlinLogging.logger {}
 

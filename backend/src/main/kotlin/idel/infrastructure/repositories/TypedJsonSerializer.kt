@@ -27,7 +27,8 @@ class TypedJsonSerializer<T>(
     mapper: ObjectMapper,
     rootName: String,
     private val type: String,
-    private val typedClass: Class<T>
+    private val typedClass: Class<T>,
+    private val ignoredFields: Set<String> = emptySet()
 ) : JsonSerializer {
     private val mapperForUnwrappedJson: ObjectMapper
     private val mapperForWrappedJson: ObjectMapper
@@ -58,7 +59,14 @@ class TypedJsonSerializer<T>(
         val json = ObjectNode(mapperForUnwrappedJson.nodeFactory)
         val jsonEntity = mapperForUnwrappedJson.valueToTree<ObjectNode>(input)
         json.put(typeField, type)
-        json.setAll<ObjectNode>(jsonEntity)
+
+        val idValue = jsonEntity["id"]?.textValue()
+        if (idValue != null) {
+            jsonEntity.remove(idValue)
+            json.put("id", idValue)
+        }
+
+        json.setAll<ObjectNode>(jsonEntity.remove(ignoredFields))
         return json
     }
 

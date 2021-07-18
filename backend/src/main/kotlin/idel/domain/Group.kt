@@ -2,6 +2,7 @@ package idel.domain
 
 
 import arrow.core.Either
+import arrow.core.Option
 import arrow.core.Some
 import arrow.core.computations.either
 import arrow.core.flatten
@@ -225,6 +226,10 @@ class Group(
         return clone(joiningKey = generateJoiningKey())
     }
 
+    fun userDomainAllowed(userDomain : String) : Boolean {
+        return domainRestrictions.isEmpty() || domainRestrictions.contains(userDomain)
+    }
+
     override fun toString(): String {
         return "Group(id='$id', ctime=$ctime, creator=$creator, state=$state, name='$name', " +
                 "description='$description', logo='${logo.subSequence(0, 100)}', " +
@@ -303,6 +308,7 @@ interface GroupRepository : BaseRepository<Group>, CouchbaseTransactionBaseRepos
      */
     fun loadByUser(
         userId: String,
+        partOfName : String?,
         pagination: Repository.Pagination,
         ordering: GroupOrdering
     ): Either<Exception, List<Group>>
@@ -310,7 +316,7 @@ interface GroupRepository : BaseRepository<Group>, CouchbaseTransactionBaseRepos
     /**
      * Loads only available and visible groups.
      */
-    fun loadOnlyAvailable(pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>>
+    fun loadOnlyAvailable(userId: String, userDomain: String, partOfName: String?, pagination: Repository.Pagination, ordering: GroupOrdering): Either<Exception, List<Group>>
 
     /**
      * Load group by link to join.

@@ -42,7 +42,8 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     protected val cluster: Cluster,
     protected val collection: Collection,
     protected val type: String,
-    protected val typedClass: Class<T>
+    protected val typedClass: Class<T>,
+    protected val ignoredFields : Set<String> = emptySet()
 ) : BaseRepository<T> {
 
     abstract val log: KLogger
@@ -56,7 +57,8 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
         mapper = mapper,
         rootName = "ie",
         type = type,
-        typedClass = typedClass
+        typedClass = typedClass,
+        ignoredFields = ignoredFields
     )
 
     protected val transcoder: JsonTranscoder = JsonTranscoder.create(jsonSerializer)

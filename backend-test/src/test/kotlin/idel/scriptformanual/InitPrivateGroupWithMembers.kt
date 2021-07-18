@@ -15,11 +15,11 @@ fun main() {
     val userB = User("userB","member")
     val userC = User("userC","non member")
 
-    userAdmin.users.register(userAdmin.name)
-    userAdmin.users.register(userB.name)
-    userAdmin.users.register(userC.name)
+    userAdmin.users.register(userAdmin)
+    userAdmin.users.register(userB)
+    userAdmin.users.register(userC)
 
-    var response = userAdmin.groups.create(name = "architecture internal process", entryMode = GroupsApi.PRIVATE)
+    val response = userAdmin.groups.create(name = "architecture internal process", entryMode = GroupsApi.PRIVATE)
     val joiningKey = response.extractField(GroupsApi.Fields.JOINING_KEY)
 
     val joinRequestResponse = userB.joinRequests.create(joiningKey)

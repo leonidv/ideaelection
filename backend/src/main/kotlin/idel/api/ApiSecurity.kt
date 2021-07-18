@@ -53,7 +53,7 @@ class GroupSecurity(
     private val adminLevel = setOf(GroupAccessLevel.ADMIN)
 
 
-    fun <T> secure(
+    private fun <T> secure(
             groupId: String,
             user: IdelOAuth2User,
             requiredLevels: Set<GroupAccessLevel>,
@@ -61,7 +61,7 @@ class GroupSecurity(
     ): EntityOrError<T> {
 
 
-        val result: Either<Exception, Either<Exception, T>> = either.eager<Exception, Either<Exception, T>> {
+        val result: Either<Exception, Either<Exception, T>> = either.eager {
             val accessLevels = securityService.groupAccessLevel(groupId, user).bind()
             if (accessLevels.intersect(requiredLevels).isNotEmpty()) {
                 action()
@@ -81,6 +81,31 @@ class GroupSecurity(
         return secure(groupId, user, adminLevel, action)
     }
 
+    sealed class GroupIdentity(val errorMessage : String) {
+        companion object {
+            fun id(value : String) = IdGroupIdentity(value)
+            fun joiningKey(value : String) = JoiningKeyGroupIdentity(value)
+        }
+    }
+    class IdGroupIdentity(val id: String) : GroupIdentity(errorMessage = id)
+    class JoiningKeyGroupIdentity(val key : String) : GroupIdentity(errorMessage = "joiningKey = $key")
+
+    fun <T> asDomainMember(groupIdentity: GroupIdentity, user: IdelOAuth2User, action: Action<T>) : EntityOrError<T> {
+       val result : Either<Exception, Either<Exception, T>> = either.eager {
+            val group = when(groupIdentity) {
+                is IdGroupIdentity -> groupRepository.load(groupIdentity.id)
+                is JoiningKeyGroupIdentity -> groupRepository.loadByJoiningKey(groupIdentity.key)
+            }.bind()
+
+            if (group.userDomainAllowed(user.domain)) {
+                action()
+            } else {
+                Either.Left(EntityNotFound("group", groupIdentity.errorMessage))
+            }
+        }
+
+        return DataOrError.fromEither(result.flatten(), controllerLog)
+    }
     /**
      * Check that user is member of group.
      */
