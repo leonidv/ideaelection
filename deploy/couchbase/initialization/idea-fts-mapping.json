@@ -3,10 +3,10 @@
 {
   "type": "fulltext-index",
   "name": "idea_fts",
-  "uuid": "62eedfffcab6f432",
+  "uuid": "",
   "sourceType": "couchbase",
   "sourceName": "ideaelection",
-  "sourceUUID": "4140ccdc949f532ad744c76567363d5d",
+  "sourceUUID": "",
   "planParams": {
     "maxPartitionsPerPIndex": 171,
     "indexPartitions": 6

@@ -5,7 +5,7 @@ CB_PASSWORD="${CB_PASSWORD:=password}"
 CB_HOST="${CB_HOST:=localhost}"
 CB_STORAGE_ENGINE="${CB_STORAGE_ENGINE:=plasma}" #plasma for enterprise, forestdb for community
 
-CURL_COMMON="-s --fail -u $CB_ADMIN:$CB_PASSWORD"
+CURL_COMMON=" --fail -u $CB_ADMIN:$CB_PASSWORD"
 
 CALL_DIR="$(pwd)"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
