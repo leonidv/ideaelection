@@ -1,67 +1,41 @@
 version: v1.0
-
 name: Idea Elections
 
-
 agent:
-
   machine:
-
     type: e1-standard-2
     os_image: ubuntu2004
 execution_time_limit:
   minutes: 30
 
-
 global_job_config:
-
   secrets:
-
     - name: DockerHubCredentials
 
-
   prologue:
-
     commands:
-
       - checkout
       - sudo .semaphore/semaphoreci-cleandisk.sh
       - sudo .semaphore/install-podman-ubuntu.sh
       - .semaphore/gradle-no-daemon.sh
       - sudo podman info
-
       - sem-version java 11
-
       - java -version
-
       - echo $DOCKERHUB_PASSWORD | sudo podman login --username "$DOCKERHUB_USERNAME" --password-stdin
-
       - sudo podman login --get-login docker.io
 
-
   epilogue:
-
     always:
-
       commands:
-
         - df -h
 
-
 blocks:
-
   - name: Couchbase building
-
     run:
-
       when: "change_in('/deploy/couchbase/')"
-
     task:
-
       jobs:
-
         - name: Build Couchbase container
-
           commands:
             - cd deploy/couchbase
             - sudo ./couchbase-run-original.sh
@@ -69,91 +43,50 @@ blocks:
             - initialization/init.sh
             - cd ../
             - sudo ./build-couchbase.sh
-
             - sudo podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
 
-
   - name: Backend building
-
     run:
-
       when: "change_in(['/backend/', '/backend-test/'])"
-
     task:
-
       env_vars:
-
         - name:  BUILD_DIR
-
           value: /home/semaphore/ideaelection
-
         - name: LOG_DIR
-
           value:  /home/semaphore/ideaelection/logs
 
-
       prologue:
-
         commands:
-
           - checkout
-
           - sudo scripts/couchbase-run.sh "-p 8080:8080"
           - sleep 15
-
           - cache restore gradleCache
 
-
       epilogue:
-
         always:
-
           commands:
-
             - cache store m2 $HOME/.m2
-
             - cache delete gradleCache
-
             - cache store gradleCache $HOME/.gradle/caches/
-
         on_fail:
-
           commands:
-
             - cp -r $BUILD_DIR/backend-test/build/reports $LOG_DIR
-
             - tar -zcvf log-and-reports.tar.gz $LOG_DIR
-
             - artifact push job log-and-reports.tar.gz
-
       jobs:
-
         - name: Build backend application
-
           commands:
-
             - export GIT_COMMIT=$SEMAPHORE_GIT_SHA
-
             - export GIT_BRANCH=$SEMAPHORE_GIT_BRANCH
-
             - cd $BUILD_DIR/backend
-
             - ./gradlew --console=plain build bootJar
-
             - cd $BUILD_DIR/deploy
-
             - sudo ./build-backend.sh testmode
-
             - cd $BUILD_DIR/scripts
-
             - sudo ./backend-run.sh testmode
-
             - sleep 10
-
             - cd ../backend-test
-
             - ./gradlew --console=plain test allureReport
-
             - sudo podman push docker.io/leonidv/idel-backend-testmode docker.io/leonidv/idel-backend-testmode
 
 #  - name: Deploy to test
