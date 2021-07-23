@@ -2,35 +2,46 @@ package idel.tests.infrastructure
 
 import idel.tests.apiobject.*
 import io.kotest.core.spec.style.scopes.DescribeScope
+import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
 
 
-suspend fun DescribeScope.registryUsers(vararg users: User) {
+suspend fun DescribeSpecContainerContext.registryUsers(vararg users: User) {
     describe("register users") {
         users.forEach {user ->
             it("register user [${user.name}]") {
-                User.instanceAdmin.users.register(user.name).shouldBeOk()
+                User.instanceAdmin.users.register(user, email = user.email).shouldBeOk()
             }
         }
     }
 }
 
 data class GroupInfo(
-    val groupId : String,
-    val joiningKey : String
+    val groupId: String,
+    val joiningKey: String
 )
 
-suspend fun DescribeScope.createGroup(
+suspend fun DescribeSpecContainerContext.createGroup(
     groupAdmin: User,
     members: Set<User>,
-    entryMode: String = GroupsApi.PUBLIC
+    entryMode: String = GroupsApi.PUBLIC,
+    domainRestrictions: Array<String> = emptyArray()
 ): GroupInfo {
 
     lateinit var groupId: String
     lateinit var joiningKey: String
 
+    val domainRestrictionLabel = if (domainRestrictions.isNotEmpty()) {
+        " domainRestrictions = [${domainRestrictions.joinToString()}]"
+    } else {
+        ""
+    }
 
-    describe("$groupAdmin creates group with entryMode = [$entryMode]") {
-        val createGroupResponse = groupAdmin.groups.create("assignee spec group", entryMode)
+    describe("$groupAdmin creates group. entryMode = [$entryMode]$domainRestrictionLabel") {
+        val createGroupResponse = groupAdmin.groups.create(
+            name = "assignee spec group",
+            entryMode = entryMode,
+            domainRestrictions = domainRestrictions
+        )
 
         checkIsOk(createGroupResponse)
 
@@ -48,7 +59,7 @@ suspend fun DescribeScope.createGroup(
                 }
 
                 describe("admin approve join request") {
-                    var joinRequestId = joinRequestResponse.extractId()
+                    val joinRequestId = joinRequestResponse.extractId()
                     val approveRequest = groupAdmin.joinRequests.changeStatus(joinRequestId, JoinRequestsApi.APPROVED)
                     checkIsOk(approveRequest, joinRequestIsApproved)
                 }

@@ -88,7 +88,7 @@ class JoinToPublicGroupScenario : DescribeSpec({
 
             checkIsOk(addIdeaResponse, hasId)
 
-            val ideaId = (addIdeaResponse.body().dataId() as Some).t
+            val ideaId = (addIdeaResponse.body().dataId() as Some).value
 
 
             context("load idea") {

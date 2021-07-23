@@ -8,17 +8,17 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.LocalDateTime
 
-class UserApi (userName : String, idelUrl: String = Idel.URL) : AbstractObjectApi(userName, idelUrl, "users") {
+class UserApi (user : User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "users") {
     private val log = KotlinLogging.logger {}
 
 
 
-    fun register(userName: String) : HttpResponse<JsonNode> {
+    fun register(user: User, email : String = user.email) : HttpResponse<JsonNode> {
         val body = """
             {
-                "id": "$userName@httpbasic",
-                "email": "$userName@mail.fake",
-                "displayName": "$userName Registered from a test ${LocalDateTime.now()}",
+                "id": "${user.id}",
+                "email": "$email",
+                "displayName": "${user.id} Registered from a test ${LocalDateTime.now()}",
                 "avatar": "",
                 "roles": [
                     "ROLE_USER"
@@ -26,8 +26,8 @@ class UserApi (userName : String, idelUrl: String = Idel.URL) : AbstractObjectAp
             }
         """.trimIndent()
 
-        log.trace {"UsersApi.register body = $body"}
-
         return post("",body)
     }
 }
+
+const val DEFAULT_DOMAIN = "mail.fake"

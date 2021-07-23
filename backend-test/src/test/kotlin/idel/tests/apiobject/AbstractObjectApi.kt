@@ -11,19 +11,15 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 
-abstract class AbstractObjectApi(val username: String, val idelUrl: String = Idel.URL, val resource: String) {
+abstract class AbstractObjectApi(val user: User, val idelUrl: String = Idel.URL, val resource: String) {
     private val log = KotlinLogging.logger {}
 
-    val resourceUri = URI.create("$idelUrl/$resource")
+    private val resourceUri : URI = URI.create("$idelUrl/$resource")
 
-    protected val client = HttpClient.newBuilder()
+    protected val client: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(1))
-        .authenticator(IdelHttpAuthenticator(username))
+        .authenticator(IdelHttpAuthenticator(user.name))
         .build()
-
-
-    protected fun asJson(array: Collection<Any>): String = array.map {""" "$it" """}
-        .joinToString(prefix = "[", postfix = "]")
 
 
     protected fun requestBuilder(params: String): HttpRequest.Builder {
@@ -39,11 +35,12 @@ abstract class AbstractObjectApi(val username: String, val idelUrl: String = Ide
     }
 
     private fun send(request: HttpRequest, bodyForLog : String) : HttpResponse<JsonNode> {
-        if (bodyForLog.length < 2000) {
-            log.trace {"\n ${request.method()} ${request.uri()} \n$bodyForLog"}
+        val bodyMsg = if (bodyForLog.length < 2000) {
+             bodyForLog
         } else {
-            log.trace {"\n ${request.method()}, ${request.uri()} body is too big for log"}
+            "body is too big for log"
         }
+        log.trace {"\n${user.id} ${user.domain} ${request.method()} ${request.uri()} \n$bodyMsg"}
         return client.send(request, ofJson())!!
     }
 

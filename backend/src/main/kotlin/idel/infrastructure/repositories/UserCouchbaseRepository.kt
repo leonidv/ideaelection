@@ -13,7 +13,7 @@ data class PersistsUser(
     override val email: String,
     override val displayName: String,
     override val avatar: String,
-    override val roles: Set<String>
+    override val roles: Set<String>,
 ) : User {
 
 
@@ -34,7 +34,13 @@ class UserCouchbaseRepository(
     cluster: Cluster,
     collection: Collection
 ) :
-    AbstractTypedCouchbaseRepository<PersistsUser>(cluster, collection, TYPE, PersistsUser::class.java),
+    AbstractTypedCouchbaseRepository<PersistsUser>(
+        cluster,
+        collection,
+        TYPE,
+        PersistsUser::class.java,
+        ignoredFields = setOf("domain")
+    ),
     UserRepository {
     companion object {
         const val TYPE = "user"

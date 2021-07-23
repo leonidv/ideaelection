@@ -4,9 +4,7 @@ package idel.infrastructure.repositories
 import arrow.core.Either
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
-import com.couchbase.client.java.codec.JacksonJsonSerializer
 import com.couchbase.client.java.json.JsonObject
-import com.couchbase.client.java.query.QueryOptions
 import com.fasterxml.jackson.databind.node.ObjectNode
 import idel.domain.*
 import mu.KotlinLogging
@@ -14,33 +12,39 @@ import mu.KotlinLogging
 class GroupCouchbaseRepository(
     cluster: Cluster,
     collection: Collection
-) : AbstractTypedCouchbaseRepository<Group>(cluster, collection, type = "group", Group::class.java), GroupRepository {
+) : AbstractTypedCouchbaseRepository<Group>(
+    cluster,
+    collection,
+    type = TYPE,
+    Group::class.java,
+    ignoredFields = setOf("membersCount", "ideasCount")
+), GroupRepository {
 
     companion object {
-        val NOT_DELETED_CONDITION: String = """grp.state != "${GroupState.DELETED}" """;
+        const val TYPE = "group"
 
-        fun generateBaseQueryPart(
-            bucketName: String,
-            type: String,
-            additionalFields: String = "",
-            ansiJoin: String = ""
-        ): String {
-            val templatedQuery = """
-                    | SELECT OBJECT_CONCAT(grp, {
-                    |    "membersCount" : (select raw count(*) from n as x where x._type="groupMember")[0],
-                    |    "ideasCount" : (select raw count(*) from n as x where x._type="idea")[0]
-                    | }) AS ie
-                    | FROM `$bucketName` as grp --#ansiJoin
-                    | INNER NEST `$bucketName` as n
-                    | ON n.groupId == grp.id
-                    | where grp._type = "$type" """.trimMargin()
-            return templatedQuery
-                .replaceFirst("--#ansiJoin", ansiJoin)
-        }
+        private val NOT_DELETED_CONDITION: String = """grp.state != "${GroupState.DELETED}" """;
+
+        private const val GROUP_MEMBER_TYPE = GroupMemberCouchbaseRepository.TYPE
+
+        private const val IDEA_TYPE = IdeaCouchbaseRepository.TYPE
     }
 
-    private val baseQueryPart = generateBaseQueryPart(bucketName, type)
+    private val baseQueryPart = """
+                    | SELECT OBJECT_CONCAT(grp, {
+                    |    "membersCount" : (select raw count(*) from n as x where x._type="$GROUP_MEMBER_TYPE")[0],
+                    |    "ideasCount" : (select raw count(*) from n as x where x._type="$IDEA_TYPE")[0]
+                    | }) AS ie
+                    | FROM `$bucketName` as grp
+                    | INNER NEST `$bucketName` as n ON KEY n.groupId FOR grp
+                    | where grp._type = "$type" """.trimMargin()
 
+    /**
+     * Subquery which loads groupId from groupsMember which are belongs to a user.
+     * You MUST add a param ```userId```.
+     */
+    private val subQueryUserGroupMember = "(SELECT RAW gm.groupId from `$bucketName` gm " +
+            """where gm._type="$GROUP_MEMBER_TYPE" and gm.userId=${'$'}userId)"""
 
     override val log = KotlinLogging.logger {}
 
@@ -69,48 +73,70 @@ class GroupCouchbaseRepository(
 
     override fun loadByUser(
         userId: String,
+        partOfName: String?,
         pagination: Repository.Pagination,
         ordering: GroupOrdering
     ): Either<Exception, List<Group>> {
-        val selectPart = generateBaseQueryPart(
-            bucketName = bucketName,
-            type = type,
-            ansiJoin = """${'\n'} join $bucketName as grpMember on (grp.id = grpMember.groupId) """
+        val filters = mutableListOf(
+            "grp.id in $subQueryUserGroupMember",
+            NOT_DELETED_CONDITION
         )
-
-        val filterParts = listOf(
-            """grpMember._type = "groupMember" """,
-            "grpMember.userId = \$userId",
-            NOT_DELETED_CONDITION)
         val params = JsonObject.create();
         params.put("userId", userId)
+
+
+        if (!partOfName.isNullOrBlank()) {
+            filters += "CONTAINS(LOWER(grp.name), LOWER(\$partOfName))"
+            params.put("partOfName", partOfName)
+        }
 
         val orderingPart = "grp.${Repository.enumAsOrdering(ordering)}"
 
         return rawLoad(
-            basePart = selectPart,
-            filterQueryParts = filterParts,
+            basePart = baseQueryPart,
+            filterQueryParts = filters,
             ordering = orderingPart,
-            params, pagination
+            params = params,
+            pagination = pagination,
+            useFulltextSearch = false
         )
     }
 
 
     override fun loadOnlyAvailable(
+        userId: String,
+        userDomain: String,
+        partOfName: String?,
         pagination: Repository.Pagination,
         ordering: GroupOrdering
     ): Either<Exception, List<Group>> {
-        val params = JsonObject.create()
         val orderingValue = "grp.${Repository.enumAsOrdering(ordering)}"
 
-        val filterQueryParts = listOf(
-            """grp.entryMode IN ["${GroupEntryMode.PUBLIC}","${GroupEntryMode.CLOSED}"]""",
-            NOT_DELETED_CONDITION,
+        val entryModeCondition = """grp.entryMode IN ["${GroupEntryMode.PUBLIC}","${GroupEntryMode.CLOSED}"]"""
+
+        val domainRestrictionCondition = "( (ARRAY_LENGTH(grp.domainRestrictions) = 0) " +
+                "OR ANY dr IN grp.domainRestrictions SATISFIES lower(dr) = lower(\$userDomain) END )"
+
+        val userIsNotInGroupCondition = "grp.id not in $subQueryUserGroupMember"
+
+        val filters = mutableListOf(
+            entryModeCondition,
+            domainRestrictionCondition,
+            userIsNotInGroupCondition,
+            NOT_DELETED_CONDITION
         )
+        val params = JsonObject.create()
+        params.put("userDomain", userDomain)
+        params.put("userId", userId)
+
+        if (!partOfName.isNullOrBlank()) {
+            filters += "CONTAINS(LOWER(grp.name), LOWER(\$partOfName))"
+            params.put("partOfName", partOfName)
+        }
 
         return rawLoad(
             basePart = baseQueryPart,
-            filterQueryParts = filterQueryParts,
+            filterQueryParts = filters,
             ordering = orderingValue,
             params = params,
             pagination = pagination,
@@ -147,79 +173,6 @@ class GroupCouchbaseRepository(
                 Either.Right(queryResult.value[0])
             }
         }
-    }
-
-    fun addMember(groupId: String, member: GroupMember): Either<Exception, String> {
-        return try {
-            val pMember = "\$member"
-            val query = """
-                    UPDATE `$bucketName`
-                    SET members = ARRAY_APPEND(members,$pMember)
-                    WHERE _type="$type"
-                          AND id=${'$'}id 
-                          AND NOT ANY member IN members SATISFIES member.id = ${'$'}memberId END 
-                    RETURNING id
-        """.trimIndent()
-
-            val mapper = initMapper()
-            val jsonStrMember = mapper.writeValueAsString(member)
-            val jsonMember = JsonObject.fromJson(jsonStrMember) // ugly hack :(
-
-            val params = JsonObject.create();
-            params.put("member", jsonMember)
-            params.put("id", groupId)
-            params.put("memberId", member.id)
-
-            val serializer = JacksonJsonSerializer.create(mapper)
-            val options = QueryOptions
-                .queryOptions()
-                .serializer(serializer)
-                .parameters(params)
-
-            log.trace {"query: [$query], params: [$params]"}
-
-            cluster.query(query, options)
-            Either.Right("OK")
-
-        } catch (e: Exception) {
-            Either.Left(e)
-        }
-    }
-
-    fun removeMember(groupId: String, userId: String): Either<Exception, String> {
-        return try {
-            val pGroupId = "\$groupId"
-            val pUserId = "\$userId"
-            val query = """UPDATE `$bucketName`
-                    SET members = ARRAY_REMOVE(members, (
-                        SELECT RAW FIRST member FOR member IN members WHEN member.id = $pUserId END AS member
-                        FROM `$bucketName` ie_member
-                        WHERE id = $pGroupId
-                            AND _type="$type")[0] )
-                    WHERE _type="$type" 
-                        AND id=$pGroupId 
-                        AND ANY member IN members SATISFIES member.id = $pUserId END
-                    RETURNING *""".trimIndent()
-
-
-            val params = JsonObject.create();
-            params.put("groupId", groupId)
-            params.put("userId", userId)
-
-
-            val options = QueryOptions
-                .queryOptions()
-                .parameters(params)
-
-            log.trace {"query: [$query], params: [$params]"}
-
-            cluster.query(query, options)
-            Either.Right("ok")
-
-        } catch (e: Exception) {
-            Either.Left(e)
-        }
-
     }
 
     override fun entityToJsonObject(entity: Group): ObjectNode = jsonSerializer.serializeToObjectNode(entity)

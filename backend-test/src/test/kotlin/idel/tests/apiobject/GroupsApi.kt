@@ -1,5 +1,6 @@
 package idel.tests.apiobject
 
+import arrow.core.None
 import arrow.core.Option
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
@@ -12,7 +13,7 @@ interface GroupsFields {
     val JOINING_KEY : String
 }
 
-class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi(username, idelUrl, "groups") {
+class GroupsApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "groups") {
     private val log = KotlinLogging.logger {}
 
     companion object {
@@ -68,12 +69,21 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
     /**
      * Return available groups
      */
-    fun loadAvailable() = get("?onlyAvailable")
+    fun loadAvailable(userId: String = user.id, name: Option<String> = None) : HttpResponse<JsonNode> {
+      val nameArg = name.map {"&name=$it"}.getOrElse {""}
+      return get("?onlyAvailable$nameArg")
+    }
 
     /**
      * Load user's groups.
      */
-    fun loadForUser(userId: String = username.asUserId()) = get("?userId=$userId")
+    fun loadForUser(
+        userId: String = user.id,
+        name: Option<String> = None
+    ) : HttpResponse<JsonNode> {
+        val nameArg = name.map {"&name=$it"}.getOrElse {""}
+        return get("?userId=$userId$nameArg")
+    }
 
     /**
      * Load members of group.
@@ -81,9 +91,9 @@ class GroupsApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectAp
      */
     fun loadMembers(
         groupId: String,
-        usernameFilter: Option<String> = Option.empty(),
-        first: Option<String> = Option.empty(),
-        last: Option<String> = Option.empty()
+        usernameFilter: Option<String> = None,
+        first: Option<String> = None,
+        last: Option<String> = None
     ): HttpResponse<JsonNode> {
         val params = listOf(
             usernameFilter.map {"username=$it"}.getOrElse {""},

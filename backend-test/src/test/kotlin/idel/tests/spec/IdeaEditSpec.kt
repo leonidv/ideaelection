@@ -37,7 +37,7 @@ class IdeaEditSpec : DescribeSpec({
             lateinit var ideaId: String
 
             describe("$userB add ideas") {
-                var addResponse = userB.ideas.add(
+                val addResponse = userB.ideas.add(
                     groupId = groupId,
                     summary = "summary v1",
                     description = "description [b]v1[/b]",
@@ -102,7 +102,7 @@ class IdeaEditSpec : DescribeSpec({
 
                 describe("$userAdmin can edit idea") {
                     val version = newVersion()
-                    var response = userAdmin.ideas.quickEdit(ideaId, version)
+                    val response = userAdmin.ideas.quickEdit(ideaId, version)
                     checkUpdateToVersion(response, version)
                 }
 

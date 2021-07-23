@@ -1,6 +1,7 @@
 package idel.tests.spec
 
 import arrow.core.Option
+import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 
@@ -90,8 +91,8 @@ class GroupsSpec : DescribeSpec({
             describe("pageable (first = 0, last = 1) and return $userC") {
                 val response = userA.groups.loadMembers(
                     groupId,
-                    first = Option.just("0"),
-                    last = Option.just("1")
+                    first = Some("0"),
+                    last = Some("1")
                 )
 
                 checkIsOk(
@@ -105,8 +106,8 @@ class GroupsSpec : DescribeSpec({
             describe("pageable (first = 1, last = 2) and return $userB") {
                 val response = userA.groups.loadMembers(
                     groupId,
-                    first = Option.just("1"),
-                    last = Option.just("2")
+                    first = Some("1"),
+                    last = Some("2")
                 )
 
                 checkIsOk(
@@ -120,7 +121,7 @@ class GroupsSpec : DescribeSpec({
             describe("username filter [user] returns [$userC, $userB, $userA]") {
                 val response = userA.groups.loadMembers(
                     groupId,
-                    usernameFilter = Option.just("user")
+                    usernameFilter = Some("user")
                 )
 
                 checkIsOk(
@@ -135,7 +136,7 @@ class GroupsSpec : DescribeSpec({
             describe("username filter is [erB] returns [$userB]") {
                 val response = userA.groups.loadMembers(
                     groupId,
-                    usernameFilter = Option.just("erB")
+                    usernameFilter = Some("erB")
                 )
 
                 checkIsOk(
@@ -148,7 +149,7 @@ class GroupsSpec : DescribeSpec({
             describe("username filter is [generated uuid] returns empty array") {
                 val response = userA.groups.loadMembers(
                     groupId,
-                    usernameFilter = Option.just(UUID.randomUUID().toString())
+                    usernameFilter = Some(UUID.randomUUID().toString())
                 )
 
                 checkIsOk(
@@ -296,7 +297,7 @@ class GroupsSpec : DescribeSpec({
                 val nextName = "abc1"
                 val nextDescription = "edf1"
                 val nextEntryQuestion = "neq2"
-                val nextDomainRestrictions = arrayOf("dom.ai", "company.com")
+                val nextDomainRestrictions = arrayOf(userA.domain, "dom.ai", "company.com")
 
                 describe("change response should return new data") {
                     val response = userA.groups.changeProperties(

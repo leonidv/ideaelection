@@ -56,10 +56,4 @@ class AccessToPrivateGroupScenarios : DescribeSpec({
         }
 
     }
-
-    describe("join request") {
-        describe("$userC can't create join using group link") {
-
-        }
-    }
 })

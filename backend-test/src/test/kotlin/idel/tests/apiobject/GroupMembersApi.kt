@@ -5,9 +5,9 @@ import idel.tests.Idel
 import idel.tests.infrastructure.asUserId
 import java.net.http.HttpResponse
 
-class GroupMembersApi(username: String, idelUrl: String = Idel.URL) : AbstractObjectApi(username, idelUrl, "groupmembers") {
+class GroupMembersApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "groupmembers") {
 
-    fun remove(groupId : String, userId: String = username.asUserId()) : HttpResponse<JsonNode> {
+    fun remove(groupId : String, userId: String = user.id) : HttpResponse<JsonNode> {
         val body = """
             {
                 "groupId":"$groupId",

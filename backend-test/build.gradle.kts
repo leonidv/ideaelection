@@ -14,7 +14,7 @@ plugins {
 group = "ideaelection"
 version = "1.0"
 
-val kotestVersion = "4.3.0"
+val kotestVersion = "4.6.0"
 val jacksonVersion = "2.11.2"
 
 repositories {
@@ -31,7 +31,7 @@ dependencies {
     testImplementation("io.rest-assured:rest-assured:4.2.0")
     testImplementation("io.rest-assured:kotlin-extensions:4.2.0")
 
-    testImplementation("io.arrow-kt:arrow-core:0.10.4")
+    testImplementation("io.arrow-kt:arrow-core:0.13.2")
 
     testImplementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
@@ -45,8 +45,8 @@ dependencies {
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion") // for kotest framework
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion") // for kotest core jvm assertions
-    testImplementation("io.kotest:kotest-assertions-arrow-jvm:$kotestVersion")
-    testImplementation("io.kotest:kotest-extensions-allure:$kotestVersion")
+    testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.0.2")
+    implementation("io.kotest.extensions:kotest-extensions-allure:1.0.1")
 }
 
 

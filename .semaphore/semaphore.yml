@@ -4,9 +4,9 @@ name: Idea Elections
 agent:
   machine:
     type: e1-standard-2
-    os_image: ubuntu1804
+    os_image: ubuntu2004
 execution_time_limit:
-    minutes: 30
+  minutes: 30
 
 global_job_config:
   secrets:
@@ -15,11 +15,10 @@ global_job_config:
   prologue:
     commands:
       - checkout
-      - .semaphore/semaphoreci-cleandisk.sh
-      - .semaphore/ubuntu1804-podman-install.sh
+      - sudo .semaphore/semaphoreci-cleandisk.sh
+      - sudo .semaphore/install-podman-ubuntu.sh
+      - .semaphore/gradle-no-daemon.sh
       - sudo podman info
-      # - cache restore container_images
-      # - sudo du -sh $HOME/.local/share/containers/
       - sem-version java 11
       - java -version
       - echo $DOCKERHUB_PASSWORD | sudo podman login --username "$DOCKERHUB_USERNAME" --password-stdin
@@ -28,9 +27,6 @@ global_job_config:
   epilogue:
     always:
       commands:
-#        - cache delete container_images
-#        - cache store container_images $HOME/.local/share/containers/storage/
-        - sudo du -sh /mnt/containers/storage
         - df -h
 
 blocks:
@@ -41,7 +37,11 @@ blocks:
       jobs:
         - name: Build Couchbase container
           commands:
-            - cd deploy/
+            - cd deploy/couchbase
+            - sudo ./couchbase-run-original.sh
+            - sleep 10
+            - initialization/init.sh
+            - cd ../
             - sudo ./build-couchbase.sh
             - sudo podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
 
@@ -61,7 +61,6 @@ blocks:
           - sudo scripts/couchbase-run.sh "-p 8080:8080"
           - sleep 15
           - cache restore gradleCache
-#          - sudo du -sh $HOME/.gradle/caches/
 
       epilogue:
         always:
@@ -90,17 +89,17 @@ blocks:
             - ./gradlew --console=plain test allureReport
             - sudo podman push docker.io/leonidv/idel-backend-testmode docker.io/leonidv/idel-backend-testmode
 
-  - name: Deploy to test
-    task:
-      secrets:
-        - name: SAEDI_KUBECTL
-      prologue:
-        commands:
-          - .semaphore/install-kustomize.sh
-      jobs:
-        - name: Apply deployment
-          commands:
-            - kubectl config view
-            - kubectl get deployments
-            - kustomize build deploy/kubernetes/overlays/test/ | kubectl replace --force -f -
-            - kubectl  rollout status -w deployment/test-saedi
+#  - name: Deploy to test
+#    task:
+#      secrets:
+#        - name: SAEDI_KUBECTL
+#      prologue:
+#        commands:
+#          - .semaphore/install-kustomize.sh
+#      jobs:
+#        - name: Apply deployment
+#          commands:
+#            - kubectl config view
+#            - kubectl get deployments
+#            - kustomize build deploy/kubernetes/overlays/test/ | kubectl replace --force -f -
+#            - kubectl  rollout status -w deployment/test-saedi

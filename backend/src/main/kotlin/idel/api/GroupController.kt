@@ -9,8 +9,10 @@ import idel.infrastructure.repositories.CouchbaseTransactions
 import idel.infrastructure.security.IdelOAuth2User
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
+import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import java.lang.RuntimeException
 import java.util.*
 
 @RestController
@@ -22,6 +24,10 @@ class GroupController(
     private val groupService: GroupService,
     apiSecurityFactory: ApiSecurityFactory
 ) {
+    companion object {
+       const val NAME_FILTER_MIN_SYMBOLS = 3
+    }
+
     val log = KotlinLogging.logger {}
 
     val factory = GroupFactory()
@@ -33,7 +39,7 @@ class GroupController(
         @RequestBody properties: GroupEditableProperties,
         @AuthenticationPrincipal user: IdelOAuth2User
     ): EntityOrError<Group> {
-        val x = either.eager<Exception, Group>({
+        val x = either.eager<Exception, Group> {
             val group = factory.createGroup(UserInfo.ofUser(user), properties).bind()
 
             val creatorAsAdmin = GroupMember.of(group.id, user, GroupMemberRole.GROUP_ADMIN)
@@ -43,7 +49,7 @@ class GroupController(
             }.bind()
 
             group
-        })
+        }
 
         return DataOrError.fromEither(x, log)
     }
@@ -54,32 +60,57 @@ class GroupController(
         @AuthenticationPrincipal user: IdelOAuth2User,
         @PathVariable groupId: String
     ): EntityOrError<Group> {
-        val result = either.eager<Exception, Either<Exception, Group>> {
-            val group = groupRepository.load(groupId).bind()
-            if (group.entryMode == GroupEntryMode.PRIVATE) {
-                val isMember = groupMemberRepository.isMember(groupId, user.id).bind()
-                if (isMember) {
-                    Either.Right(group)
+        val identity = GroupSecurity.IdGroupIdentity(groupId)
+        return security.group.asDomainMember(identity, user) {
+            val result = either.eager<Exception, Either<Exception, Group>> {
+                val group = groupRepository.load(groupId).bind()
+                if (group.entryMode == GroupEntryMode.PRIVATE) {
+                    val isMember = groupMemberRepository.isMember(groupId, user.id).bind()
+                    if (isMember) {
+                        Either.Right(group)
+                    } else {
+                        Either.Left(EntityNotFound("group", groupId))
+                    }
                 } else {
-                    Either.Left(EntityNotFound("group", groupId))
+                    Either.Right(group)
                 }
-            } else {
-                Either.Right(group)
-            }
-        }.flatten()
-        return DataOrError.fromEither(result, log)
+            }.flatten()
+            result
+        }
     }
 
+
+    @GetMapping(params = ["key"])
+    fun loadByJoiningKey(
+        @AuthenticationPrincipal user: IdelOAuth2User,
+        @RequestParam key: String
+    ): EntityOrError<Group> {
+        val identity = GroupSecurity.JoiningKeyGroupIdentity(key)
+        return security.group.asDomainMember(identity, user) {
+            groupRepository.loadByJoiningKey(key)
+        }
+    }
+
+    private fun <T>ifNameValid(name : String?, actionIfValid : () -> EntityOrError<T>) : EntityOrError<T> {
+        return if (!name.isNullOrBlank() && name.length < NAME_FILTER_MIN_SYMBOLS) {
+            DataOrError.incorrectArgument("name","name should contains minimum $NAME_FILTER_MIN_SYMBOLS symbols")
+        } else {
+            actionIfValid()
+        }
+    }
 
     @GetMapping(params = ["userId"])
     fun loadByUser(
         @AuthenticationPrincipal user: IdelOAuth2User,
         @RequestParam userId: String,
+        @RequestParam(required = false) name: String?,
         @RequestParam(required = false, defaultValue = "") order: GroupOrdering,
         pagination: Repository.Pagination
     ): EntityOrError<List<Group>> {
-        return security.user.asHimSelf(userId, user) {
-            groupRepository.loadByUser(userId, pagination, order)
+        return ifNameValid(name) {
+            security.user.asHimSelf(userId, user) {
+                groupRepository.loadByUser(userId, name, pagination, order)
+            }
         }
     }
 
@@ -87,21 +118,22 @@ class GroupController(
     fun loadAvailableForUser(
         @AuthenticationPrincipal user: IdelOAuth2User,
         @RequestParam(defaultValue = "true") onlyAvailable: Boolean,
+        @RequestParam(required = false) name : String?,
         @RequestParam(defaultValue = "") ordering: GroupOrdering,
         pagination: Repository.Pagination
     ): EntityOrError<List<Group>> {
-        val result = groupRepository.loadOnlyAvailable(pagination, ordering)
-        return DataOrError.fromEither(result, log)
+        return ifNameValid(name) {
+            val result = groupRepository.loadOnlyAvailable(
+                userId = user.id,
+                userDomain = user.domain,
+                partOfName = name,
+                pagination = pagination,
+                ordering = ordering
+            )
+            DataOrError.fromEither(result, log)
+        }
     }
 
-    @GetMapping(params = ["key"])
-    fun loadByJoiningKey(
-        @AuthenticationPrincipal user: IdelOAuth2User,
-        @RequestParam key: String
-    ): EntityOrError<Group> {
-        val result = groupRepository.loadByJoiningKey(key)
-        return DataOrError.fromEither(result, log)
-    }
 
     @GetMapping("/{groupId}/members")
     fun loadUsers(
@@ -146,7 +178,7 @@ class GroupController(
     }
 
     @DeleteMapping("/{groupId}/joining-key")
-    fun resetJoingingKey(
+    fun resetJoiningKey(
         @AuthenticationPrincipal user: IdelOAuth2User,
         @PathVariable groupId: String
     ) : EntityOrError<Group> {

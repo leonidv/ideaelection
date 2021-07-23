@@ -1,6 +1,8 @@
 package idel.tests.infrastructure
 
+import arrow.core.None
 import arrow.core.Option
+import arrow.core.Some
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -31,7 +33,7 @@ object JsonNodeExtensions {
     fun JsonNode.hasPath(jsonPath: String): Boolean {
         return this
             .queryString(jsonPath)
-            .map {!it.isNullOrBlank()}
+            .map {it.isNotBlank()}
             .getOrElse {false}
     }
 
@@ -49,9 +51,8 @@ object JsonNodeExtensions {
 
 
     fun JsonNode.hasObjectWithFields(objectPath: String, vararg fields: Pair<String, String>): Boolean {
-        val jsonFilter = fields
-            .map {"@.${it.first} == '${it.second}'"}
-            .joinToString(prefix = "?(", separator = " && ", postfix = ")")
+        val jsonFilter =
+            fields.joinToString(prefix = "?(", separator = " && ", postfix = ")") {"@.${it.first} == '${it.second}'"}
         val jsonPath = """$objectPath[$jsonFilter]"""
         return try {
             val parsed = JsonPath.parse(this, conf)
@@ -89,9 +90,9 @@ object JsonNodeExtensions {
             val parsed = JsonPath.parse(this, conf)
             Option.fromNullable(parsed.read(jsonPath, stringTypeRef))
         } catch (e: MappingException) {
-            Option.empty()
+            None
         } catch (e: PathNotFoundException) {
-            Option.empty()
+            None
         }
 
     }
@@ -102,9 +103,9 @@ object JsonNodeExtensions {
             val list = parsed.read(jsonPath, listStringTypeRef)
             Option.fromNullable(list)
         } catch (e: MappingException) {
-            Option.empty()
+            None
         } catch (e: PathNotFoundException) {
-            Option.empty()
+            None
         }
     }
 
@@ -112,9 +113,9 @@ object JsonNodeExtensions {
         return try {
             val parsed = JsonPath.parse(this, conf)
             val size = parsed.read<Int>("${jsonPath}.length()")
-            Option.just(size)
+            Some(size)
         } catch (e: PathNotFoundException) {
-            Option.empty()
+            None
         }
     }
 
@@ -124,7 +125,7 @@ object JsonNodeExtensions {
             val list = parsed.read(jsonPath, setStringTypeRef)
             Option.fromNullable(list)
         } catch (e: PathNotFoundException) {
-            Option.empty()
+            None
         }
 
     }
@@ -133,7 +134,7 @@ object JsonNodeExtensions {
         return try {
             queryString(jsonPath).map {it.toInt()}
         } catch (e: NumberFormatException) {
-            Option.empty()
+            None
         }
     }
 

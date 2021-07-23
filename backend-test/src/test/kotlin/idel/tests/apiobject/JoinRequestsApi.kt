@@ -8,14 +8,14 @@ import idel.tests.infrastructure.asUserId
 import mu.KotlinLogging
 import java.net.http.HttpResponse
 
-class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : AbstractObjectApi(username, idelUrl, "joinrequests") {
+class JoinRequestsApi(user : User, idelUrl : String = Idel.URL) : AbstractObjectApi(user, idelUrl, "joinrequests") {
 
     private val log = KotlinLogging.logger {}
 
     companion object {
-        val APPROVED = "APPROVED"
-        val DECLINED = "DECLINED"
-        val UNRESOLVED = "UNRESOLVED"
+        const val APPROVED = "APPROVED"
+        const val DECLINED = "DECLINED"
+        const val UNRESOLVED = "UNRESOLVED"
     }
 
 
@@ -31,7 +31,7 @@ class JoinRequestsApi(username : String, idelUrl : String = Idel.URL) : Abstract
         return post("",body)
     }
 
-    fun loadForUser(userId: String = username.asUserId()) = get("?userId=$userId")
+    fun loadForUser(userId: String = user.id) = get("?userId=$userId")
 
     fun loadForGroup(groupId: String) = get("?groupId=$groupId")
 

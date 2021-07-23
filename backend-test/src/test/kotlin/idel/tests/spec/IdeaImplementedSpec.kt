@@ -32,7 +32,7 @@ class IdeaImplementedSpec : DescribeSpec({
             describe("$userB create an idea, by default idea is not implemented") {
                 val response = userB.ideas.add(groupId, summary = "idea for assignee spec")
                 checkIsOk(response, ideaIsNotImplemented)
-                ideaId = (response.body().dataId() as Some).t
+                ideaId = (response.body().dataId() as Some).value
             }
         }
 

@@ -54,9 +54,9 @@ object ResponseMatchers {
             val oValue = value.queryString(jsonPath)
             return when (oValue) {
                 is Some -> MatcherResult(
-                    passed = oValue.t == expected,
-                    failureMessage = "Should has [$expected] at [$jsonPath], actual value = [${oValue.t}]",
-                    negatedFailureMessage = "Should not has [$expected] at [$jsonPath], actual value = [${oValue.t}]"
+                    passed = oValue.value == expected,
+                    failureMessage = "Should has [$expected] at [$jsonPath], actual value = [${oValue.value}]",
+                    negatedFailureMessage = "Should not has [$expected] at [$jsonPath], actual value = [${oValue.value}]"
                 )
                 is None -> MatcherResult(
                     passed = false,

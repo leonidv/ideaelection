@@ -89,18 +89,24 @@ class GroupMembershipService(
                 userId = userId
             ).flatMap {(group: Group, user: User) ->
                 val groupId = group.id
-                when (group.entryMode) {
-                    GroupEntryMode.PUBLIC -> {
-                        val request = JoinRequest.createApproved(groupId, userId, message)
-                        val newMember = GroupMember.of(groupId, user, GroupMemberRole.MEMBER)
-                        groupMemberRepository.add(newMember).map {request}
+                val domainRestrictions = group.domainRestrictions
+                val domainAllowed = domainRestrictions.isEmpty() || domainRestrictions.contains(user.domain)
+                if (domainAllowed) {
+                    when (group.entryMode) {
+                        GroupEntryMode.PUBLIC -> {
 
+                            val request = JoinRequest.createApproved(groupId, userId, message)
+                            val newMember = GroupMember.of(groupId, user, GroupMemberRole.MEMBER)
+                            groupMemberRepository.add(newMember).map {request}
+                        }
+                        GroupEntryMode.CLOSED,
+                        GroupEntryMode.PRIVATE -> {
+                            val request = JoinRequest.createUnresolved(groupId, userId, message)
+                            joinRequestRepository.add(request)
+                        }
                     }
-                    GroupEntryMode.CLOSED,
-                    GroupEntryMode.PRIVATE -> {
-                        val request = JoinRequest.createUnresolved(groupId, userId, message)
-                        joinRequestRepository.add(request)
-                    }
+                } else {
+                    Either.Left(EntityNotFound("group", "joiningKey = $joiningKey"))
                 }
             }
         } catch (ex: Exception) {

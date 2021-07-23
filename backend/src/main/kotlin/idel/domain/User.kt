@@ -13,6 +13,8 @@ interface IUserInfo : Identifiable {
 
 interface User : IUserInfo {
     val roles : Set<String>
+    val domain : String
+        get() = this.email.split('@').last()
 }
 
 /**
@@ -22,7 +24,7 @@ data class UserInfo(
         override val id: String,
         override val email: String,
         override val displayName: String,
-        override val avatar: String
+        override val avatar: String,
 ) : IUserInfo {
     companion object {
         fun ofUser(user : User) : UserInfo {

@@ -12,13 +12,13 @@ fun main() {
     val userAdmin = User("userAdmin")
     val users = ('A'..'E').map {User("user$it")}
 
-    userAdmin.users.register(userAdmin.name)
-    users.forEach {user -> userAdmin.users.register(user.name)}
+    userAdmin.users.register(userAdmin)
+    users.forEach {user -> userAdmin.users.register(user)}
 
     lateinit var joiningKey : String
 
 
-    var response = userAdmin.groups.create(name = "architecture reports", entryMode = GroupsApi.PUBLIC)
+    val response = userAdmin.groups.create(name = "architecture reports", entryMode = GroupsApi.PUBLIC)
     joiningKey = response.extractField(GroupsApi.Fields.JOINING_KEY)
 
     users.subList(0,3).forEach {it.joinRequests.create(joiningKey)}

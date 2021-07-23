@@ -26,7 +26,7 @@ class IdelAuthorities {
         /**
          * Safe method for converting from iterable of [Roles] into [IdelAuthorities]
          */
-        fun from(roles : Iterable<String>) : List<GrantedAuthority> {
+        fun from(roles : Iterable<String>) : List<out GrantedAuthority> {
             return roles.map {from(it)}
         }
 
