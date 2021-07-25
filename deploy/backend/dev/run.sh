@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-cd /idel
+cd /app
 java -Dtestmode=on -jar idel-backend.jar

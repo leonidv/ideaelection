@@ -91,7 +91,6 @@ tasks {
 
     bootJar {
         archiveFileName.set("idel-backend.jar")
-
     }
 }
 

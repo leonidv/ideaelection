@@ -20,13 +20,17 @@ global_job_config:
       - .semaphore/gradle-no-daemon.sh
       - sudo podman info
       - sem-version java 11
-      - java -version
+      - sem-version python 3.9
       - echo $DOCKERHUB_PASSWORD | sudo podman login --username "$DOCKERHUB_USERNAME" --password-stdin
       - sudo podman login --get-login docker.io
+      - source .semaphore/env-export.sh
+      - echo $PROCESS_TAG
 
   epilogue:
     always:
       commands:
+        - sudo podman images
+        - podman images
         - df -h
 
 blocks:
@@ -45,13 +49,13 @@ blocks:
             - initialization/init.sh
             - cd ../
             - sudo ./build-couchbase.sh
-            - sudo podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
+            - sudo podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase:$PROCESS_TAG
 
   - name: Backend building
 #    run:
 #      when: "change_in(['/backend/', '/backend-test/'])"
-    skip:
-      when: true
+#    skip:
+#      when: true
     task:
       env_vars:
         - name:  BUILD_DIR
@@ -62,16 +66,13 @@ blocks:
       prologue:
         commands:
           - checkout
-          - sudo scripts/couchbase-run.sh "-p 8080:8080"
-          - sleep 15
-          - cache restore gradleCache
+#          - cache restore gradleCache
 
       epilogue:
-        always:
-          commands:
-            - cache store m2 $HOME/.m2
-            - cache delete gradleCache
-            - cache store gradleCache $HOME/.gradle/caches/
+#        always:
+#          commands:
+#            - cache delete gradleCache
+#            - cache store gradleCache $HOME/.gradle/caches/
         on_fail:
           commands:
             - cp -r $BUILD_DIR/backend-test/build/reports $LOG_DIR
@@ -80,18 +81,26 @@ blocks:
       jobs:
         - name: Build backend application
           commands:
-            - export GIT_COMMIT=$SEMAPHORE_GIT_SHA
-            - export GIT_BRANCH=$SEMAPHORE_GIT_BRANCH
+           # - sudo python  scripts/couchbase-run.sh "-p 8080:8080" $PROCESS_TAG
+            - >-
+              sudo python scripts/containers/run-container-alternative-tags.py
+              docker.io/leonidv/idel-couchbase
+              --run-options "-d --quiet --name idel-couchbase -p 8091-8094:8091-8094 -p 11210:11210 -p 8080:8080"
+              --tag $PROCESS_TAG --tag-backup test
+
             - cd $BUILD_DIR/backend
+            - export GIT_COMMIT
+            - export GIT_BRANCH
             - ./gradlew --console=plain build bootJar
             - cd $BUILD_DIR/deploy
-            - sudo ./build-backend.sh testmode
+            - sudo ./build-backend.sh dev
             - cd $BUILD_DIR/scripts
-            - sudo ./backend-run.sh testmode
-            - sleep 10
+            - sudo ./backend-run.sh
+            #- sleep 10 backend test prepare enough time
+
             - cd ../backend-test
             - ./gradlew --console=plain test allureReport
-            - sudo podman push docker.io/leonidv/idel-backend-testmode docker.io/leonidv/idel-backend-testmode
+            - sudo podman push docker.io/leonidv/idel-backend docker.io/leonidv/idel-backend:$PROCESS_TAG
 
   - name: Deploy to test
     task:
@@ -99,14 +108,21 @@ blocks:
         - name: SAEDI_KUBECTL
       prologue:
         commands:
-          - .semaphore/install-kustomize.sh
+          - kubectl config view
+          - kubectl config current-context
+          - kubectl get deployments
+          - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
+          - podman login --get-login docker.io
+          #- .semaphore/install-kustomize.sh
       jobs:
         - name: Apply deployment
           commands:
-            - kubectl config view
-            - kubectl get deployments
-            - echo "SEMAPHORE_WORKFLOW_ID=${SEMAPHORE_WORKFLOW_ID}"
-            - echo "SEMAPHORE_WORKFLOW_NUMBER=${SEMAPHORE_WORKFLOW_NUMBER}"
-#            - kustomize build deploy/kubernetes/overlays/test/ | kubectl replace --force -f -
-#            - kubectl  rollout status -w deployment/test-saedi
-
+            - cd scripts/containers
+            - >-
+              python rollup-up-deployment.py  docker.io/leonidv/idel-couchbase
+              --process-tag $PROCESS_TAG --label test
+              --deployment deployment/saedi --container-name couchbase
+            - >-
+              python rollup-up-deployment.py  docker.io/leonidv/idel-backend
+              --process-tag $PROCESS_TAG --label test
+              --deployment deployment/saedi --container-name backend

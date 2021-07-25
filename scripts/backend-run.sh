@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
 
-MODE=${1:-testmode}
-
-
-#case $MODE in
-#"testmode") PODMAN_ADVANCED_SETTINGS="--env LOG_DIR=/idel/logs" ;;
-#"dev") source initialization/init.sh ;;
-#esac
+TAG=${1:-"latest"}
 
 podman run -d --quiet \
-  --name idel-backend-${MODE} \
+  --name idel-backend \
   --network=container:idel-couchbase \
   --replace=true \
-  leonidv/idel-backend-${MODE}
+  docker.io/leonidv/idel-backend:"${TAG}"

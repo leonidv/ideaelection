@@ -9,12 +9,11 @@ spec:
       app: saedi
   replicas: 1
   template:
-    metadata:
-
     spec:
       containers:
-        - name: saedi-couchbase
-          image: docker.io/leonidv/idel-couchbase
+        - name: couchbase
+          image: docker.io/leonidv/idel-couchbase:test
+          imagePullPolicy: Always
           ports:
             - containerPort: 8091
             - containerPort: 8092
@@ -22,7 +21,8 @@ spec:
             - containerPort: 8094
             - containerPort: 11210
 
-        - name: saedi-backend
-          image: docker.io/leonidv/idel-backend-testmode
+        - name: backend
+          image: docker.io/leonidv/idel-backend:test
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
