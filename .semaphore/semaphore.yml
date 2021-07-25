@@ -31,8 +31,10 @@ global_job_config:
 
 blocks:
   - name: Couchbase building
-    run:
-      when: "change_in('/deploy/couchbase/')"
+#    run:
+#      when: "change_in('/deploy/couchbase/')"
+    skip:
+      when: true
     task:
       jobs:
         - name: Build Couchbase container
@@ -46,8 +48,10 @@ blocks:
             - sudo podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase
 
   - name: Backend building
-    run:
-      when: "change_in(['/backend/', '/backend-test/'])"
+#    run:
+#      when: "change_in(['/backend/', '/backend-test/'])"
+    skip:
+      when: true
     task:
       env_vars:
         - name:  BUILD_DIR
@@ -89,17 +93,20 @@ blocks:
             - ./gradlew --console=plain test allureReport
             - sudo podman push docker.io/leonidv/idel-backend-testmode docker.io/leonidv/idel-backend-testmode
 
-#  - name: Deploy to test
-#    task:
-#      secrets:
-#        - name: SAEDI_KUBECTL
-#      prologue:
-#        commands:
-#          - .semaphore/install-kustomize.sh
-#      jobs:
-#        - name: Apply deployment
-#          commands:
-#            - kubectl config view
-#            - kubectl get deployments
+  - name: Deploy to test
+    task:
+      secrets:
+        - name: SAEDI_KUBECTL
+      prologue:
+        commands:
+          - .semaphore/install-kustomize.sh
+      jobs:
+        - name: Apply deployment
+          commands:
+            - kubectl config view
+            - kubectl get deployments
+            - echo "SEMAPHORE_WORKFLOW_ID=${SEMAPHORE_WORKFLOW_ID}"
+            - echo "SEMAPHORE_WORKFLOW_NUMBER=${SEMAPHORE_WORKFLOW_NUMBER}"
 #            - kustomize build deploy/kubernetes/overlays/test/ | kubectl replace --force -f -
 #            - kubectl  rollout status -w deployment/test-saedi
+
