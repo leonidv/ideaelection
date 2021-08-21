@@ -10,4 +10,4 @@ nohup.out
 .*
 *.log
 allure-results
-
+__pycache__/
