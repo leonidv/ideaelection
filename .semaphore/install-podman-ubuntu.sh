@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source /etc/os-release
 OS=xUbuntu_20.04
-VERSION=1.21.1
+VERSION=1.21.2
 PODMAN_REPO="https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/"
 CONTAINERS_PATH=/mnt/containers/storage
 
