@@ -1,11 +1,11 @@
-val kotlinVersion = "1.5.20"
+val kotlinVersion = "1.5.21"
 val jacksonVersion = "2.12.2"
 
 
 plugins {
     id("org.springframework.boot") version "2.5.2"
-    kotlin("jvm") version "1.5.20"
-    kotlin("plugin.spring") version "1.5.20"
+    kotlin("jvm") version "1.5.21"
+    kotlin("plugin.spring") version "1.5.21"
     id("idea")
 }
 
@@ -38,6 +38,7 @@ dependencies {
     implementation("org.springframework.security:spring-security-config")
     implementation("org.springframework.security:spring-security-oauth2-client")
     implementation("org.springframework.security:spring-security-oauth2-jose")
+    implementation("org.springframework.security:spring-security-oauth2-resource-server")
 
     implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
     implementation("org.springdoc:springdoc-openapi-security:$springDocVersion")
@@ -60,8 +61,8 @@ dependencies {
 
     implementation("org.apache.commons:commons-lang3:3.10")
 
-    implementation(kotlin("stdlib-jdk8"))
-    implementation(kotlin("reflect"))
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.21")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.21")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.21")
 

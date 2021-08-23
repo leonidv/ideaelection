@@ -12,10 +12,14 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.password.NoOpPasswordEncoder
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint
+import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler
 
 @Configuration
 @EnableWebSecurity
+@Order(2)
 class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurityConfigurerAdapter() {
     val log = KotlinLogging.logger {}
 
@@ -28,9 +32,17 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
 
 
     override fun configure(http: HttpSecurity) {
-        http
-            .authorizeRequests()
-            .anyRequest().authenticated()
+        http.authorizeRequests {
+            it.anyRequest().authenticated()
+        }.exceptionHandling {
+            it
+                .authenticationEntryPoint(BearerTokenAuthenticationEntryPoint())
+                .accessDeniedHandler(BearerTokenAccessDeniedHandler())
+        }.sessionManagement {it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)}
+//        http
+//            .authorizeRequests()
+//            .anyRequest()
+//            .authenticated()
 
         http.anonymous().disable()
 
@@ -43,19 +55,19 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
             http
                 .httpBasic()
                 .realmName(basicRealmName)
-
-            http.csrf().disable()
         }
+
 
         val oauth2LoginConfigurer = OAuth2LoginConfigurer<HttpSecurity>();
         val customOAuth2LoginConfigurer = WrapperOAuth2LoginConfigurer(oauth2LoginConfigurer, userRepository)
+        http.csrf().disable()
         http.apply(customOAuth2LoginConfigurer)
 
 
     }
 
     override fun configure(web: WebSecurity) {
-       // web.debug(true)
+         web.debug(true)
     }
 
     @Suppress("DEPRECATION")
@@ -70,9 +82,15 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
 
 @Configuration
 @Order(1)
-class Probes: WebSecurityConfigurerAdapter() {
+class Probes : WebSecurityConfigurerAdapter() {
+    override fun configure(web: WebSecurity) {
+        web.debug(true)
+    }
+
     override fun configure(http: HttpSecurity) {
-        http.antMatcher("/probes/**").anonymous()
+        http
+            .antMatcher("/m/info").anonymous()
+            //.antMatcher("/probes/**").anonymous()
 
     }
 }
