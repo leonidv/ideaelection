@@ -28,6 +28,9 @@ class UserController(val userRepository: UserRepository) {
 
     val log: KLogger = KotlinLogging.logger {}
 
+
+
+
     @GetMapping("/me")
     @ResponseBody
     fun me(authentication: Authentication): ResponseEntity<DataOrError<MeResult>> {
