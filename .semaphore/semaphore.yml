@@ -66,13 +66,8 @@ blocks:
       prologue:
         commands:
           - checkout
-#          - cache restore gradleCache
 
       epilogue:
-#        always:
-#          commands:
-#            - cache delete gradleCache
-#            - cache store gradleCache $HOME/.gradle/caches/
         on_fail:
           commands:
             - cp -r $BUILD_DIR/backend-test/build/reports $LOG_DIR
@@ -81,7 +76,6 @@ blocks:
       jobs:
         - name: Build backend application
           commands:
-           # - sudo python  scripts/couchbase-run.sh "-p 8080:8080" $PROCESS_TAG
             - >-
               sudo python scripts/containers/run-container-alternative-tags.py
               docker.io/leonidv/idel-couchbase
@@ -96,8 +90,6 @@ blocks:
             - sudo ./build-backend.sh dev
             - cd $BUILD_DIR/scripts
             - sudo ./backend-run.sh
-            #- sleep 10 backend test prepare enough time
-
             - cd ../backend-test
             - ./gradlew --console=plain test allureReport
             - sudo podman push docker.io/leonidv/idel-backend docker.io/leonidv/idel-backend:$PROCESS_TAG
@@ -113,7 +105,6 @@ blocks:
           - kubectl get deployments
           - echo $DOCKERHUB_PASSWORD | podman login --username "$DOCKERHUB_USERNAME" --password-stdin
           - podman login --get-login docker.io
-          #- .semaphore/install-kustomize.sh
       jobs:
         - name: Apply deployment
           commands:
