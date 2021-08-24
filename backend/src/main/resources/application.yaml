@@ -38,6 +38,6 @@ management:
     info:
       enabled: true
 
-#server:
-#  forward-headers-strategy: native
+server:
+  forward-headers-strategy: framework
 
