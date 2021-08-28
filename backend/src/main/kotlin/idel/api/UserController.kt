@@ -13,6 +13,7 @@ import mu.KLogger
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/users")
 class UserController(val userRepository: UserRepository) {
     data class MeResult(val id: String,
+                        val domain : String,
                         val displayName: String,
                         val avatar: String,
                         val email: String,
@@ -27,8 +29,6 @@ class UserController(val userRepository: UserRepository) {
 
 
     val log: KLogger = KotlinLogging.logger {}
-
-
 
 
     @GetMapping("/me")
@@ -39,6 +39,7 @@ class UserController(val userRepository: UserRepository) {
         return if (principal is IdelOAuth2User) {
             val result = MeResult(
                     id = principal.id,
+                    domain = principal.domain,
                     displayName = principal.displayName,
                     avatar = principal.avatar,
                     email = principal.email,
@@ -50,6 +51,10 @@ class UserController(val userRepository: UserRepository) {
         }
     }
 
+    @GetMapping("/me2")
+    fun me2(@AuthenticationPrincipal user : User) : User {
+        return user
+    }
     /**
      * Check [roles] and if it correct call [actionIfCorrect]
      *

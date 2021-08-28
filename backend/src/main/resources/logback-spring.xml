@@ -12,10 +12,10 @@
     </root>
 
     <logger name="org.springframework.security" level="TRACE"/>
-    <logger name="org.springframework.web" level="DEBUG"/>
+    <logger name="org.springframework.web" level="TRACE"/>
     <logger name="org.springframework" level="INFO"/>
     <logger name="com.couchbase.config" level="WARN"/>
-    <logger name="com.couchbase" level="INFO"/>
+    <logger name="com.couchbase" level="OFF"/>
 
     <logger name="idel" level="DEBUG"/>
     <logger name="idel.infrastructure.repositories" level="TRACE"/>
