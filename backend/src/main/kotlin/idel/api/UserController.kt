@@ -8,7 +8,6 @@ import idel.domain.Roles
 import idel.domain.User
 import idel.domain.UserRepository
 import idel.infrastructure.repositories.PersistsUser
-import idel.infrastructure.security.IdelOAuth2User
 import mu.KLogger
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
@@ -36,7 +35,7 @@ class UserController(val userRepository: UserRepository) {
     fun me(authentication: Authentication): ResponseEntity<DataOrError<MeResult>> {
         val principal = authentication.principal
 
-        return if (principal is IdelOAuth2User) {
+        return if (principal is User) {
             val result = MeResult(
                     id = principal.id,
                     domain = principal.domain,
@@ -47,7 +46,7 @@ class UserController(val userRepository: UserRepository) {
             )
             DataOrError.ok(result)
         } else {
-            return DataOrError.internal("principal is not IdelOAuth2User");
+            return DataOrError.internal("principal is not User");
         }
     }
 
@@ -139,7 +138,7 @@ class UserSecurity(private val controllerLog : KLogger) {
     /**
      * Check that user is owner of resource.
      */
-    fun <T> asHimSelf(userId : String, user: IdelOAuth2User, action : () -> Either<Exception,T>) : EntityOrError<T>  {
+    fun <T> asHimSelf(userId : String, user: User, action : () -> Either<Exception,T>) : EntityOrError<T>  {
        val result = if (userId == user.id) {
            action()
        } else {

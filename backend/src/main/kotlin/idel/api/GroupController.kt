@@ -6,13 +6,10 @@ import arrow.core.computations.either
 import arrow.core.flatten
 import idel.domain.*
 import idel.infrastructure.repositories.CouchbaseTransactions
-import idel.infrastructure.security.IdelOAuth2User
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
-import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import java.lang.RuntimeException
 import java.util.*
 
 @RestController
@@ -37,7 +34,7 @@ class GroupController(
     @PostMapping
     fun create(
         @RequestBody properties: GroupEditableProperties,
-        @AuthenticationPrincipal user: IdelOAuth2User
+        @AuthenticationPrincipal user: User
     ): EntityOrError<Group> {
         val x = either.eager<Exception, Group> {
             val group = factory.createGroup(UserInfo.ofUser(user), properties).bind()
@@ -57,7 +54,7 @@ class GroupController(
 
     @GetMapping("/{groupId}")
     fun load(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable groupId: String
     ): EntityOrError<Group> {
         val identity = GroupSecurity.IdGroupIdentity(groupId)
@@ -82,7 +79,7 @@ class GroupController(
 
     @GetMapping(params = ["key"])
     fun loadByJoiningKey(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @RequestParam key: String
     ): EntityOrError<Group> {
         val identity = GroupSecurity.JoiningKeyGroupIdentity(key)
@@ -101,7 +98,7 @@ class GroupController(
 
     @GetMapping(params = ["userId"])
     fun loadByUser(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @RequestParam userId: String,
         @RequestParam(required = false) name: String?,
         @RequestParam(required = false, defaultValue = "") order: GroupOrdering,
@@ -116,7 +113,7 @@ class GroupController(
 
     @GetMapping(params = ["onlyAvailable"])
     fun loadAvailableForUser(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @RequestParam(defaultValue = "true") onlyAvailable: Boolean,
         @RequestParam(required = false) name : String?,
         @RequestParam(defaultValue = "") ordering: GroupOrdering,
@@ -137,7 +134,7 @@ class GroupController(
 
     @GetMapping("/{groupId}/members")
     fun loadUsers(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable groupId: String,
         @RequestParam username: Optional<String>,
         pagination: Repository.Pagination
@@ -150,7 +147,7 @@ class GroupController(
 
     @PatchMapping("/{groupId}")
     fun updateInfo(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable groupId: String,
         @RequestBody properties: GroupEditableProperties
     ): EntityOrError<Group> {
@@ -163,7 +160,7 @@ class GroupController(
 
     @DeleteMapping("/{groupId}")
     fun archive(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable groupId: String
     ): EntityOrError<Group> {
         return security.group.asAdmin(groupId, user) {
@@ -179,7 +176,7 @@ class GroupController(
 
     @DeleteMapping("/{groupId}/joining-key")
     fun resetJoiningKey(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable groupId: String
     ) : EntityOrError<Group> {
         return security.group.asAdmin(groupId, user) {
@@ -194,7 +191,7 @@ class GroupController(
 
     @PatchMapping("/{groupId}/members/{userId}/role-in-group")
     fun changeMemberRole(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable groupId: String,
         @PathVariable userId: String,
         @RequestBody rolePatch: RolePatch
@@ -207,7 +204,7 @@ class GroupController(
 
     @DeleteMapping("/{groupId}/members/{memberId}")
     fun removeMember(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable groupId: String,
         @PathVariable memberId: String
     ): EntityOrError<String> {

@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatten
 import idel.domain.*
-import idel.infrastructure.security.IdelOAuth2User
 import mu.KLogger
 import org.springframework.stereotype.Service
 
@@ -55,7 +54,7 @@ class GroupSecurity(
 
     private fun <T> secure(
             groupId: String,
-            user: IdelOAuth2User,
+            user: User,
             requiredLevels: Set<GroupAccessLevel>,
             action: Action<T>
     ): EntityOrError<T> {
@@ -73,11 +72,11 @@ class GroupSecurity(
         return DataOrError.fromEither(result.flatten(), controllerLog)
     }
 
-    fun <T> asMember(groupId: String, user: IdelOAuth2User, action: Action<T>): EntityOrError<T> {
+    fun <T> asMember(groupId: String, user: User, action: Action<T>): EntityOrError<T> {
         return secure(groupId, user, memberLevel, action)
     }
 
-    fun <T> asAdmin(groupId: String, user: IdelOAuth2User, action: Action<T>): EntityOrError<T> {
+    fun <T> asAdmin(groupId: String, user: User, action: Action<T>): EntityOrError<T> {
         return secure(groupId, user, adminLevel, action)
     }
 
@@ -90,7 +89,7 @@ class GroupSecurity(
     class IdGroupIdentity(val id: String) : GroupIdentity(errorMessage = id)
     class JoiningKeyGroupIdentity(val key : String) : GroupIdentity(errorMessage = "joiningKey = $key")
 
-    fun <T> asDomainMember(groupIdentity: GroupIdentity, user: IdelOAuth2User, action: Action<T>) : EntityOrError<T> {
+    fun <T> asDomainMember(groupIdentity: GroupIdentity, user: User, action: Action<T>) : EntityOrError<T> {
        val result : Either<Exception, Either<Exception, T>> = either.eager {
             val group = when(groupIdentity) {
                 is IdGroupIdentity -> groupRepository.load(groupIdentity.id)
@@ -130,7 +129,7 @@ class IdeaSecurity(private val securityService: SecurityService,
 
     fun <T> secure(
             ideaId: String,
-            user: IdelOAuth2User,
+            user: User,
             requiredLevels: Set<IdeaAccessLevel>,
             action: IdeaAction<T>
     ): EntityOrError<T> {
@@ -148,7 +147,7 @@ class IdeaSecurity(private val securityService: SecurityService,
         return DataOrError.fromEither(result.flatten(), controllerLog)
     }
 
-    fun <T> withLevels(ideaId: String, user: IdelOAuth2User, action: IdeaActionWithLevels<T>): EntityOrError<T> {
+    fun <T> withLevels(ideaId: String, user: User, action: IdeaActionWithLevels<T>): EntityOrError<T> {
         val result: Either<Exception, Either<Exception, T>> = either.eager {
             val idea = ideaRepository.load(ideaId).bind()
             //val (group) = groupRepository.load(idea.groupId)
@@ -159,11 +158,11 @@ class IdeaSecurity(private val securityService: SecurityService,
         return DataOrError.fromEither(result.flatten(), controllerLog)
     }
 
-    fun <T> asMember(ideaId: String, user: IdelOAuth2User, action: IdeaAction<T>): EntityOrError<T> {
+    fun <T> asMember(ideaId: String, user: User, action: IdeaAction<T>): EntityOrError<T> {
         return secure(ideaId, user, setOf(IdeaAccessLevel.GROUP_MEMBER), action)
     }
 
-    fun <T> asEditor(ideaId: String, user: IdelOAuth2User, action: IdeaAction<T>): EntityOrError<T> {
+    fun <T> asEditor(ideaId: String, user: User, action: IdeaAction<T>): EntityOrError<T> {
         return secure(ideaId, user, setOf(IdeaAccessLevel.ASSIGNEE, IdeaAccessLevel.AUTHOR), action)
     }
 

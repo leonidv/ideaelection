@@ -9,7 +9,6 @@ import com.nimbusds.jwt.SignedJWT
 import idel.domain.Roles
 import idel.domain.User
 import idel.infrastructure.security.IdelAuthorities
-import idel.infrastructure.security.IdelOAuth2User
 import idel.infrastructure.security.IdelPrincipal
 import idel.infrastructure.security.JwtIssuerService
 import org.springframework.beans.factory.annotation.Value

@@ -1,11 +1,11 @@
 package idel.api
 
 import idel.domain.Roles
+import idel.domain.User
 import idel.domain.UserRepository
 import idel.infrastructure.repositories.PersistsUser
-import idel.infrastructure.security.IdelOAuth2User
 import org.springframework.http.MediaType
-import org.springframework.security.core.Authentication
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
@@ -26,9 +26,7 @@ class FirstSetupController(val userRepository: UserRepository)  {
     }
     @GetMapping("", produces = arrayOf(MediaType.TEXT_HTML_VALUE))
     @ResponseBody
-    fun init(authentication: Authentication) : String  {
-
-        val user = authentication.principal as IdelOAuth2User
+    fun init(@AuthenticationPrincipal user: User) : String  {
 
         val users = userRepository.load(0,10)
 

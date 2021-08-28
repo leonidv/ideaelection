@@ -53,10 +53,17 @@ class TestUser(authorities: MutableCollection<out GrantedAuthority>,
  * Allow any username. Create new user with password equals username, if username not found.
  */
 class TestUsersDetailsService(val userRepository: UserRepository) : UserDetailsService {
+  companion object {
+      const val PROVIDER = "httpbasic"
+
+      fun makeId(username: String) : String = "$username@${TestUser.PROVIDER}"
+
+  }
+
   override fun loadUserByUsername(username: String): TestUser {
       val role = username.split("__").last()
 
-     val eUser = userRepository.load(TestUser.makeId(username))
+     val eUser = userRepository.load(makeId(username))
 
       return when (eUser) {
         is Either.Right -> {

@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatten
 import idel.domain.*
-import idel.infrastructure.security.IdelOAuth2User
 import mu.KLogger
 import mu.KotlinLogging
 
@@ -20,7 +19,7 @@ class GroupMemberSecurity(private val securityService: SecurityService,
     private fun <T> secure(
         groupId: String,
         memberUserId: String,
-        user: IdelOAuth2User,
+        user: User,
         requiredLevels: Set<GroupMemberAccessLevel>,
         action: GroupMemberAction<T>
     ): EntityOrError<T> {
@@ -50,7 +49,7 @@ class GroupMemberSecurity(private val securityService: SecurityService,
      */
     fun <T> asAdminOrHimSelf(memberGroupId: String,
                              memberUserId: String,
-                             user: IdelOAuth2User,
+                             user: User,
                              action: GroupMemberAction<T>): EntityOrError<T> {
         val requiredLevels = setOf(GroupMemberAccessLevel.HIM_SELF, GroupMemberAccessLevel.GROUP_ADMIN)
         return secure(memberGroupId, memberUserId, user, requiredLevels, action)

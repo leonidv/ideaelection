@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatten
 import idel.domain.*
-import idel.infrastructure.security.IdelOAuth2User
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.http.HttpStatus
@@ -34,7 +33,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
 
     @PostMapping
     fun create(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @RequestBody properties: InitialProperties
     ): EntityOrError<Idea> {
         return secure.group.asMember(properties.groupId, user) {
@@ -48,7 +47,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
 
 
     @GetMapping("/{ideaId}")
-    fun load(@AuthenticationPrincipal user: IdelOAuth2User, @PathVariable ideaId: String): EntityOrError<Idea> {
+    fun load(@AuthenticationPrincipal user: User, @PathVariable ideaId: String): EntityOrError<Idea> {
         return secure.idea.asMember(ideaId, user) {idea ->
             Either.Right(idea)
         }
@@ -56,7 +55,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
 
     @PatchMapping("/{ideaId}")
     fun updateInfo(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String,
         @RequestBody properties: IdeaEditableProperties
     ): EntityOrError<Idea> {
@@ -70,7 +69,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     @PostMapping("/{ideaId}/voters")
     @ResponseStatus(HttpStatus.CREATED)
     fun vote(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String
     ): EntityOrError<Idea> {
         return secure.idea.asMember(ideaId, user) {
@@ -82,7 +81,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
 
     @DeleteMapping("/{ideaId}/voters")
     fun devote(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String
     ): EntityOrError<Idea> {
         return secure.idea.asMember(ideaId, user) {
@@ -96,7 +95,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
 
     @PatchMapping("/{ideaId}/assignee")
     fun assign(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String,
         @RequestBody assignee: Assignee
     ): EntityOrError<Idea> {
@@ -125,7 +124,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
 
     @PatchMapping("/{ideaId}/implemented")
     fun implemented(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String,
         @RequestBody body: Implemented
     ): EntityOrError<Idea> {
@@ -143,7 +142,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     @GetMapping
     @ResponseBody
     fun load(
-        @AuthenticationPrincipal user: IdelOAuth2User,
+        @AuthenticationPrincipal user: User,
         @RequestParam(required = true) groupId: String,
         @RequestParam(required = false, defaultValue = "") ordering: IdeaOrdering,
         @RequestParam("offered-by") offeredBy: Optional<String>,

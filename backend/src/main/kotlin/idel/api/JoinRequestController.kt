@@ -1,7 +1,6 @@
 package idel.api
 
 import idel.domain.*
-import idel.infrastructure.security.IdelOAuth2User
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -21,7 +20,7 @@ class JoinRequestController(val groupMembershipService: GroupMembershipService,
 
 
     @PostMapping
-    fun create(@AuthenticationPrincipal user: IdelOAuth2User, @RequestBody joinRequestParams: JoinRequestParams): EntityOrError<JoinRequest> {
+    fun create(@AuthenticationPrincipal user: User, @RequestBody joinRequestParams: JoinRequestParams): EntityOrError<JoinRequest> {
         val eJoinRequest = groupMembershipService.requestMembership(
             joiningKey = joinRequestParams.joiningKey,
             userId = user.id,
@@ -31,7 +30,7 @@ class JoinRequestController(val groupMembershipService: GroupMembershipService,
 
 
     @GetMapping(params = ["userId"])
-    fun loadByUser(@AuthenticationPrincipal user: IdelOAuth2User,
+    fun loadByUser(@AuthenticationPrincipal user: User,
                    @RequestParam(required = false, defaultValue = "") order: GroupMembershipRequestOrdering,
                    @RequestParam userId : String,
                    pagination: Repository.Pagination
@@ -46,7 +45,7 @@ class JoinRequestController(val groupMembershipService: GroupMembershipService,
     }
 
     @GetMapping(params = ["groupId"])
-    fun loadByGroup(@AuthenticationPrincipal user: IdelOAuth2User,
+    fun loadByGroup(@AuthenticationPrincipal user: User,
                     @RequestParam(required = false, defaultValue = "") order: GroupMembershipRequestOrdering,
                     @RequestParam groupId: String,
                     pagination: Repository.Pagination
@@ -58,7 +57,7 @@ class JoinRequestController(val groupMembershipService: GroupMembershipService,
 
     data class Resolution(val status : AcceptStatus)
     @PatchMapping("{joinRequestId}/status")
-    fun resolve(@AuthenticationPrincipal user: IdelOAuth2User,
+    fun resolve(@AuthenticationPrincipal user: User,
                 @PathVariable joinRequestId : String,
                 @RequestBody resolution : Resolution) : EntityOrError<JoinRequest> {
         val result = groupMembershipService.resolveRequest(joinRequestId, resolution.status)
