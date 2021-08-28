@@ -14,29 +14,19 @@ import java.net.http.HttpResponse
 import java.time.Duration
 
 
-class EntityStorage(val idelUrl  : String = Idel.URL) {
+class EntityStorage(idelUrl  : String = Idel.URL) : AbstractObjectApi(User.instanceAdmin,idelUrl, "/configs/storage") {
 
     val log = KotlinLogging.logger {}
 
-    private val client = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(1))
-        .authenticator(IdelHttpAuthenticator("test"))
-        .build()
 
     private fun deleteEntity(entityType : String) {
-        val request = HttpRequest
-            .newBuilder()
-            .DELETE()
-            .uri(URI.create("$idelUrl/configs/couchbase/$entityType"))
-            .build()
+        val response = delete("/$entityType","")
 
-        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-        val json = jacksonObjectMapper().readValue(response.body()) as JsonNode
 
         if (response.statusCode() == HttpURLConnection.HTTP_OK) {
-            log.info("Clear $entityType. ${json["data"]}")
+            log.info("Clear $entityType. ${response.body().toPrettyString()}")
         } else {
-            log.warn("Something is wrong, ${json["error"]}")
+            log.warn("Something is wrong, ${response.body().toPrettyString()}")
             throw RuntimeException("Can't clear $entityType. ${response.body()}")
         }
 

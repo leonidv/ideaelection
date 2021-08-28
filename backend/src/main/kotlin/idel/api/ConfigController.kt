@@ -46,7 +46,7 @@ class ConfigController {
        }
     }
 
-    @DeleteMapping("/couchbase/{type}")
+    @DeleteMapping("/storage/{type}")
     fun  deleteEntities(@PathVariable type : String) : ResponseEntity<DataOrError<String>> {
        return if (testMode) {
            try {

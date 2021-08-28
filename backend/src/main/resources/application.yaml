@@ -2,6 +2,7 @@
 # Don't use it in production, it's very dangerous!
 testmode: false
 
+
 couchbase:
   host: localhost
   port:
@@ -40,3 +41,6 @@ management:
 jwt:
   private.key: classpath:jwt_private_key
   public.key: classpath:jwt_public_key.crt
+  
+server:
+  forward-headers-strategy: framework
