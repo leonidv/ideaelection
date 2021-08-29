@@ -11,9 +11,9 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="org.springframework.security" level="TRACE"/>
-    <logger name="org.springframework.web" level="TRACE"/>
-    <logger name="org.springframework" level="DEBUG"/>
+    <logger name="org.springframework.security" level="DEBUG"/>
+    <logger name="org.springframework.web" level="DEBUG"/>
+    <logger name="org.springframework" level="INFO"/>
     <logger name="org.springframework.web.filter.CommonsRequestLoggingFilter" level="DEBUG"/>
     <logger name="org.springframework.boot.autoconfigure.logging" level="INFO"/>
     <logger name="org.springframework.beans.factory.support" level="INFO"/>

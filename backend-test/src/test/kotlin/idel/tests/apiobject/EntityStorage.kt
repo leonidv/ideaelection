@@ -1,26 +1,17 @@
 package idel.tests.apiobject
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import idel.tests.Idel
-import idel.tests.infrastructure.IdelHttpAuthenticator
 import mu.KotlinLogging
 import java.net.HttpURLConnection
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.time.Duration
 
 
-class EntityStorage(idelUrl  : String = Idel.URL) : AbstractObjectApi(User.instanceAdmin,idelUrl, "/configs/storage") {
+class EntityStorage(idelUrl: String = Idel.URL) : AbstractObjectApi(User.instanceAdmin, idelUrl, "configs/storage") {
 
     val log = KotlinLogging.logger {}
 
 
-    private fun deleteEntity(entityType : String) {
-        val response = delete("/$entityType","")
+    private fun deleteEntity(entityType: String) {
+        val response = delete("/$entityType", "")
 
 
         if (response.statusCode() == HttpURLConnection.HTTP_OK) {
@@ -39,6 +30,7 @@ class EntityStorage(idelUrl  : String = Idel.URL) : AbstractObjectApi(User.insta
         clearJoinRequests()
         clearGroupMembers()
     }
+
     /**
      * Remove all ideas from bucket.
      *

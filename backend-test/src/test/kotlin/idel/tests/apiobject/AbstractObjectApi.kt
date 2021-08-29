@@ -2,7 +2,6 @@ package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
-import idel.tests.infrastructure.IdelHttpAuthenticator
 import idel.tests.infrastructure.ofJson
 import mu.KotlinLogging
 import java.net.URI
@@ -10,6 +9,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
+import java.util.*
 
 abstract class AbstractObjectApi(val user: User, val idelUrl: String = Idel.URL, val resource: String) {
     private val log = KotlinLogging.logger {}
@@ -18,9 +18,13 @@ abstract class AbstractObjectApi(val user: User, val idelUrl: String = Idel.URL,
 
     protected val client: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(1))
-        .authenticator(IdelHttpAuthenticator(user.name))
+        .version(HttpClient.Version.HTTP_1_1)
         .build()
 
+
+    private fun basicAuth(username: String, password: String): String {
+        return "Basic " + Base64.getEncoder().encodeToString("$username:$password".toByteArray())
+    }
 
     protected fun requestBuilder(params: String): HttpRequest.Builder {
         val uri = URI.create("$resourceUri$params")
@@ -30,6 +34,7 @@ abstract class AbstractObjectApi(val user: User, val idelUrl: String = Idel.URL,
         return HttpRequest
             .newBuilder(uri)
             .timeout(Duration.ofHours(1))
+            .header("Authorization", basicAuth(user.name, user.name))
             .header("Content-Type", "application/json")
 
     }
