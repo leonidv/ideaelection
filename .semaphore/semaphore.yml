@@ -96,7 +96,7 @@ blocks:
 
   - name: Deploy to test
 #    skip:
-#      when: true
+      when: true
     task:
       secrets:
         - name: SAEDI_KUBECTL
