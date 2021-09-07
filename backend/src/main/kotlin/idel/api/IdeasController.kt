@@ -14,7 +14,11 @@ import java.util.*
 
 @RestController
 @RequestMapping("/ideas")
-class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: ApiSecurityFactory) {
+class IdeasController(
+    val ideaRepository: IdeaRepository,
+    val userRepository: UserRepository,
+    apiSecurityFactory: ApiSecurityFactory
+) {
 
     private val log = KotlinLogging.logger {}
 
@@ -30,6 +34,11 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
         override val descriptionPlainText: String,
         override val link: String,
     ) : IIdeaEditableProperties
+
+    data class IdeasList(
+        val idea: List<Idea>,
+        val users: Set<User>
+    )
 
     @PostMapping
     fun create(
@@ -151,7 +160,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
         @RequestParam("text") text: Optional<String>,
         pagination: Repository.Pagination
     )
-            : EntityOrError<List<Idea>> {
+            : EntityOrError<IdeasList> {
 
         return secure.group.asMember(groupId, user) {
             val filtering = IdeaFiltering(
@@ -160,7 +169,11 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
                 assignee = assignee.asOption(),
                 text = text.asOption()
             )
-            ideaRepository.load(groupId, ordering, filtering, pagination)
+            either.eager {
+                val ideas = ideaRepository.load(groupId, ordering, filtering, pagination).bind()
+                val users = userRepository.enrichIdeas(ideas, maxVoters = 10).bind()
+                IdeasList(ideas, users)
+            }
         }
     }
 }
