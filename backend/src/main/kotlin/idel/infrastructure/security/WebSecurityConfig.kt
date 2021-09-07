@@ -25,6 +25,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.time.Instant
@@ -54,6 +56,17 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
     lateinit var privateKey: RSAPrivateKey
 
     override fun configure(http: HttpSecurity) {
+        if (testMode) {
+            val corsCfg = CorsConfiguration()
+            corsCfg.allowedOrigins= listOf("*")
+            corsCfg.allowedMethods = listOf("*")
+            corsCfg.allowedHeaders = listOf("*")
+            val corsSource = UrlBasedCorsConfigurationSource()
+            corsSource.registerCorsConfiguration("/**", corsCfg)
+            http.cors().configurationSource(corsSource)
+            http.csrf().disable()
+        }
+
         http.authorizeRequests {
             it.anyRequest().authenticated()
         }
@@ -80,13 +93,12 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
                 .httpBasic()
                 .realmName(basicRealmName)
 
-            http.cors().disable()
         }
 
         val oauth2LoginConfigurer = OAuth2LoginConfigurer<HttpSecurity>();
         oauth2LoginConfigurer.successHandler(Oauth2JwtTokenSuccesHandler(jwtIssuer()))
         val customOAuth2LoginConfigurer = WrapperOAuth2LoginConfigurer(oauth2LoginConfigurer, userRepository)
-        http.csrf().disable()
+
 
 
         http.apply(customOAuth2LoginConfigurer)
