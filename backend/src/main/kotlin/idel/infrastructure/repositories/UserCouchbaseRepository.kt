@@ -8,6 +8,8 @@ import com.couchbase.client.java.json.JsonObject
 import idel.domain.*
 import mu.KotlinLogging
 import kotlin.math.E
+import kotlin.math.max
+import kotlin.math.min
 
 data class PersistsUser(
     override val id: String,
@@ -91,7 +93,8 @@ class UserCouchbaseRepository(
 
     override fun enrichIdeas(ideas: List<Idea>, maxVoters: Int): Either<Exception, Set<User>> {
         val usersIds: Set<UserId> = ideas.flatMap {idea ->
-            setOf(idea.assignee, idea.author) + idea.voters.subList(0, maxVoters)
+            val votersCount = min (idea.voters.size, maxVoters)
+            setOf(idea.assignee, idea.author) + idea.voters.subList(0, votersCount)
         }.toSet()
 
         val users = mutableSetOf<User>()

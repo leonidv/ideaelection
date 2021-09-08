@@ -36,7 +36,7 @@ class IdeasController(
     ) : IIdeaEditableProperties
 
     data class IdeasList(
-        val idea: List<Idea>,
+        val ideas: List<Idea>,
         val users: Set<User>
     )
 
