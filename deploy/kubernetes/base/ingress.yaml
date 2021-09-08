@@ -5,6 +5,11 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: traefik
 spec:
+  tls:
+    - hosts:
+        - api.test.saedi.io
+      secretName: tls-ap.test.saedi.io
+
   rules:
     - host: couchbase.test.saedi.io
       http:

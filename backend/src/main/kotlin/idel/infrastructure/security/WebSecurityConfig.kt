@@ -25,6 +25,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.time.Instant
@@ -41,7 +43,7 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
 
 
     @Value("\${testmode}")
-    var basicEnabled = false
+    var testMode = false
 
     @Value("\${security.httpbasic.realm}")
     lateinit var basicRealmName: String
@@ -54,6 +56,16 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
     lateinit var privateKey: RSAPrivateKey
 
     override fun configure(http: HttpSecurity) {
+        if (testMode) {
+            val corsCfg = CorsConfiguration()
+            corsCfg.allowedOrigins= listOf("*")
+            corsCfg.allowedMethods = listOf("*")
+            corsCfg.allowedHeaders = listOf("*")
+            val corsSource = UrlBasedCorsConfigurationSource()
+            corsSource.registerCorsConfiguration("/**", corsCfg)
+            http.cors().configurationSource(corsSource)
+        }
+
         http.authorizeRequests {
             it.anyRequest().authenticated()
         }
@@ -70,7 +82,7 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
         http.anonymous().disable()
 
 
-        if (basicEnabled) {
+        if (testMode) {
             log.warn("Basic Authentication is enabled, please DON'T USE this mode in the production")
             log.warn("By design of IdeaElection, you should use your organization SSO (Google OAuth, for example) for managing users")
             log.warn("Read testing.md file in the project documentation for more information.")
@@ -79,6 +91,7 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
             http
                 .httpBasic()
                 .realmName(basicRealmName)
+
         }
 
         val oauth2LoginConfigurer = OAuth2LoginConfigurer<HttpSecurity>();
