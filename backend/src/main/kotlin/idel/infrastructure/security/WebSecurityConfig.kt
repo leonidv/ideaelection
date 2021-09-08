@@ -64,7 +64,6 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
             val corsSource = UrlBasedCorsConfigurationSource()
             corsSource.registerCorsConfiguration("/**", corsCfg)
             http.cors().configurationSource(corsSource)
-            http.csrf().disable()
         }
 
         http.authorizeRequests {
@@ -98,9 +97,7 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
         val oauth2LoginConfigurer = OAuth2LoginConfigurer<HttpSecurity>();
         oauth2LoginConfigurer.successHandler(Oauth2JwtTokenSuccesHandler(jwtIssuer()))
         val customOAuth2LoginConfigurer = WrapperOAuth2LoginConfigurer(oauth2LoginConfigurer, userRepository)
-
-
-
+        http.csrf().disable()
         http.apply(customOAuth2LoginConfigurer)
     }
 

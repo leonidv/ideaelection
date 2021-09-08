@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
 import idel.tests.infrastructure.ofJson
 import mu.KotlinLogging
+import java.io.IOException
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -14,7 +15,7 @@ import java.util.*
 abstract class AbstractObjectApi(val user: User, val idelUrl: String = Idel.URL, val resource: String) {
     private val log = KotlinLogging.logger {}
 
-    private val resourceUri : URI = URI.create("$idelUrl/$resource")
+    private val resourceUri: URI = URI.create("$idelUrl/$resource")
 
     protected val client: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(1))
@@ -39,9 +40,9 @@ abstract class AbstractObjectApi(val user: User, val idelUrl: String = Idel.URL,
 
     }
 
-    private fun send(request: HttpRequest, bodyForLog : String) : HttpResponse<JsonNode> {
+    private fun send(request: HttpRequest, bodyForLog: String): HttpResponse<JsonNode> {
         val bodyMsg = if (bodyForLog.length < 2000) {
-             bodyForLog
+            bodyForLog
         } else {
             "body is too big for log"
         }
@@ -80,9 +81,9 @@ abstract class AbstractObjectApi(val user: User, val idelUrl: String = Idel.URL,
         return send(request, "")
     }
 
-    protected fun delete(params: String, body: String) : HttpResponse<JsonNode> {
+    protected fun delete(params: String, body: String): HttpResponse<JsonNode> {
         val request = requestBuilder(params)
-            .method("DELETE",HttpRequest.BodyPublishers.ofString(body))
+            .method("DELETE", HttpRequest.BodyPublishers.ofString(body))
             .build()
 
         return send(request, body)
