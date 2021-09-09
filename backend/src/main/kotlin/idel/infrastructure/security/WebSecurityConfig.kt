@@ -49,27 +49,32 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
     lateinit var basicRealmName: String
 
     @Value("\${jwt.public.key}")
-    lateinit var publicKey : RSAPublicKey;
+    lateinit var publicKey: RSAPublicKey;
 
 
     @Value("\${jwt.private.key}")
     lateinit var privateKey: RSAPrivateKey
 
+    @Value("\${security.cors.allowed-origins}")
+    var allowedOrigins: Array<String> = emptyArray()
+
+
     override fun configure(http: HttpSecurity) {
-        if (testMode) {
-            val corsCfg = CorsConfiguration()
-            corsCfg.allowedOrigins= listOf("*")
-            corsCfg.allowedMethods = listOf("*")
-            corsCfg.allowedHeaders = listOf("*")
-            val corsSource = UrlBasedCorsConfigurationSource()
-            corsSource.registerCorsConfiguration("/**", corsCfg)
-            http.cors().configurationSource(corsSource)
-        }
+        val corsCfg = CorsConfiguration()
+        log.info {"CORS is enabled for origins: ${allowedOrigins.joinToString(prefix = "[", postfix = "]")}"}
+        corsCfg.allowedOrigins = allowedOrigins.toList()
+        corsCfg.allowedMethods = listOf("*")
+        corsCfg.allowedHeaders = listOf("*")
+        corsCfg.allowCredentials = true
+        val corsSource = UrlBasedCorsConfigurationSource()
+        corsSource.registerCorsConfiguration("/**", corsCfg)
+        http.cors().configurationSource(corsSource)
+
 
         http.authorizeRequests {
             it.anyRequest().authenticated()
         }
-            .csrf{it.ignoringAntMatchers("/token")}
+            .csrf {it.ignoringAntMatchers("/token")}
             .oauth2ResourceServer {it.jwt()}
             .oauth2ResourceServer().jwt {cstm ->
                 cstm.jwtAuthenticationConverter(IdelPrincipalJwtConvertor())
@@ -83,9 +88,9 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
 
 
         if (testMode) {
-            log.warn("Basic Authentication is enabled, please DON'T USE this mode in the production")
-            log.warn("By design of IdeaElection, you should use your organization SSO (Google OAuth, for example) for managing users")
-            log.warn("Read testing.md file in the project documentation for more information.")
+            log.warn("! Basic Authentication is enabled, please DON'T USE this mode in the production")
+            log.warn("! By design of IdeaElection, you should use your organization SSO (Google OAuth, for example) for managing users")
+            log.warn("! Read testing.md file in the project documentation for more information.")
 
             log.debug("Basic Authentication realm=[${basicRealmName}]")
             http
@@ -102,12 +107,12 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
     }
 
     @Bean
-    fun jwtDecoder() : JwtDecoder {
+    fun jwtDecoder(): JwtDecoder {
         return NimbusJwtDecoder.withPublicKey(this.publicKey).build()
     }
 
     @Bean
-    fun jwtIssuer() : JwtIssuerService {
+    fun jwtIssuer(): JwtIssuerService {
         return JwtIssuerService(privateKey, TimeUnit.DAYS.toMillis(365L))
     }
 
@@ -132,7 +137,7 @@ class BuildInfo : org.springframework.security.config.annotation.web.configurati
     }
 }
 
-class JwtIssuerService(val key : RSAPrivateKey, val timeToLive : Long) {
+class JwtIssuerService(val key: RSAPrivateKey, val timeToLive: Long) {
 
     fun issueToken(user: User): String {
         val now = Instant.now()

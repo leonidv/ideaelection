@@ -14,6 +14,8 @@ couchbase:
 security:
   httpbasic:
     realm: ideaelection
+  cors:
+    allowed-origins: https://saedi.zap-it.ru, http://saedi.zap-it.ru, https://api.zap-it.ru, http://api.zap-it.ru
 
 
 spring:
