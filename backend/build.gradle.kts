@@ -45,9 +45,9 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")
 
 
-    implementation("com.couchbase.client:java-client:3.1.4")
-    implementation("com.couchbase.client:couchbase-transactions:1.1.6")
-    implementation("io.projectreactor:reactor-core:3.4.3") // https://github.com/Azure/azure-sdk-for-java/issues/20106
+    implementation("com.couchbase.client:java-client:3.2.1")
+    implementation("com.couchbase.client:couchbase-transactions:1.2.1")
+    // implementation("io.projectreactor:reactor-core:3.4.3") // https://github.com/Azure/azure-sdk-for-java/issues/20106
 
 
     implementation("io.github.microutils:kotlin-logging-jvm:2.0.8")

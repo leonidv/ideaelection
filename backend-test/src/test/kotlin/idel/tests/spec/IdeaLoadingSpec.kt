@@ -1,6 +1,5 @@
 package idel.tests.spec
 
-import arrow.core.Option
 import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
@@ -98,9 +97,9 @@ class IdeaLoadingSpec : DescribeSpec({
             describe("text = [$filter]") {
                 val response = userA.ideas.list(groupId = groupId, text = Some(filter))
 
-                val containsIdeaChecks = ideasSummary.map {containsIdeaWithSummary(it)}.toTypedArray()
+                val containsIdeaChecks = ideasSummary.map {ideasContainsIdeaWithSummary(it)}.toTypedArray()
 
-                checkIsOk(response, dataListSize(containsIdeaChecks.size), *containsIdeaChecks)
+                checkIsOk(response, ideasCount(containsIdeaChecks.size), usersCount(1),  *containsIdeaChecks)
             }
         }
     }

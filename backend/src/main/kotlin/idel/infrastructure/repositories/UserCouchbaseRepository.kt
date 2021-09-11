@@ -93,9 +93,11 @@ class UserCouchbaseRepository(
 
     override fun enrichIdeas(ideas: List<Idea>, maxVoters: Int): Either<Exception, Set<User>> {
         val usersIds: Set<UserId> = ideas.flatMap {idea ->
-            val votersCount = min (idea.voters.size, maxVoters)
+            val votersCount = min(idea.voters.size, maxVoters)
             setOf(idea.assignee, idea.author) + idea.voters.subList(0, votersCount)
-        }.toSet()
+        }
+            .filterNot {it.isEmpty()}
+            .toSet()
 
         val users = mutableSetOf<User>()
         for (userId in usersIds) {

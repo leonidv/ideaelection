@@ -35,16 +35,6 @@ class ConfigController {
         }
     }
 
-    @GetMapping("/couchbase")
-    @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
-    fun couchbase() : CouchbaseProperties {
-       return if (testMode) {
-           params
-       } else {
-           params.copy(password = "")
-       }
-    }
 
     @DeleteMapping("/storage/{type}")
     fun  deleteEntities(@PathVariable type : String) : ResponseEntity<DataOrError<String>> {
