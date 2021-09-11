@@ -2,11 +2,8 @@ package idel.tests.spec
 
 import arrow.core.Some
 import idel.tests.apiobject.*
+import idel.tests.infrastructure.*
 import idel.tests.infrastructure.JsonNodeExtensions.dataId
-import idel.tests.infrastructure.checkIsForbidden
-import idel.tests.infrastructure.checkIsOk
-import idel.tests.infrastructure.createGroup
-import idel.tests.infrastructure.registryUsers
 import io.kotest.core.spec.style.DescribeSpec
 
 class IdeaImplementedSpec : DescribeSpec({
@@ -32,7 +29,7 @@ class IdeaImplementedSpec : DescribeSpec({
             describe("$userB create an idea, by default idea is not implemented") {
                 val response = userB.ideas.add(groupId, summary = "idea for assignee spec")
                 checkIsOk(response, ideaIsNotImplemented)
-                ideaId = (response.body().dataId() as Some).value
+                ideaId = response.extractId("idea")
             }
         }
 

@@ -29,7 +29,7 @@ class IdeaVotingSpec : DescribeSpec({
         describe("$userA adds idea") {
             val response = userA.ideas.quickAdd(groupId, "1")
             checkIsOk(response)
-            ideaId = response.extractId()
+            ideaId = response.extractId("idea")
         }
     }
 

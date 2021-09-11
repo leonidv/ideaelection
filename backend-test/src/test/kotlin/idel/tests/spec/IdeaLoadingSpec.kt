@@ -114,7 +114,7 @@ class IdeaLoadingSpec : DescribeSpec({
             describe("add 20 ideas") {
                 ideaIds = (1..20).map {i ->
                     val response = userA.ideas.quickAdd(groupId, i.toString())
-                    response.extractId()
+                    response.extractId("idea")
                 }.toTypedArray()
             }
 

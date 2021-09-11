@@ -30,7 +30,7 @@ class IdeaAssigneeSpec : DescribeSpec({
             describe("$userB create an idea") {
                 val response = userB.ideas.add(groupId, summary = "idea for assignee spec")
                 checkIsOk(response)
-                ideaId = (response.body().dataId() as Some).value
+                ideaId = response.extractId("idea")
             }
         }
 

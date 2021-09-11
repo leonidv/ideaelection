@@ -159,14 +159,16 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
 /**
  * Fields checks
  */
-fun ideaAssigneeIs(user: User) = BodyFieldValueChecker.forField("assignee",user.id)
-fun ideaNotAssigned() = BodyFieldValueChecker("idea is not assigned", "$.data.assignee", "")
-val ideaIsImplemented = BodyFieldValueChecker("idea is implemented", "$.data.implemented", "true")
-val ideaIsNotImplemented = BodyFieldValueChecker("idea is not implemented", "$.data.implemented", "false")
-fun ideaHasSummary(summary: String) = BodyFieldValueChecker.forField("summary", summary)
-fun ideaHasDescription(description: String) = BodyFieldValueChecker.forField("description", description)
-fun ideaHasDescriptionPlainText(description: String) = BodyFieldValueChecker.forField("descriptionPlainText", description)
-fun ideaHasLink(link: String) = BodyFieldValueChecker.forField("link", link)
+fun ideaAssigneeIs(user: User) = BodyFieldValueChecker.forField("idea.assignee",user.id)
+fun ideaNotAssigned() = BodyFieldValueChecker("idea is not assigned", "$.data.idea.assignee", "")
+val ideaIsImplemented = BodyFieldValueChecker("idea is implemented", "$.data.idea.implemented", "true")
+val ideaIsNotImplemented = BodyFieldValueChecker("idea is not implemented", "$.data.idea.implemented", "false")
+fun ideaHasSummary(summary: String) = BodyFieldValueChecker.forField("idea.summary", summary)
+fun ideaHasDescription(description: String) = BodyFieldValueChecker.forField("idea.description", description)
+fun ideaHasDescriptionPlainText(description: String) = BodyFieldValueChecker.forField("idea.descriptionPlainText", description)
+fun ideaHasLink(link: String) = BodyFieldValueChecker.forField("idea.link", link)
+fun ideaHasVoterCount(votersCount : Int) = BodyArraySize("has $votersCount voters", "$.data.idea.voters",votersCount)
+fun ideaHasVoter(user : User) = BodyArrayElementExists("has voter [${user.id}]", "$.data.idea.voters", user.id)
 
 fun ideasCount(count : Int) = BodyArraySize("response contains $count ideas", "$.data.ideas", count)
 fun usersCount(count : Int) = BodyArraySize("response contains $count users", "$.data.users", count)
@@ -175,6 +177,4 @@ fun ideasContainsIdeaWithSummary(summary: String) = BodyContainsObject(
 )
 fun ideasOrder(ids : Array<String>) = BodyArrayOrder("has correct order", "$.data.ideas", "id", ids)
 
-fun ideaHasVoterCount(votersCount : Int) = BodyArraySize("has $votersCount voters", "$.data.voters",votersCount)
-fun ideaHasVoter(user : User) = BodyArrayElementExists("has voter [${user.id}]", "$.data.voters", user.id)
 

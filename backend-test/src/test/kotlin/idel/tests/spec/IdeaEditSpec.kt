@@ -51,7 +51,7 @@ class IdeaEditSpec : DescribeSpec({
                     ideaHasDescriptionPlainText("description v1"),
                     ideaHasLink("http://test.io/v1")
                 )
-                ideaId = addResponse.extractId()
+                ideaId = addResponse.extractId("idea")
                 userB.role = "author"
             }
 
@@ -116,7 +116,7 @@ class IdeaEditSpec : DescribeSpec({
             describe("$userB adds idea") {
                 val response = userB.ideas.add(groupId)
                 checkIsOk(response)
-                ideaId = response.extractId()
+                ideaId = response.extractId("idea")
                 userB.role = "author"
             }
 
