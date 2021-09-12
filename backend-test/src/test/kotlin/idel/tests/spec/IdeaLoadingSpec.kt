@@ -99,7 +99,7 @@ class IdeaLoadingSpec : DescribeSpec({
 
                 val containsIdeaChecks = ideasSummary.map {ideasContainsIdeaWithSummary(it)}.toTypedArray()
 
-                checkIsOk(response, ideasCount(containsIdeaChecks.size), usersCount(1),  *containsIdeaChecks)
+                checkIsOk(response, ideasCount(containsIdeaChecks.size), usersInfoCount(1),  *containsIdeaChecks)
             }
         }
     }

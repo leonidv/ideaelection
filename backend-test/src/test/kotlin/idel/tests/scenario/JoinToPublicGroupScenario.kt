@@ -1,9 +1,7 @@
 package idel.tests.scenario
 
-import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
-import idel.tests.infrastructure.JsonNodeExtensions.dataId
 import io.kotest.core.spec.style.DescribeSpec
 import java.net.HttpURLConnection
 import kotlin.time.ExperimentalTime

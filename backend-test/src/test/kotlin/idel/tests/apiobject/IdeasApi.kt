@@ -171,10 +171,14 @@ fun ideaHasVoterCount(votersCount : Int) = BodyArraySize("has $votersCount voter
 fun ideaHasVoter(user : User) = BodyArrayElementExists("has voter [${user.id}]", "$.data.idea.voters", user.id)
 
 fun ideasCount(count : Int) = BodyArraySize("response contains $count ideas", "$.data.ideas", count)
-fun usersCount(count : Int) = BodyArraySize("response contains $count users", "$.data.users", count)
 fun ideasContainsIdeaWithSummary(summary: String) = BodyContainsObject(
     "contains idea with summary [$summary]", "$.data.ideas", arrayOf(Pair("summary", summary))
 )
 fun ideasOrder(ids : Array<String>) = BodyArrayOrder("has correct order", "$.data.ideas", "id", ids)
+
+fun usersInfoCount(count : Int) = BodyArraySize("response contains $count users", "$.data.users", count)
+fun usersInfoContains(user : Set<User>) = BodyArrayContainsObjects("has user's info", "$.data.users", "id", user.map {it.id}.toSet())
+
+
 
 

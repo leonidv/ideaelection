@@ -8,6 +8,7 @@ import idel.tests.infrastructure.JsonNodeExtensions.hasArrayElement
 import idel.tests.infrastructure.JsonNodeExtensions.hasArrayObjectsOrder
 import idel.tests.infrastructure.JsonNodeExtensions.hasObjectWithFields
 import idel.tests.infrastructure.JsonNodeExtensions.hasPath
+import idel.tests.infrastructure.JsonNodeExtensions.containsObjects
 import idel.tests.infrastructure.JsonNodeExtensions.queryInt
 import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import io.kotest.matchers.Matcher
@@ -134,6 +135,23 @@ object ResponseMatchers {
             )
         }
     }
+
+    fun containsObjects(arrayPath: String, field: String, expectedValues: Set<String>) = object : Matcher<JsonNode> {
+        override fun test(value: JsonNode): MatcherResult {
+            val nonExists = value.containsObjects(arrayPath, field, expectedValues)
+            val failureMsg = if (nonExists.isEmpty()) {
+                ""
+            } else {
+                "some values is not found: [${nonExists.joinToString()}]"
+            }
+
+            return MatcherResult(
+                passed = nonExists.isEmpty(),
+                failureMessage = failureMsg,
+                negatedFailureMessage = "all elements are contained"
+            )
+        }
+    }
 }
 
 /**
@@ -184,6 +202,8 @@ fun JsonNode.shouldContainsObject(arrayPath: String, vararg fields: Pair<String,
 fun JsonNode.shouldNotContainsObject(arrayPath: String, vararg fields: Pair<String, String>) =
     this shouldNot ResponseMatchers.hasObjectWithFields(arrayPath, *fields)
 
+fun JsonNode.shouldContainsObjects(arrayPath: String, field: String, expectedValues: Set<String>) =
+    this should ResponseMatchers.containsObjects(arrayPath, field, expectedValues)
 
 fun JsonNode.shouldHasArrayObjectsOrder(arrayPath: String, field : String, values: Array<String>) =
     this should ResponseMatchers.hasArrayObjectsOrder(arrayPath, field, values)

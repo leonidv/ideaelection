@@ -3,7 +3,6 @@ package idel.tests.spec
 import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
-import idel.tests.infrastructure.JsonNodeExtensions.dataId
 import io.kotest.core.spec.style.DescribeSpec
 
 class IdeaAssigneeSpec : DescribeSpec({
@@ -45,10 +44,24 @@ class IdeaAssigneeSpec : DescribeSpec({
         }
 
         describe("$userC assign idea himself (idea is yet not assigned)") {
-            checkIsOk(
-                userC.ideas.assign(ideaId, userC),
-                ideaAssigneeIs(userC)
-            )
+            describe("operation is allowed") {
+                checkIsOk(
+                    userC.ideas.assign(ideaId, userC),
+                    ideaAssigneeIs(userC),
+                )
+            }
+
+            describe("assignee is $userC") {
+                val response = userA.ideas.load(ideaId)
+
+                checkIsOk(response,
+                    ideaAssigneeIs(userC),
+                    usersInfoCount(2),
+                    usersInfoContains(setOf(userB, userC))
+                )
+            }
+
+
         }
 
         context("idea is assigned to $userC") {
@@ -69,14 +82,22 @@ class IdeaAssigneeSpec : DescribeSpec({
             }
         }
 
-
-//        describe("$userC (assignee)")
-
         describe("$userA (group admin) change assignee to $userB") {
-            checkIsOk(
-                userA.ideas.assign(ideaId, userB),
-                ideaAssigneeIs(userB)
-            )
+            describe("operation is allowed") {
+                checkIsOk(
+                    userA.ideas.assign(ideaId, userB),
+                    ideaAssigneeIs(userB)
+                )
+            }
+
+            describe("assignee is change") {
+                checkIsOk(
+                    userA.ideas.load(ideaId),
+                    ideaAssigneeIs(userB),
+                    usersInfoCount(1),
+                    usersInfoContains(setOf(userB))
+                )
+            }
         }
 
 

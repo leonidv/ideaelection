@@ -1,9 +1,6 @@
 package idel.tests.spec
 
-import idel.tests.apiobject.EntityStorage
-import idel.tests.apiobject.User
-import idel.tests.apiobject.ideaHasVoter
-import idel.tests.apiobject.ideaHasVoterCount
+import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
 
@@ -44,7 +41,9 @@ class IdeaVotingSpec : DescribeSpec({
             val response = userA.ideas.load(ideaId)
             checkIsOk(
                 response,
-                ideaHasVoter(userA)
+                ideaHasVoter(userA),
+                usersInfoCount(1),
+                usersInfoContains(setOf(userA))
             )
         }
 
@@ -60,7 +59,9 @@ class IdeaVotingSpec : DescribeSpec({
                 response,
                 ideaHasVoterCount(2),
                 ideaHasVoter(userA),
-                ideaHasVoter(userB)
+                ideaHasVoter(userB),
+                usersInfoCount(2),
+                usersInfoContains(setOf(userA, userB))
             )
         }
 
@@ -74,13 +75,27 @@ class IdeaVotingSpec : DescribeSpec({
             checkIsOk(
                 response,
                 ideaHasVoterCount(1),
-                ideaHasVoter(userB)
+                ideaHasVoter(userB),
+                usersInfoCount(2),
+                usersInfoContains(setOf(userA, userB))
             )
         }
 
         describe("$userB remove his vote") {
             val response = userB.ideas.devote(ideaId)
-            checkIsOk(response, ideaHasVoterCount(0))
+            checkIsOk(
+                response,
+                ideaHasVoterCount(0))
+        }
+
+        describe("no voters") {
+            var response = userA.ideas.load(ideaId)
+            checkIsOk(
+                response,
+                ideaHasVoterCount(0),
+                usersInfoCount(1),
+                usersInfoContains(setOf(userA))
+            )
         }
     }
 
