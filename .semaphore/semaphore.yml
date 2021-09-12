@@ -95,7 +95,7 @@ blocks:
             - sudo podman push docker.io/leonidv/idel-backend docker.io/leonidv/idel-backend:$PROCESS_TAG
 
   - name: Deploy to test
-    skip:
+    run:
       when: branch = 'master'
     task:
       secrets:
