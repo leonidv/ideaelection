@@ -73,7 +73,7 @@ class Idea(
     /**
      * User which is assigned to implement this Idea.
      */
-    val assignee: String,
+    val assignee: UserId,
 
     /**
      * Idea is done. And it is very cool!
@@ -83,12 +83,12 @@ class Idea(
     /**
      * User which have offered this idea.
      */
-    val author: String,
+    val author: UserId,
 
     /**
      * Voters which give their voice for this idea.
      */
-    val voters: List<String>,
+    val voters: List<UserId>,
 
     ) : IIdeaEditableProperties, Identifiable {
 
@@ -104,7 +104,7 @@ class Idea(
      *
      * User, which offered an idea, can't vote for it. In this case the method returns an Idea without any changes)
      */
-    fun addVote(userId: String): Idea {
+    fun addVote(userId: UserId): Idea {
         if (voters.contains(userId)) {
             return this
         }
@@ -115,7 +115,7 @@ class Idea(
     /**
      * Remove voter's vote from this idea.
      */
-    fun removeVote(userId: String): Idea {
+    fun removeVote(userId: UserId): Idea {
         val newVoters = this.voters.minus(userId)
         return this.clone(voters = newVoters)
     }

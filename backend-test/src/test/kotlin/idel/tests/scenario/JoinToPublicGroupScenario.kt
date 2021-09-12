@@ -1,9 +1,7 @@
 package idel.tests.scenario
 
-import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
-import idel.tests.infrastructure.JsonNodeExtensions.dataId
 import io.kotest.core.spec.style.DescribeSpec
 import java.net.HttpURLConnection
 import kotlin.time.ExperimentalTime
@@ -86,9 +84,9 @@ class JoinToPublicGroupScenario : DescribeSpec({
         describe("$userB adds an idea to the group") {
             val addIdeaResponse = userB.ideas.add(groupId)
 
-            checkIsOk(addIdeaResponse, hasId)
+            checkIsOk(addIdeaResponse)
 
-            val ideaId = (addIdeaResponse.body().dataId() as Some).value
+            val ideaId = addIdeaResponse.extractId("idea")
 
 
             context("load idea") {

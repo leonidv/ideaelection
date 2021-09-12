@@ -63,6 +63,18 @@ object JsonNodeExtensions {
         }
     }
 
+    /**
+     * Check that array contains set of object.
+     * @return if all values are contained in the array return emptySet(). Otherwise, return a set with values that
+     * are not found in the array.
+     */
+    fun JsonNode.containsObjects(arrayPath: String, field: String, values: Set<String>): Set<String> {
+        val result = mutableSetOf<String>()
+        values.filterNot { value ->
+            this.hasObjectWithFields(arrayPath,Pair(field, value) )
+        }
+        return result
+    }
 
     /**
      * Check that array contains element at positions as they are given.
@@ -138,13 +150,6 @@ object JsonNodeExtensions {
         }
     }
 
-
-    /**
-     * extract id of entity. Is always has same path in response.
-     */
-    fun JsonNode.dataId(): Option<String> {
-        return this.queryString("$.data.id")
-    }
 }
 
 

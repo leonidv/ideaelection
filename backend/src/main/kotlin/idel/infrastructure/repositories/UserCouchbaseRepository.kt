@@ -7,6 +7,9 @@ import com.couchbase.client.java.Collection
 import com.couchbase.client.java.json.JsonObject
 import idel.domain.*
 import mu.KotlinLogging
+import kotlin.math.E
+import kotlin.math.max
+import kotlin.math.min
 
 data class PersistsUser(
     override val id: String,
@@ -79,10 +82,26 @@ class UserCouchbaseRepository(
         return q.rowsAs(this.typedClass)
     }
 
-    override fun loadUserInfo(ids: List<UserId>): Either<Exception, List<UserInfo>> {
-        val users = mutableListOf<UserInfo>()
-        for (id in ids) {
-            when (val eUser = load(id)) {
+    override fun loadByGroup(
+        groupId: String,
+        pagination: Repository.Pagination,
+        usernameFilter: Option<String>
+    ): Either<Exception, List<User>> {
+        throw NotImplementedError()
+    }
+
+
+    override fun enrichIdeas(ideas: List<Idea>, maxVoters: Int): Either<Exception, Set<User>> {
+        val usersIds: Set<UserId> = ideas.flatMap {idea ->
+            val votersCount = min(idea.voters.size, maxVoters)
+            setOf(idea.assignee, idea.author) + idea.voters.subList(0, votersCount)
+        }
+            .filterNot {it.isEmpty()}
+            .toSet()
+
+        val users = mutableSetOf<User>()
+        for (userId in usersIds) {
+            when (val eUser = load(userId)) {
                 is Either.Left -> when (val ex = eUser.value) {
                     is EntityNotFound -> {
                         log.debug {ex.message}
@@ -90,20 +109,11 @@ class UserCouchbaseRepository(
                     else -> return eUser
                 }
                 is Either.Right -> {
-                    val userInfo = UserInfo.ofUser(eUser.value)
-                    users.add(userInfo)
+                    users.add(eUser.value)
                 }
             }
         }
+
         return Either.Right(users)
-    }
-
-
-    override fun loadByGroup(
-        groupId: String,
-        pagination: Repository.Pagination,
-        usernameFilter: Option<String>
-    ): Either<Exception, List<User>> {
-        throw NotImplementedError()
     }
 }

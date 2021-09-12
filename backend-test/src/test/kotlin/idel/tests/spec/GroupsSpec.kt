@@ -445,7 +445,7 @@ class GroupsSpec : DescribeSpec({
                 userE.role = "non member"
 
                 val addIdeaResponse = userA.ideas.quickAdd(groupId, "1")
-                ideaId = addIdeaResponse.extractId()
+                ideaId = addIdeaResponse.extractId("idea")
 
             }
 

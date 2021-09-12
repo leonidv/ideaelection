@@ -14,7 +14,11 @@ import java.util.*
 
 @RestController
 @RequestMapping("/ideas")
-class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: ApiSecurityFactory) {
+class IdeasController(
+    val ideaRepository: IdeaRepository,
+    val userRepository: UserRepository,
+    apiSecurityFactory: ApiSecurityFactory
+) {
 
     private val log = KotlinLogging.logger {}
 
@@ -31,25 +35,43 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
         override val link: String,
     ) : IIdeaEditableProperties
 
+    data class IdeasPayload(
+        val ideas: List<Idea>,
+        val users: Set<User>
+    )
+
+    data class IdeaPayload(
+        val idea: Idea,
+        val users: Set<User>?
+    ) {
+        companion object {
+            fun onlyIdea(idea: Idea) = IdeaPayload(idea, null)
+        }
+    }
+
+
     @PostMapping
     fun create(
         @AuthenticationPrincipal user: User,
         @RequestBody properties: InitialProperties
-    ): EntityOrError<Idea> {
+    ): EntityOrError<IdeaPayload> {
         return secure.group.asMember(properties.groupId, user) {
             either.eager {
                 val idea = factory.createIdea(properties, properties.groupId, user.id).bind()
                 ideaRepository.add(idea)
-                idea
+                IdeaPayload.onlyIdea(idea)
             }
         }
     }
 
 
     @GetMapping("/{ideaId}")
-    fun load(@AuthenticationPrincipal user: User, @PathVariable ideaId: String): EntityOrError<Idea> {
+    fun load(@AuthenticationPrincipal user: User, @PathVariable ideaId: String): EntityOrError<IdeaPayload> {
         return secure.idea.asMember(ideaId, user) {idea ->
-            Either.Right(idea)
+            either.eager {
+               val users = userRepository.enrichIdeas(listOf(idea),10).bind()
+               IdeaPayload(idea, users)
+            }
         }
     }
 
@@ -58,11 +80,11 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
         @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String,
         @RequestBody properties: IdeaEditableProperties
-    ): EntityOrError<Idea> {
+    ): EntityOrError<IdeaPayload> {
         return secure.idea.withLevels(ideaId, user) {_, levels ->
             ideaRepository.possibleMutate(ideaId) {idea ->
                 idea.updateInformation(properties, levels)
-            }
+            }.map(IdeaPayload::onlyIdea)
         }
     }
 
@@ -71,11 +93,11 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     fun vote(
         @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String
-    ): EntityOrError<Idea> {
+    ): EntityOrError<IdeaPayload> {
         return secure.idea.asMember(ideaId, user) {
             ideaRepository.mutate(ideaId) {idea ->
                 idea.addVote(user.id)
-            }
+            }.map(IdeaPayload::onlyIdea)
         }
     }
 
@@ -83,11 +105,11 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
     fun devote(
         @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String
-    ): EntityOrError<Idea> {
+    ): EntityOrError<IdeaPayload> {
         return secure.idea.asMember(ideaId, user) {
             ideaRepository.mutate(ideaId) {idea ->
                 idea.removeVote(user.id)
-            }
+            }.map(IdeaPayload::onlyIdea)
         }
     }
 
@@ -98,7 +120,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
         @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String,
         @RequestBody assignee: Assignee
-    ): EntityOrError<Idea> {
+    ): EntityOrError<IdeaPayload> {
         return secure.idea.withLevels(ideaId, user) {idea, levels ->
             either.eager<Exception, Either<Exception, Idea>> {
                 val removeAssignee = (assignee.userId == NOT_ASSIGNED)
@@ -116,7 +138,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
                         Either.Left(OperationNotPermitted())
                     }
                 }
-            }.flatten()
+            }.flatten().map(IdeaPayload::onlyIdea)
         }
     }
 
@@ -127,7 +149,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
         @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String,
         @RequestBody body: Implemented
-    ): EntityOrError<Idea> {
+    ): EntityOrError<IdeaPayload> {
         return secure.idea.withLevels(ideaId, user) {_, levels ->
             ideaRepository.possibleMutate(ideaId) {idea ->
                 if (body.implemented) {
@@ -135,7 +157,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
                 } else {
                     idea.notImplement(levels)
                 }
-            }
+            }.map(IdeaPayload::onlyIdea)
         }
     }
 
@@ -151,7 +173,7 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
         @RequestParam("text") text: Optional<String>,
         pagination: Repository.Pagination
     )
-            : EntityOrError<List<Idea>> {
+            : EntityOrError<IdeasPayload> {
 
         return secure.group.asMember(groupId, user) {
             val filtering = IdeaFiltering(
@@ -160,7 +182,11 @@ class IdeasController(val ideaRepository: IdeaRepository, apiSecurityFactory: Ap
                 assignee = assignee.asOption(),
                 text = text.asOption()
             )
-            ideaRepository.load(groupId, ordering, filtering, pagination)
+            either.eager {
+                val ideas = ideaRepository.load(groupId, ordering, filtering, pagination).bind()
+                val users = userRepository.enrichIdeas(ideas, maxVoters = 10).bind()
+                IdeasPayload(ideas, users)
+            }
         }
     }
 }

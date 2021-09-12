@@ -50,11 +50,6 @@ interface UserRepository {
     fun exists(id : String) : Either<Exception,Boolean>
 
     /**
-     * Load users by their id. Ignore id if user is not found.
-     */
-    fun loadUserInfo(ids : List<UserId>) : Either<Exception,List<UserInfo>>
-
-    /**
      * Persists new user.
      */
     fun add(user : User)
@@ -78,4 +73,11 @@ interface UserRepository {
      * In fact, the best place for this method is [GroupMemberRepository], but it's required too hard refactoring.
      */
     fun loadByGroup(groupId : String, pagination: Repository.Pagination, usernameFilter : Option<String>) : Either<Exception, List<User>>
+
+    /**
+     * Load all user that relative to each idea in the list.
+     *
+     * If two or more ideas contain the same user, the user will be returned only one time.
+     */
+    fun enrichIdeas(idea: List<Idea>, maxVoters: Int) : Either<Exception, Set<User>>
 }

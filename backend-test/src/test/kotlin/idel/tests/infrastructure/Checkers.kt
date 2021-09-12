@@ -73,6 +73,17 @@ class NotBodyContainsObject(
     }
 }
 
+class BodyArrayContainsObjects(
+    override val testName: String,
+    private val arrayPath: String,
+    private val field: String,
+    private val values : Set<String>
+) : ResponseChecker {
+    override fun check(jsonNode: JsonNode) {
+        jsonNode.shouldContainsObjects(arrayPath, field, values)
+    }
+}
+
 class BodyArrayOrder(
     override val testName: String,
     private val arrayPath: String,
