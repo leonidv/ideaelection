@@ -16,7 +16,7 @@ import javax.annotation.PostConstruct
  */
 @RestController
 @RequestMapping("/configs")
-class ConfigController {
+class StorageController {
     private val log = KotlinLogging.logger {}
 
     @Value("\${testmode}")

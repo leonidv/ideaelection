@@ -1,23 +1,6 @@
 @startuml
 
-
-'actor User order 1
-'participant groups order 2
-'participant joinrequests order 3
-'participant ideas order 4
-'actor Admin order 5
-
-skinparam monochrome true
-skinparam shadowing false
-
-skinparam Sequence {
-    GroupBorderColor #ff0f0f
-    GroupShadow false
-    GroupBorderThickness 1
-    GroupHeaderFontStyle normal
-    GroupBodyBackgroundColor white
-}
-
+!include theme.puml
 
 actor User
 User -> "groups" : GET onlyAvailable=true
@@ -37,7 +20,7 @@ else CLOSED (admin should approve)
     actor Admin
     Admin ->  "joinrequests" : GET ?groupId={groupId}
     Admin <-- "joinrequests" : list of group's join requests
-    Admin ->  "joinrequests" : POST /{joinrequestsId}/status APPROVED
+    Admin ->  "joinrequests" : PATCH /{joinrequestsId}/status APPROVED
     deactivate "joinrequests"
 end
 

@@ -1,0 +1,55 @@
+@startuml
+!include theme.puml
+
+'actor Admin order -1
+'actor User order -2
+'participant groups order 2
+'participant joinrequests order 3
+'participant ideas order 4
+'actor Admin order 5
+
+title
+ This is a <i>simplified</i> description of the process.
+ <size:12>Real API accepts a set of registered user's id and a set of new system user's emails.
+ <size:12>This diagram show a process for a <i>one</i> new user.
+end title
+
+
+
+
+actor Admin
+participant invites
+database Storage
+participant SMTP
+actor Person order 100
+
+group send an invitation by email
+    Admin -> "invites" : POST userEmail, groupId
+    invites -> Storage : persist
+    return OK
+    invites -> SMTP : Email an invitation to the person
+    return OK
+    invites --> Admin: OK
+end
+Admin --> "invites" : GET /?groupId={groupId}
+return list of all unresolved invites to the group
+
+group Person register in the system via invitation
+    Person <- SMTP : read email with invitation
+    Person -> Fronted : page with invitation to system
+    Person -> oauth2 : /authorization
+    return authorization complete
+    create actor User order 90
+    Person -> User : become a registered user of system
+    note right: All invites which are created\nby email filled with user's id
+end
+
+group User accept invite to group
+    User -> invites : GET /?userId={userId}
+
+    User -> "invites" : PATCH /{inviteId}/status APPROVED
+    User ->  "ideas"  : GET /?groupId={groupId}
+    User <-- "ideas" : list of group's idea
+end
+@enduml
+

@@ -12,6 +12,7 @@ import com.couchbase.client.java.codec.JsonTranscoder
 import com.couchbase.client.java.json.JsonObject
 import com.couchbase.client.java.kv.GetOptions
 import com.couchbase.client.java.kv.InsertOptions
+import com.couchbase.client.java.kv.RemoveOptions
 import com.couchbase.client.java.kv.ReplaceOptions
 import com.couchbase.client.java.query.QueryOptions
 import com.couchbase.client.java.query.QueryScanConsistency
@@ -117,6 +118,8 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
      */
     protected fun getOptions(): GetOptions = GetOptions.getOptions().transcoder(transcoder)
 
+    protected fun removeOptions() : RemoveOptions = RemoveOptions.removeOptions()
+
     /**
      * Return QueryOptions with [[params]], 2-seconds timeout and [transcoder]
      */
@@ -219,6 +222,12 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
             val result = collection.get(id, getOptions())
             val entity = result.contentAs(typedClass)
             entity
+        }
+    }
+
+    override fun delete(id: String): Either<Exception, Unit> {
+        return safelyKeyOperation(id) {
+            collection.remove(id, removeOptions())
         }
     }
 

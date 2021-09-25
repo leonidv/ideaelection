@@ -19,6 +19,11 @@ interface BaseRepository<T : Identifiable> {
     fun load(id: String): Either<Exception, T>
 
     /**
+     * Delete entity from storage.
+     */
+    fun delete(id : String): Either<Exception, Unit>
+
+    /**
      * Check exists entity or not without loading full document.
      */
     fun exists(id: String): Either<Exception, Boolean>
