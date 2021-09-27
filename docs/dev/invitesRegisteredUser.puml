@@ -1,0 +1,33 @@
+@startuml
+
+!include theme.puml
+
+'actor Admin order -1
+'actor User order -2
+'participant groups order 2
+'participant joinrequests order 3
+'participant ideas order 4
+'actor Admin order 5
+
+title
+ This is a <i>simplified</i> description of the process.
+ <size:12>Real API accepts a set of registered user's id and a set of new system user's emails.
+ <size:12>This diagram show a process for one new user.
+end title
+
+actor Admin
+
+Admin --> "invites" : POST userId, groupId
+return OK status=UNRESOLVED
+Admin --> "invites" : GET /?groupId={groupId}
+return list of all unresolved invites to the group
+
+actor User
+User --> "invites" : GET
+return list of unresolved user's invites
+User --> "invites" : PATCH /{inviteId}/status APPROVED
+User ->  "ideas"  : GET /?groupId={groupId}
+User <-- "ideas" : list of group's idea
+
+@enduml
+

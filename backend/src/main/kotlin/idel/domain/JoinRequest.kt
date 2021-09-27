@@ -53,10 +53,6 @@ class JoinRequest(val groupId: String,
 }
 
 interface JoinRequestRepository : BaseRepository<JoinRequest> {
-    fun remove(id: String): Either<Exception, Unit>
-
-    fun replace(joinRequest: JoinRequest): Either<Exception, JoinRequest>
-
     fun loadByUser(userId: UserId, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination): Either<Exception, List<JoinRequest>>
 
     fun loadByGroup(groupId: String, ordering: GroupMembershipRequestOrdering, pagination: Repository.Pagination): Either<Exception, List<JoinRequest>>
