@@ -16,7 +16,7 @@ global_job_config:
     commands:
       - checkout
       - sudo .semaphore/semaphoreci-cleandisk.sh
-      - sudo .semaphore/install-podman-ubuntu.sh
+     # - sudo .semaphore/install-podman-ubuntu.sh
       - .semaphore/gradle-no-daemon.sh
       - sudo podman info
       - sem-version java 11
