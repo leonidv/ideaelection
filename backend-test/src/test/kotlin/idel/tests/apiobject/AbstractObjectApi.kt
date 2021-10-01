@@ -12,7 +12,14 @@ import java.net.http.HttpResponse
 import java.time.Duration
 import java.util.*
 
-abstract class AbstractObjectApi(val user: User, val idelUrl: String = Idel.URL, val resource: String) {
+abstract class AbstractObjectApi(
+    val user: User,
+    val idelUrl: String = Idel.URL,
+
+    /**
+     * Without trailing slash
+     */
+    val resource: String) {
     private val log = KotlinLogging.logger {}
 
     private val resourceUri: URI = URI.create("$idelUrl/$resource")
