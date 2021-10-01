@@ -1,12 +1,10 @@
 package idel.api
 
 import arrow.core.Either
+import arrow.core.Option
 import arrow.core.flatMap
 import com.couchbase.client.core.error.DocumentExistsException
-import idel.domain.OperationNotPermitted
-import idel.domain.Roles
-import idel.domain.User
-import idel.domain.UserRepository
+import idel.domain.*
 import idel.infrastructure.repositories.PersistsUser
 import mu.KLogger
 import mu.KotlinLogging
@@ -102,27 +100,10 @@ class UserController(val userRepository: UserRepository) {
     }
 
     @GetMapping
-    fun list(@RequestParam(required = false, defaultValue = "0") first: Int,
-             @RequestParam(required = false, defaultValue = "10") last: Int): ResponseEntity<DataOrError<List<User>>> {
-        val size = last - first;
-
-        if (size <= 0) {
-            return DataOrError.incorrectArgument("last: $last, first: $first", "first should be less then first")
-        }
-
-        if (size > 100) {
-            val error = ErrorDescription.tooManyItems(size, 100);
-            return DataOrError.errorResponse(error)
-        }
-
-
-        return try {
-            DataOrError.ok(userRepository.load(first, last))
-
-        } catch (e: Exception) {
-            log.error(e) {"Can't load users list"}
-            DataOrError.internal("Can't load data.  Exception message: " + e.message)
-        }
+    fun list(@AuthenticationPrincipal user : User,
+             @RequestParam filter : String?,
+             pagination: Repository.Pagination): ResponseEntity<DataOrError<List<User>>> {
+        return DataOrError.fromEither(userRepository.load(Option.fromNullable(filter), pagination), log)
     }
 
     @GetMapping("/{userId}")

@@ -2,13 +2,12 @@ package idel.infrastructure.repositories
 
 import arrow.core.Either
 import arrow.core.Option
+import arrow.core.Some
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.json.JsonObject
 import idel.domain.*
 import mu.KotlinLogging
-import kotlin.math.E
-import kotlin.math.max
 import kotlin.math.min
 
 data class PersistsUser(
@@ -61,33 +60,25 @@ class UserCouchbaseRepository(
         return mutate(user.id) {PersistsUser.of(user)}
     }
 
-    override fun load(first: Int, last: Int): List<User> {
-        val limit = last - first
+    override fun load(usernameFilter: Option<String>, pagination: Repository.Pagination): Either<Exception, List<User>> {
+        val filterQueryParts = mutableListOf<String>()
         val params = JsonObject.create()
-            .put("offset", first)
-            .put("limit", limit)
 
-        val queryString = "select * from `ideaelection` as ie " +
-                "where _type = \"${this.type}\" " +
-                "order by displayName offset \$offset limit \$limit"
+        if (usernameFilter is Some) {
+            filterQueryParts.add("""
+                (CONTAINS(UPPER(ie.displayName), UPPER(${'$'}username)) or 
+                 CONTAINS(UPPER(ie.email), UPPER(${'$'}username)))
+            """.trimIndent())
+            params.put("username", usernameFilter.value)
+        }
 
-        log.trace {"query: [$queryString], params: [$params]"}
-
-
-        val q = cluster.query(
-            queryString,
-            queryOptions(params).readonly(true)
+        return super.load(
+            filterQueryParts = filterQueryParts,
+            ordering = "ie.displayName ASC",
+            params = params,
+            pagination = pagination,
+            useFulltextSearch = false
         )
-
-        return q.rowsAs(this.typedClass)
-    }
-
-    override fun loadByGroup(
-        groupId: String,
-        pagination: Repository.Pagination,
-        usernameFilter: Option<String>
-    ): Either<Exception, List<User>> {
-        throw NotImplementedError()
     }
 
 

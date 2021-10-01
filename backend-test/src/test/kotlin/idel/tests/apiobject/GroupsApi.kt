@@ -14,7 +14,6 @@ interface GroupsFields {
 }
 
 class GroupsApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "groups") {
-    private val log = KotlinLogging.logger {}
 
     companion object {
         const val PUBLIC = "PUBLIC"

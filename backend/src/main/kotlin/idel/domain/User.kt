@@ -65,14 +65,7 @@ interface UserRepository {
     /**
      * Load list of users.
      */
-    fun load(first : Int, last : Int) : List<User>
-
-    /**
-     * Load user's from group.
-     *
-     * In fact, the best place for this method is [GroupMemberRepository], but it's required too hard refactoring.
-     */
-    fun loadByGroup(groupId : String, pagination: Repository.Pagination, usernameFilter : Option<String>) : Either<Exception, List<User>>
+    fun load(usernameFilter: Option<String>, pagination: Repository.Pagination) : Either<Exception, List<User>>
 
     /**
      * Load all user that relative to each idea in the list.
