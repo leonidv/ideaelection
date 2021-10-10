@@ -29,6 +29,7 @@ class EntityStorage(idelUrl: String = Idel.URL) : AbstractObjectApi(User.instanc
         clearGroups()
         clearJoinRequests()
         clearGroupMembers()
+        clearInvites()
     }
 
     /**
@@ -54,5 +55,8 @@ class EntityStorage(idelUrl: String = Idel.URL) : AbstractObjectApi(User.instanc
 
     fun clearGroupMembers() {
         this.deleteEntity("groupMember")
+    }
+    fun clearInvites() {
+        this.deleteEntity("invite")
     }
 }

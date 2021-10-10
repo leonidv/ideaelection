@@ -2,6 +2,9 @@ package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
+import idel.tests.infrastructure.BodyArrayContainsObjects
+import idel.tests.infrastructure.BodyContainsObject
+import idel.tests.infrastructure.NotBodyContainsObject
 import idel.tests.infrastructure.toJsonArray
 import java.net.http.HttpResponse
 import java.time.LocalDateTime
@@ -11,6 +14,8 @@ class InvitesStatuses {
     val DECLINED: String = "DECLINED"
 }
 
+class InvitesField
+
 class InvitesApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "invites") {
 
     companion object {
@@ -19,7 +24,7 @@ class InvitesApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(use
 
     fun create(
         groupId: String,
-        registeredUsersIds: Array<User>,
+        registeredUsers: Array<User>,
         newUsersEmails: Array<User>,
         message: String = "Created from tests ${LocalDateTime.now()}",
     ): HttpResponse<JsonNode> {
@@ -27,7 +32,7 @@ class InvitesApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(use
             {
                 "groupId" : "$groupId",
                 "message" : "$message",
-                "registeredUsersIds" : ${registeredUsersIds.map {it.id}.toJsonArray()},
+                "registeredUsersIds" : ${registeredUsers.map {it.id}.toJsonArray()},
                 "newUsersEmails" : ${newUsersEmails.map {it.id}.toJsonArray()}
             }
         """.trimIndent()
@@ -69,3 +74,30 @@ class InvitesApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(use
         return delete("/$inviteId", "")
     }
 }
+
+fun hasInvitesToGroups(groupsIds: Array<String>) = BodyArrayContainsObjects(
+    testName = "include invites to groups [$groupsIds]",
+    arrayPath = "$.data.invites",
+    field = "groupId",
+    values = groupsIds.toSet()
+)
+
+fun inviteUserSelectorFields(groupId: String, userId: String) =
+    arrayOf(
+        Pair("groupId", groupId),
+        Pair("userId", userId),
+        Pair("userEmail", null),
+        Pair("emailWasSent", null)
+    )
+
+fun hasInviteForUser(groupId: String, user: User) = BodyContainsObject(
+    testName = "include invite for user",
+    objectPath = "$.data.invites",
+    fields = inviteUserSelectorFields(groupId, user.id)
+)
+
+fun hasNotInviteForUser(groupId: String, user: User) = NotBodyContainsObject(
+    testName = "don't include invite for user",
+    objectPath = "$.data.invites",
+    fields = inviteUserSelectorFields(groupId, user.id)
+)

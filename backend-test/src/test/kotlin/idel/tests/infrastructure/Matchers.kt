@@ -106,7 +106,7 @@ object ResponseMatchers {
         }
     }
 
-    fun hasObjectWithFields(objectPath: String, vararg fields: Pair<String, String>) = object : Matcher<JsonNode> {
+    fun hasObjectWithFields(objectPath: String, vararg fields: Pair<String, String?>) = object : Matcher<JsonNode> {
         override fun test(value: JsonNode): MatcherResult {
             val hasObject = value.hasObjectWithFields(objectPath, *fields)
             val msg = """contains object of array at path $objectPath with fields ${fields.joinToString()}"""
@@ -196,10 +196,10 @@ fun JsonNode.shouldContainsArrayElement(arrayPath: String, elementValue: String)
 fun JsonNode.shouldNotContainsArrayElement(arrayPath: String, elementValue: String) =
     this shouldNot ResponseMatchers.hasArrayElement(arrayPath, elementValue)
 
-fun JsonNode.shouldContainsObject(arrayPath: String, vararg fields: Pair<String, String>) =
+fun JsonNode.shouldContainsObject(arrayPath: String, vararg fields: Pair<String, String?>) =
     this should ResponseMatchers.hasObjectWithFields(arrayPath, *fields)
 
-fun JsonNode.shouldNotContainsObject(arrayPath: String, vararg fields: Pair<String, String>) =
+fun JsonNode.shouldNotContainsObject(arrayPath: String, vararg fields: Pair<String, String?>) =
     this shouldNot ResponseMatchers.hasObjectWithFields(arrayPath, *fields)
 
 fun JsonNode.shouldContainsObjects(arrayPath: String, field: String, expectedValues: Set<String>) =

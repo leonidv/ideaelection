@@ -7,6 +7,7 @@ import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
 import idel.tests.infrastructure.*
+import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import java.net.http.HttpResponse
 
 class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "ideas") {
@@ -179,6 +180,9 @@ fun ideasOrder(ids : Array<String>) = BodyArrayOrder("has correct order", "$.dat
 fun usersInfoCount(count : Int) = BodyArraySize("response contains $count users", "$.data.users", count)
 fun usersInfoContains(user : Set<User>) = BodyArrayContainsObjects("has user's info", "$.data.users", "id", user.map {it.id}.toSet())
 
-
+fun extractInviteId(user: User, groupId: String, response : HttpResponse<JsonNode>) : String {
+    val query = "$.data.invites[?(@.userId=='${user.id}' && @.groupId=='$groupId')].id"
+    return response.body()!!.queryString(query).getOrElse {ValueNotExists.throwForQuery(query)}
+}
 
 

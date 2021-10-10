@@ -56,7 +56,7 @@ class NotBodyArrayElementExists(
 class BodyContainsObject(
     override val testName: String,
     private val objectPath: String,
-    private val fields: Array<Pair<String, String>>
+    private val fields: Array<Pair<String, String?>>
 ) : ResponseChecker {
     override fun check(jsonNode: JsonNode) {
         jsonNode.shouldContainsObject(objectPath, *fields)
@@ -66,7 +66,7 @@ class BodyContainsObject(
 class NotBodyContainsObject(
     override val testName: String,
     private val objectPath: String,
-    private val fields: Array<Pair<String, String>>
+    private val fields: Array<Pair<String, String?>>
 ) : ResponseChecker {
     override fun check(jsonNode: JsonNode) {
         jsonNode.shouldNotContainsObject(objectPath, *fields)

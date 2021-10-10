@@ -5,16 +5,21 @@ import arrow.core.Option
 import arrow.core.Some
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.jayway.jsonpath.Configuration
-import com.jayway.jsonpath.JsonPath
-import com.jayway.jsonpath.PathNotFoundException
-import com.jayway.jsonpath.TypeRef
+import com.jayway.jsonpath.*
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider
 import com.jayway.jsonpath.spi.mapper.MappingException
 
 fun idField(id: String) = Pair("id", id)
+
+class ValueNotExists(msg: String) : Exception(msg) {
+    companion object {
+        fun `throw`(field: String): Nothing = throw ValueNotExists("field = [$field]")
+        fun throwForQuery(query: String): Nothing = throw ValueNotExists("query = [$query]")
+    }
+}
 
 object JsonNodeExtensions {
     private val provider = JacksonJsonNodeJsonProvider(jacksonObjectMapper())
@@ -50,9 +55,13 @@ object JsonNodeExtensions {
     }
 
 
-    fun JsonNode.hasObjectWithFields(objectPath: String, vararg fields: Pair<String, String>): Boolean {
+    fun JsonNode.hasObjectWithFields(objectPath: String, vararg fields: Pair<String, String?>): Boolean {
         val jsonFilter =
-            fields.joinToString(prefix = "?(", separator = " && ", postfix = ")") {"@.${it.first} == '${it.second}'"}
+            fields.joinToString(prefix = "?(", separator = " && ", postfix = ")") {field ->
+                val name = field.first
+                val value = if (field.second != null) "'${field.second}'" else "null"
+                "@.$name == $value"
+            }
         val jsonPath = """$objectPath[$jsonFilter]"""
         return try {
             val parsed = JsonPath.parse(this, conf)
@@ -70,8 +79,8 @@ object JsonNodeExtensions {
      */
     fun JsonNode.containsObjects(arrayPath: String, field: String, values: Set<String>): Set<String> {
         val result = mutableSetOf<String>()
-        values.filterNot { value ->
-            this.hasObjectWithFields(arrayPath,Pair(field, value) )
+        values.filterNot {value ->
+            this.hasObjectWithFields(arrayPath, Pair(field, value))
         }
         return result
     }
@@ -100,11 +109,25 @@ object JsonNodeExtensions {
     fun JsonNode.queryString(jsonPath: String): Option<String> {
         return try {
             val parsed = JsonPath.parse(this, conf)
-            Option.fromNullable(parsed.read(jsonPath, stringTypeRef))
+            val x = parsed.read<Any>(jsonPath)
+            when(x) {
+                is TextNode -> Option.fromNullable(x.textValue())
+                is IntNode -> Option.fromNullable(x.intValue().toString()) // ugly dirty hack, only for test :)
+                is ArrayNode -> if (x.size() == 1) {
+                    Option.fromNullable(x[0].textValue())
+                } else {
+                    throw IllegalArgumentException("query result is array with size != 1, jsonPath = $jsonPath")
+                }
+                else -> {
+                    throw IllegalArgumentException("jsonPath doesn't contains string or array with 1 element, jsonPath = $jsonPath")
+                }
+            }
         } catch (e: MappingException) {
             None
         } catch (e: PathNotFoundException) {
             None
+        } catch (e : InvalidPathException) {
+            throw IllegalArgumentException("invalid path [$jsonPath], syntax error = ${e.message}")
         }
 
     }

@@ -14,8 +14,10 @@ class User(val name: String, var role : String = "", val domain : String = DEFAU
 
     val groups = GroupsApi(this, idelUrl)
     val joinRequests = JoinRequestsApi(this, idelUrl)
+    val invites = InvitesApi(this, idelUrl)
     val ideas = IdeasApi(this, idelUrl)
     val users = UserApi(this, idelUrl)
+
     override fun toString(): String {
         val fmtRole = if (role.isBlank()) {
             ""

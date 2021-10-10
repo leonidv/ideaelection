@@ -6,7 +6,6 @@ import idel.domain.*
 import mu.KotlinLogging
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import javax.websocket.server.PathParam
 
 @RestController
 @RequestMapping("/invites")
@@ -32,7 +31,7 @@ class InvitesController(
         val newUsersEmails: Set<String>
     )
 
-    data class AddInviteResult(val createdInvites: Set<Invite>, val errorForUsers: Set<String>)
+    data class AddInviteResult(val invites: Set<Invite>, val errorForUsers: Set<String>)
 
     @PostMapping
     fun create(
@@ -46,7 +45,7 @@ class InvitesController(
                 author = user,
                 registeredUserIds = params.registeredUsersIds,
                 newUserEmails = params.newUsersEmails
-            ).map {result -> AddInviteResult(createdInvites = result.createdInvites, errorForUsers = result.errorsFor)}
+            ).map {result -> AddInviteResult(invites = result.createdInvites, errorForUsers = result.errorsFor)}
         }
     }
 
