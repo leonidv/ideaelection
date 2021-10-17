@@ -25,7 +25,7 @@ class InvitesApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(use
     fun create(
         groupId: String,
         registeredUsers: Array<User>,
-        newUsersEmails: Array<User>,
+        newUsersEmails: Array<String>,
         message: String = "Created from tests ${LocalDateTime.now()}",
     ): HttpResponse<JsonNode> {
         val body = """
@@ -33,7 +33,7 @@ class InvitesApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(use
                 "groupId" : "$groupId",
                 "message" : "$message",
                 "registeredUsersIds" : ${registeredUsers.map {it.id}.toJsonArray()},
-                "newUsersEmails" : ${newUsersEmails.map {it.id}.toJsonArray()}
+                "newUsersEmails" : ${newUsersEmails.toJsonArray()}
             }
         """.trimIndent()
 
@@ -90,14 +90,33 @@ fun inviteUserSelectorFields(groupId: String, userId: String) =
         Pair("emailWasSent", null)
     )
 
+fun invitePersonSelectorFields(groupId: String, email: String) =
+    arrayOf(
+        Pair("groupId", groupId),
+        Pair("userId", null),
+        Pair("userEmail", email.toLowerCase())
+    )
+
 fun hasInviteForUser(groupId: String, user: User) = BodyContainsObject(
-    testName = "include invite for user",
+    testName = "include invite for user $user",
     objectPath = "$.data.invites",
     fields = inviteUserSelectorFields(groupId, user.id)
 )
 
 fun hasNotInviteForUser(groupId: String, user: User) = NotBodyContainsObject(
-    testName = "don't include invite for user",
+    testName = "doesn't`t include invite for user",
     objectPath = "$.data.invites",
     fields = inviteUserSelectorFields(groupId, user.id)
+)
+
+fun hasInviteForPerson(groupId: String, email : String) = BodyContainsObject(
+    testName = "include invite for person, email = $email, groupId = $groupId",
+    objectPath = "$.data.invites",
+    fields = invitePersonSelectorFields(groupId, email)
+)
+
+fun hasNotInviteForPerson(groupId: String, email: String) = NotBodyContainsObject(
+    testName = "doesn't include invite for person, email = $email",
+    objectPath = "$.data.invites",
+    fields = invitePersonSelectorFields(groupId, email)
 )

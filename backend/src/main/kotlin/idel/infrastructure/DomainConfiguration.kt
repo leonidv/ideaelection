@@ -81,6 +81,10 @@ class DomainConfiguration {
         return SecurityService(groupMemberRepository, groupRepository)
     }
 
+    @Bean
+    fun userService(userRepository: UserRepository, groupMembershipService: GroupMembershipService) : UserService {
+        return UserService(userRepository, groupMembershipService)
+    }
 
 
 }

@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/users")
-class UserController(val userRepository: UserRepository) {
+class UserController(
+    private val userRepository: UserRepository,
+    private val userService: UserService
+) {
     data class MeResult(val id: String,
                         val domain : String,
                         val displayName: String,
@@ -90,7 +93,7 @@ class UserController(val userRepository: UserRepository) {
     fun register(@RequestBody userInfo: PersistsUser): ResponseEntity<out DataOrError<out User>> {
         return rolesAreNotMisspelled<User>(userInfo.roles) {
             try {
-                userRepository.add(userInfo)
+                userService.register(userInfo)
                 DataOrError.ok(userInfo)
             } catch (ex: DocumentExistsException) {
                 DataOrError.incorrectArgument("id", "User with same id already registered")

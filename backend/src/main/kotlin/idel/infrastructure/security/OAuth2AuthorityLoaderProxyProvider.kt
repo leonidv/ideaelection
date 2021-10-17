@@ -5,14 +5,18 @@ import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
 import idel.domain.EntityNotFound
+import idel.domain.GroupMembershipService
 import idel.domain.UserRepository
+import idel.domain.UserService
 import mu.KotlinLogging
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationToken
 
 class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationProvider,
-                                         private val userRepository: UserRepository) : AuthenticationProvider {
+                                         private val userRepository: UserRepository,
+                                         private val userService: UserService
+) : AuthenticationProvider {
 
     val log = KotlinLogging.logger {}
 
@@ -106,7 +110,7 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
             }
 
             is None -> {
-                userRepository.add(idelUser)
+                userService.register(idelUser)
                 idelUser.authorities
             }
         }

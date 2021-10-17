@@ -36,7 +36,7 @@ class UserCouchbaseRepository(
     cluster: Cluster,
     collection: Collection
 ) :
-    AbstractTypedCouchbaseRepository<PersistsUser>(
+    AbstractTypedCouchbaseRepository<User>(
         cluster,
         collection,
         TYPE,
@@ -50,9 +50,12 @@ class UserCouchbaseRepository(
 
     override val log = KotlinLogging.logger {}
 
-    override fun add(user: User) {
+    override fun add(user: User): Either<Exception, User> {
         val persistsUser = PersistsUser.of(user)
-        collection.insert(persistsUser.id, persistsUser, insertOptions())
+        return safelyKeyOperation(user.id) {
+            collection.insert(persistsUser.id, persistsUser, insertOptions())
+            user
+        }
     }
 
 

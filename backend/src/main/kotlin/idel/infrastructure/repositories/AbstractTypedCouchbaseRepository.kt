@@ -43,7 +43,7 @@ abstract class AbstractTypedCouchbaseRepository<T : Identifiable>(
     protected val cluster: Cluster,
     protected val collection: Collection,
     protected val type: String,
-    protected val typedClass: Class<T>,
+    protected val typedClass: Class<out T>,
     protected val ignoredFields : Set<String> = emptySet()
 ) : BaseRepository<T> {
 

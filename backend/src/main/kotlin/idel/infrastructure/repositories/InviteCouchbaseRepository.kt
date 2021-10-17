@@ -4,10 +4,7 @@ import arrow.core.Either
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
 import com.couchbase.client.java.json.JsonObject
-import idel.domain.GroupMembershipRequestOrdering
-import idel.domain.Invite
-import idel.domain.InviteRepository
-import idel.domain.Repository
+import idel.domain.*
 import mu.KotlinLogging
 
 class InviteCouchbaseRepository(cluster : Cluster, collection : Collection) :
@@ -33,6 +30,20 @@ class InviteCouchbaseRepository(cluster : Cluster, collection : Collection) :
         )
     }
 
+    override fun loadByEmail(email: String, pagination: Repository.Pagination): Either<Exception, List<Invite>> {
+        val params = JsonObject.create()
+        val filterQueryParts = listOf("UPPER(userEmail) = UPPER(\$email)")
+        params.put("email", email)
+
+        return super.load(
+            filterQueryParts,
+            Repository.enumAsOrdering(GroupMembershipRequestOrdering.CTIME_ASC),
+            params,
+            pagination,
+            useFulltextSearch = false
+        )
+    }
+
     override fun loadByGroup(
         groupId: String,
         order: GroupMembershipRequestOrdering,
@@ -50,4 +61,5 @@ class InviteCouchbaseRepository(cluster : Cluster, collection : Collection) :
             useFulltextSearch = false
         )
     }
+
 }

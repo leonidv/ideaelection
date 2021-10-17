@@ -113,6 +113,7 @@ object JsonNodeExtensions {
             when(x) {
                 is TextNode -> Option.fromNullable(x.textValue())
                 is IntNode -> Option.fromNullable(x.intValue().toString()) // ugly dirty hack, only for test :)
+                is BooleanNode -> Option.fromNullable(x.booleanValue().toString())
                 is ArrayNode -> if (x.size() == 1) {
                     Option.fromNullable(x[0].textValue())
                 } else {

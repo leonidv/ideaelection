@@ -7,6 +7,7 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import idel.domain.User
 import idel.domain.UserRepository
+import idel.domain.UserService
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -38,7 +39,7 @@ import javax.servlet.http.HttpServletResponse
 @Configuration
 @EnableWebSecurity
 @Order(2)
-class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurityConfigurerAdapter() {
+class WebSecurityConfig(private val userRepository: UserRepository, private val userService: UserService) : WebSecurityConfigurerAdapter() {
     val log = KotlinLogging.logger {}
 
 
@@ -101,7 +102,7 @@ class WebSecurityConfig(private val userRepository: UserRepository) : WebSecurit
 
         val oauth2LoginConfigurer = OAuth2LoginConfigurer<HttpSecurity>();
         oauth2LoginConfigurer.successHandler(Oauth2JwtTokenSuccesHandler(jwtIssuer()))
-        val customOAuth2LoginConfigurer = WrapperOAuth2LoginConfigurer(oauth2LoginConfigurer, userRepository)
+        val customOAuth2LoginConfigurer = WrapperOAuth2LoginConfigurer(oauth2LoginConfigurer, userRepository, userService)
         http.csrf().disable()
         http.apply(customOAuth2LoginConfigurer)
     }

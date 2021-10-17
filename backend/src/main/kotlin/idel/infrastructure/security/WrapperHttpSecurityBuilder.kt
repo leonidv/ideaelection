@@ -1,6 +1,7 @@
 package idel.infrastructure.security
 
 import idel.domain.UserRepository
+import idel.domain.UserService
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.SecurityConfigurer
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder
@@ -12,8 +13,11 @@ import javax.servlet.Filter
 typealias B = SecurityConfigurer<DefaultSecurityFilterChain, HttpSecurity>
 typealias CB = Class<B>
 
-class WrapperHttpSecurityBuilder(private val http: HttpSecurity,
-                                 private val userRepository: UserRepository) : HttpSecurityBuilder<WrapperHttpSecurityBuilder> {
+class WrapperHttpSecurityBuilder(
+    private val http: HttpSecurity,
+    private val userRepository: UserRepository,
+    private val userService: UserService
+) : HttpSecurityBuilder<WrapperHttpSecurityBuilder> {
 
     override fun <C : Any?> setSharedObject(sharedType: Class<C>?, o: C) {
         this.http.setSharedObject(sharedType, o)
@@ -24,7 +28,7 @@ class WrapperHttpSecurityBuilder(private val http: HttpSecurity,
     }
 
     override fun authenticationProvider(authenticationProvider: AuthenticationProvider): WrapperHttpSecurityBuilder {
-        val provider = OAuth2AuthorityLoaderProxyProvider(authenticationProvider, userRepository)
+        val provider = OAuth2AuthorityLoaderProxyProvider(authenticationProvider, userRepository, userService)
         this.http.authenticationProvider(provider)
         return this
     }
@@ -37,8 +41,8 @@ class WrapperHttpSecurityBuilder(private val http: HttpSecurity,
     }
 
     override fun addFilter(filter: Filter): WrapperHttpSecurityBuilder {
-       this.http.addFilter(filter)
-       return this
+        this.http.addFilter(filter)
+        return this
     }
 
     override fun userDetailsService(userDetailsService: UserDetailsService?): WrapperHttpSecurityBuilder {
@@ -60,7 +64,9 @@ class WrapperHttpSecurityBuilder(private val http: HttpSecurity,
         return this;
     }
 
-    override fun <C : SecurityConfigurer<DefaultSecurityFilterChain, WrapperHttpSecurityBuilder>?> removeConfigurer(clazz: Class<C>?): C {
+    override fun <C : SecurityConfigurer<DefaultSecurityFilterChain, WrapperHttpSecurityBuilder>?> removeConfigurer(
+        clazz: Class<C>?
+    ): C {
         TODO("Not yet implemented")
     }
 

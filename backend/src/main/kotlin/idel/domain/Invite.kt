@@ -155,9 +155,15 @@ interface InviteRepository : BaseRepository<Invite> {
         pagination: Repository.Pagination
     ): Either<Exception, List<Invite>>
 
+    fun loadByEmail(
+        email: String,
+        pagination: Repository.Pagination
+    ) : Either<Exception, List<Invite>>
+
     fun loadByGroup(
         groupId: String,
         order: GroupMembershipRequestOrdering,
         pagination: Repository.Pagination
     ): Either<Exception, List<Invite>>
+
 }

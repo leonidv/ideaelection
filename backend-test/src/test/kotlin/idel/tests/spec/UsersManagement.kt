@@ -68,7 +68,7 @@ class UsersManagement : DescribeSpec({
 
     fun genName(): String = UUID.randomUUID().toString().replace("-", "")
 
-    describe("register user") {
+    xdescribe("register user") {
         describe("positive scenarios") {
             describe("may create with all roles") {
                 table(
@@ -110,7 +110,7 @@ class UsersManagement : DescribeSpec({
             }
         }
 
-        describe("negative scenarios") {
+        xdescribe("negative scenarios") {
             describe("id already exists") {
                 val name = genName()
 

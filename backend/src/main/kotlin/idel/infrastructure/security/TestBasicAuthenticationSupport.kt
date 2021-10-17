@@ -3,6 +3,7 @@ package idel.infrastructure.security
 import arrow.core.Either
 import idel.domain.EntityNotFound
 import idel.domain.UserRepository
+import idel.domain.UserService
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService

@@ -4,7 +4,7 @@ import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
 
-class InviteRegisteredUser : DescribeSpec({
+class InviteRegisteredUserScenario : DescribeSpec({
 
     val entityStorage = EntityStorage()
     val userA = User("userA", "group's admin")

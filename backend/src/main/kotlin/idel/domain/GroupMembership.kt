@@ -51,14 +51,6 @@ class GroupMembershipService(
 
     data class Entities(val group: Group, val user: User)
 
-    private fun loadEntities(groupId: String, userId: String): Either<Exception, Entities> {
-        return either.eager {
-            val group = groupRepository.load(groupId).bind()
-            val user = userRepository.load(userId).bind()
-            Entities(group, user)
-        }
-    }
-
     private fun loadEntitiesByJoiningKey(groupJoiningKey: String, userId: String): Either<Exception, Entities> {
         return either.eager {
             val group = groupRepository.loadByJoiningKey(groupJoiningKey).bind()
@@ -213,5 +205,28 @@ class GroupMembershipService(
                 }
             }
         }
+    }
+
+    fun convertPersonInviteToUserInvite(user: User) : Either<Exception,Int> {
+        var counter = 0;
+        val result = either.eager<Exception,Int> {
+            do {
+                val invites = inviteRepository.loadByEmail(
+                    user.email,
+                    Repository.Pagination(first = 0, last = 100)
+                ).bind()
+
+                val (convertedInvites, exceptions) = invites.map { invite ->
+                    inviteRepository.mutate(invite.id) {
+                        invite.convertToUserInvite(user)
+                    }.mapLeft {
+                        log.warn(it) {"can't update invite [id = ${invite.id}, userEmail = ${user.email}]"}
+                    }
+                }.separateEither()
+                counter += convertedInvites.size
+            } while(invites.isNotEmpty())
+            counter
+        }
+        return result
     }
 }
