@@ -57,11 +57,10 @@ class JoinAndLeaveToClosedAndPrivateGroupScenarios : DescribeSpec({
                 val response = userB.joinRequests.create(joiningKey)
                 checkIsOk(
                     response,
-                    hasId,
                     joinRequestIsUnresolved
                 )
 
-                joinRequestId = response.extractId()
+                joinRequestId = extractJoinRequestId(response)
             }
 
             describe("$userB see join request in his list") {
@@ -144,11 +143,10 @@ class JoinAndLeaveToClosedAndPrivateGroupScenarios : DescribeSpec({
                 val response = userC.joinRequests.create(joiningKey)
                 checkIsOk(
                     response,
-                    hasId,
                     joinRequestIsUnresolved
                 )
 
-                joinRequestId = response.extractId()
+                joinRequestId = extractJoinRequestId(response)
             }
 
             describe("$userC don't see the group in the list of his groups") {

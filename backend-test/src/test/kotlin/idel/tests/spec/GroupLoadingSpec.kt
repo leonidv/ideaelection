@@ -468,9 +468,9 @@ suspend fun DescribeSpecContainerContext.addUserToGroup(
     describe("add $user to $groupParams") {
         val joiningKey = groupsInfo[groupParams]!!.joiningKey
         val joinRequestResponse = user.joinRequests.create(joiningKey)
-        checkIsOk(joinRequestResponse, hasId)
+        checkIsOk(joinRequestResponse)
         if (groupParams.entryMode != GroupsApi.PUBLIC) {
-            val joinRequestId = joinRequestResponse.extractId()
+            val joinRequestId = extractJoinRequestId(joinRequestResponse)
             val changeStatusResponse = admin.joinRequests.changeStatus(joinRequestId, JoinRequestsApi.APPROVED)
             checkIsOk(changeStatusResponse, joinRequestIsApproved)
         }

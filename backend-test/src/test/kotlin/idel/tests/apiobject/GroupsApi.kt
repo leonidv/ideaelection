@@ -20,6 +20,8 @@ class GroupsApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user
         const val CLOSED = "CLOSED"
         const val PRIVATE = "PRIVATE"
 
+        val ENTRY_MODES = listOf(PUBLIC, CLOSED, PRIVATE)
+
         const val MEMBER = "MEMBER"
         const val ADMIN = "GROUP_ADMIN"
 

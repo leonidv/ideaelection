@@ -1,10 +1,10 @@
 package idel.tests.apiobject
 
+import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
-import idel.tests.infrastructure.BodyContainsObject
-import idel.tests.infrastructure.BodyFieldValueChecker
-import idel.tests.infrastructure.asUserId
+import idel.tests.infrastructure.*
+import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import mu.KotlinLogging
 import java.net.http.HttpResponse
 
@@ -44,19 +44,34 @@ class JoinRequestsApi(user : User, idelUrl : String = Idel.URL) : AbstractObject
 
         return patch("/$joinRequestId/status", body)
     }
+
+    fun delete(joinRequestId: String) = super.delete("/$joinRequestId","")
 }
 
-fun joinRequestHasStatus(status : String) = BodyFieldValueChecker.forField("status",status)
-val joinRequestIsApproved = BodyFieldValueChecker("join request is approved", "$.data.status", JoinRequestsApi.APPROVED)
-val joinRequestIsUnresolved = BodyFieldValueChecker("join request is unresolved", "$.data.status", JoinRequestsApi.UNRESOLVED)
-val joinRequestIsDeclined = BodyFieldValueChecker("join request is declined","$.data.status",JoinRequestsApi.DECLINED)
-fun joinRequestHasGroupId(groupId : String) = BodyFieldValueChecker.forField("groupId",groupId)
-fun joinRequestHasUserId(userId : String) = BodyFieldValueChecker.forField("userId",userId)
-fun joinRequestHasMessage(msg : String) = BodyFieldValueChecker.forField("message", msg)
+/*
+ * fun extractInviteId(user: User, groupId: String, response : HttpResponse<JsonNode>) : String {
+val query = "$.data.invites[?(@.userId=='${user.id}' && @.groupId=='$groupId')].id"
+return response.body()!!.queryString(query).getOrElse {ValueNotExists.throwForQuery(query)}
+ */
 
+fun extractJoinRequestId(response: HttpResponse<JsonNode>) : String {
+    val path = "$.data.joinRequest.id"
+    return response.body()!!.queryString(path).getOrElse {ValueNotExists.`throw`(path)}
+}
+
+fun joinRequestHasStatus(status : String) = BodyFieldValueChecker.forField("joinRequest.status",status)
+val joinRequestIsApproved = joinRequestHasStatus(JoinRequestsApi.APPROVED)
+val joinRequestIsUnresolved = joinRequestHasStatus(JoinRequestsApi.UNRESOLVED)
+val joinRequestIsDeclined = joinRequestHasStatus(JoinRequestsApi.DECLINED)
+fun joinRequestHasGroupId(groupId : String) = BodyFieldValueChecker.forField("joinRequest.groupId",groupId)
+fun joinRequestHasUserId(userId : String) = BodyFieldValueChecker.forField("joinRequest.userId",userId)
+fun joinRequestHasMessage(msg : String) = BodyFieldValueChecker.forField("joinRequest.message", msg)
 
 fun includeJoinRequest(joinRequestId : String) =
     BodyContainsObject("include joinRequest $joinRequestId", "$.data", arrayOf(Pair("id",joinRequestId)))
+
+fun notIncludeJoinRequest(joinRequestId: String) =
+    NotBodyContainsObject("not include joinRequest $joinRequestId", "$.data", arrayOf(Pair("id", joinRequestId)))
 
 fun includeJoinRequestWithStatus(joinRequestId: String, status: String) =
     BodyContainsObject("include joinRequest $joinRequestId with status $status", "$.data",

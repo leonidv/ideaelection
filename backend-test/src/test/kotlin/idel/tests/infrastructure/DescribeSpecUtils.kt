@@ -59,7 +59,7 @@ suspend fun DescribeSpecContainerContext.createGroup(
                 }
 
                 describe("admin approve join request") {
-                    val joinRequestId = joinRequestResponse.extractId()
+                    val joinRequestId = extractJoinRequestId(joinRequestResponse)
                     val approveRequest = groupAdmin.joinRequests.changeStatus(joinRequestId, JoinRequestsApi.APPROVED)
                     checkIsOk(approveRequest, joinRequestIsApproved)
                 }

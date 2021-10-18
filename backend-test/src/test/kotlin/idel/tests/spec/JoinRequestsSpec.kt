@@ -38,17 +38,16 @@ class JoinRequestsSpec : DescribeSpec({
     describe("positive scenarios") {
         describe("creating join requests to public group") {
             describe("basic checks") {
-                lateinit var groupId : String
-                lateinit var joiningKey : String
+                lateinit var groupId: String
+                lateinit var joiningKey: String
                 val groupInfo = createGroup(userA, entryMode = GroupsApi.PUBLIC, members = setOf())
                 groupId = groupInfo.groupId
                 joiningKey = groupInfo.joiningKey
 
-                val response  = userB.joinRequests.create(joiningKey = joiningKey, message = "msg")
+                val response = userB.joinRequests.create(joiningKey = joiningKey, message = "msg")
 
                 checkIsOk(
                     response,
-                    hasId,
                     joinRequestHasGroupId(groupId),
                     joinRequestHasUserId(userB.id),
                     joinRequestIsApproved,
@@ -56,32 +55,68 @@ class JoinRequestsSpec : DescribeSpec({
                 )
 
             }
+        }
 
-            describe("join requests status depends on groups entry mode") {
-                table(
-                    headers("entryMode", "joinRequestStatus"),
-                    row(GroupsApi.PUBLIC, JoinRequestsApi.APPROVED),
-                    row(GroupsApi.CLOSED, JoinRequestsApi.UNRESOLVED),
-                    row(GroupsApi.PRIVATE, JoinRequestsApi.UNRESOLVED)
-                ).forAll {entryMode: String, status: String ->
-                    describe("for $entryMode group status should be $status") {
-                        lateinit var joiningKey : String
-                        joiningKey = createGroup(userA, entryMode = entryMode, members = setOf()).joiningKey
+        describe("join requests status depends on groups entry mode") {
+            table(
+                headers("entryMode", "joinRequestStatus"),
+                row(GroupsApi.PUBLIC, JoinRequestsApi.APPROVED),
+                row(GroupsApi.CLOSED, JoinRequestsApi.UNRESOLVED),
+                row(GroupsApi.PRIVATE, JoinRequestsApi.UNRESOLVED)
+            ).forAll {entryMode: String, status: String ->
+                describe("for $entryMode group status should be $status") {
+                    lateinit var joiningKey: String
+                    joiningKey = createGroup(userA, entryMode = entryMode, members = setOf()).joiningKey
 
+                    val response = userB.joinRequests.create(joiningKey)
+                    checkIsOk(
+                        response,
+                        joinRequestHasStatus(status)
+                    )
+                }
+            }
+        }
+
+        describe("delete a joinRequest") {
+            listOf(GroupsApi.CLOSED, GroupsApi.PRIVATE) .forEach {entryMode ->
+                describe("from a $entryMode group") {
+
+                    lateinit var joinRequestId: String
+
+                    describe("create a joinRequest") {
+                        val joiningKey = createGroup(userA, entryMode = entryMode, members = setOf()).joiningKey
                         val response = userB.joinRequests.create(joiningKey)
+                        checkIsOk(response)
+                        joinRequestId = extractJoinRequestId(response)
+                    }
+
+                    describe("$userB see joinRequest in his joinRequests") {
+                        val response = userB.joinRequests.loadForUser()
+                        checkIsOk(response, includeJoinRequest(joinRequestId))
+                    }
+
+                    describe("$userB delete him joinRequest") {
+                        val response = userB.joinRequests.delete(joinRequestId)
+                        checkIsOk(response)
+                    }
+
+                    describe("$userB don't see joinRequest in his joinRequests") {
+                        val response = userB.joinRequests.loadForUser()
                         checkIsOk(
                             response,
-                            joinRequestHasStatus(status)
+                            notIncludeJoinRequest(joinRequestId)
                         )
                     }
                 }
             }
+        }
 
-            xdescribe("user already in group") {
-                // should ignore request and sent approved
-            }
+        xdescribe("user already in group") {
+            // should ignore request and sent approved
         }
     }
+
+
 
     describe("security") {
         describe("$userB can't create join request for group with domain = [company]") {

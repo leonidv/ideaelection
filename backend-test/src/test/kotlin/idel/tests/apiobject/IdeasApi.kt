@@ -180,9 +180,5 @@ fun ideasOrder(ids : Array<String>) = BodyArrayOrder("has correct order", "$.dat
 fun usersInfoCount(count : Int) = BodyArraySize("response contains $count users", "$.data.users", count)
 fun usersInfoContains(user : Set<User>) = BodyArrayContainsObjects("has user's info", "$.data.users", "id", user.map {it.id}.toSet())
 
-fun extractInviteId(user: User, groupId: String, response : HttpResponse<JsonNode>) : String {
-    val query = "$.data.invites[?(@.userId=='${user.id}' && @.groupId=='$groupId')].id"
-    return response.body()!!.queryString(query).getOrElse {ValueNotExists.throwForQuery(query)}
-}
 
 

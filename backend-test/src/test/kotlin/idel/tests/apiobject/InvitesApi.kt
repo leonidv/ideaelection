@@ -1,11 +1,10 @@
 package idel.tests.apiobject
 
+import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
-import idel.tests.infrastructure.BodyArrayContainsObjects
-import idel.tests.infrastructure.BodyContainsObject
-import idel.tests.infrastructure.NotBodyContainsObject
-import idel.tests.infrastructure.toJsonArray
+import idel.tests.infrastructure.*
+import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import java.net.http.HttpResponse
 import java.time.LocalDateTime
 
@@ -74,6 +73,13 @@ class InvitesApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(use
         return delete("/$inviteId", "")
     }
 }
+
+fun extractInviteId(user: User, groupId: String, response : HttpResponse<JsonNode>) : String {
+    val query = "$.data.invites[?(@.userId=='${user.id}' && @.groupId=='$groupId')].id"
+    return response.body()!!.queryString(query).getOrElse {ValueNotExists.throwForQuery(query)}
+}
+
+
 
 fun hasInvitesToGroups(groupsIds: Array<String>) = BodyArrayContainsObjects(
     testName = "include invites to groups [$groupsIds]",
