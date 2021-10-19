@@ -7,13 +7,18 @@ import idel.tests.infrastructure.registryUsers
 import io.kotest.core.spec.style.DescribeSpec
 
 class InvitePersonScenario : DescribeSpec({
+
+    beforeSpec {
+        EntityStorage().clearAll()
+    }
+
     describe("initialization") {
         val userA = User("userA", "admin")
         val userB = User("userB")
         val userC = User("userC")
         val userD = User("userD")
 
-        EntityStorage().clearAll()
+
         registryUsers(userA)
 
         val userPerGroup = mapOf(

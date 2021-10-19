@@ -68,12 +68,12 @@ fun joinRequestHasUserId(userId : String) = BodyFieldValueChecker.forField("join
 fun joinRequestHasMessage(msg : String) = BodyFieldValueChecker.forField("joinRequest.message", msg)
 
 fun includeJoinRequest(joinRequestId : String) =
-    BodyContainsObject("include joinRequest $joinRequestId", "$.data", arrayOf(Pair("id",joinRequestId)))
+    BodyContainsObject("include joinRequest $joinRequestId", "$.data.joinRequests", arrayOf(Pair("id",joinRequestId)))
 
 fun notIncludeJoinRequest(joinRequestId: String) =
-    NotBodyContainsObject("not include joinRequest $joinRequestId", "$.data", arrayOf(Pair("id", joinRequestId)))
+    NotBodyContainsObject("not include joinRequest $joinRequestId", "$.data.joinRequests", arrayOf(Pair("id", joinRequestId)))
 
 fun includeJoinRequestWithStatus(joinRequestId: String, status: String) =
-    BodyContainsObject("include joinRequest $joinRequestId with status $status", "$.data",
+    BodyContainsObject("include joinRequest $joinRequestId with status $status", "$.data.joinRequests",
         arrayOf(Pair("id",joinRequestId),Pair("status",status))
     )

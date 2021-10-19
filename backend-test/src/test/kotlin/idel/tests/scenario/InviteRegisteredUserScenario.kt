@@ -11,8 +11,11 @@ class InviteRegisteredUserScenario : DescribeSpec({
     val userB = User("userB", "not member")
     val userC = User("userC", "not member")
 
-    describe("initalization") {
+    beforeSpec {
         entityStorage.clearAll()
+    }
+
+    describe("initialization") {
         registryUsers(userA, userB, userC)
     }
 

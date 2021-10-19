@@ -1,5 +1,7 @@
 package idel.api
 
+import arrow.core.Either
+import arrow.core.computations.either
 import idel.domain.*
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
@@ -10,8 +12,10 @@ import java.util.*
 @RestController
 @RequestMapping("/joinrequests")
 class JoinRequestController(
-    val groupMembershipService: GroupMembershipService,
-    val joinRequestRepository: JoinRequestRepository
+    private val groupMembershipService: GroupMembershipService,
+    private val joinRequestRepository: JoinRequestRepository,
+    private val groupRepository: GroupRepository,
+    private val userRepository: UserRepository
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -36,6 +40,16 @@ class JoinRequestController(
         val users: Set<User>
     )
 
+    private fun enrichJoinRequests(joinRequests: List<JoinRequest>) : Either<Exception, JoinRequestsPayload> {
+        return either.eager {
+            val groups = joinRequests.map {it.groupId}.toSet()
+                .map {groupId -> groupRepository.load(groupId).bind()}
+            val users = joinRequests.map {it.userId}.toSet()
+                .map {userId -> userRepository.load(userId).bind()}
+            JoinRequestsPayload(joinRequests, groups.toSet(), users.toSet())
+        }
+    }
+
     @PostMapping
     fun create(
         @AuthenticationPrincipal user: User,
@@ -56,12 +70,15 @@ class JoinRequestController(
         @RequestParam(required = false, defaultValue = "") order: GroupMembershipRequestOrdering,
         @RequestParam userId: String,
         pagination: Repository.Pagination
-    ): EntityOrError<List<JoinRequest>> {
+    ): EntityOrError<JoinRequestsPayload> {
         if (user.id != userId) {
             return DataOrError.forbidden("you can't get join requests another users")
         }
 
-        val result = joinRequestRepository.loadByUser(userId, order, pagination)
+        val result = either.eager<Exception, JoinRequestsPayload> {
+           val joinRequests = joinRequestRepository.loadByUser(userId, order, pagination).bind()
+           enrichJoinRequests(joinRequests).bind()
+        }
 
         return DataOrError.fromEither(result, log)
     }
@@ -72,8 +89,13 @@ class JoinRequestController(
         @RequestParam(required = false, defaultValue = "") order: GroupMembershipRequestOrdering,
         @RequestParam groupId: String,
         pagination: Repository.Pagination
-    ): EntityOrError<List<JoinRequest>> {
-        val result = joinRequestRepository.loadByGroup(groupId, order, pagination)
+    ): EntityOrError<JoinRequestsPayload> {
+
+
+        val result = either.eager<Exception, JoinRequestsPayload> {
+            val joinRequests = joinRequestRepository.loadByGroup(groupId, order, pagination).bind()
+            enrichJoinRequests(joinRequests).bind()
+        }
 
         return DataOrError.fromEither(result, log)
     }

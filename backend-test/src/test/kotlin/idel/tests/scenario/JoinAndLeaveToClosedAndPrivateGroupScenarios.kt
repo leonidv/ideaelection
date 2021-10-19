@@ -7,7 +7,9 @@ import io.kotest.core.spec.style.DescribeSpec
 
 class JoinAndLeaveToClosedAndPrivateGroupScenarios : DescribeSpec({
 
-    val couchbase = EntityStorage()
+    beforeSpec {
+        EntityStorage().clearAll()
+    }
 
     val userA = User("userA", "group admin")
     val userB = User("userB", "not member")
@@ -17,7 +19,6 @@ class JoinAndLeaveToClosedAndPrivateGroupScenarios : DescribeSpec({
 
     context("$userA creates $entryMode group, userB and userC try to join") {
         describe("register users") {
-            couchbase.clearAll()
             registryUsers(userA, userB, userC)
         }
 
