@@ -25,6 +25,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler
+import org.springframework.security.web.DefaultRedirectStrategy
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -55,6 +56,9 @@ class WebSecurityConfig(private val userRepository: UserRepository, private val 
 
     @Value("\${jwt.private.key}")
     lateinit var privateKey: RSAPrivateKey
+
+    @Value("\${jwt.frontend.url}")
+    lateinit var frontendUrl : String
 
     @Value("\${security.cors.allowed-origins}")
     var allowedOrigins: Array<String> = emptyArray()
@@ -101,7 +105,7 @@ class WebSecurityConfig(private val userRepository: UserRepository, private val 
         }
 
         val oauth2LoginConfigurer = OAuth2LoginConfigurer<HttpSecurity>();
-        oauth2LoginConfigurer.successHandler(Oauth2JwtTokenSuccesHandler(jwtIssuer()))
+        oauth2LoginConfigurer.successHandler(Oauth2JwtTokenSuccesHandler(jwtIssuer(), frontendUrl))
         val customOAuth2LoginConfigurer = WrapperOAuth2LoginConfigurer(oauth2LoginConfigurer, userRepository, userService)
         http.csrf().disable()
         http.apply(customOAuth2LoginConfigurer)
@@ -157,13 +161,19 @@ class JwtIssuerService(val key: RSAPrivateKey, val timeToLive: Long) {
     }
 }
 
-class Oauth2JwtTokenSuccesHandler(val jwtIssuerService: JwtIssuerService) : AuthenticationSuccessHandler {
+class Oauth2JwtTokenSuccesHandler(
+    private val jwtIssuerService: JwtIssuerService,
+    private val frontendUrl: String
+) : AuthenticationSuccessHandler {
+   private val redirectStrategy = DefaultRedirectStrategy()
+
     override fun onAuthenticationSuccess(
         request: HttpServletRequest,
         response: HttpServletResponse,
         authentication: Authentication
     ) {
-        response.writer.println(jwtIssuerService.issueToken(authentication.principal as User))
+        val jwt = jwtIssuerService.issueToken(authentication.principal as User)
+        redirectStrategy.sendRedirect(request, response, "$frontendUrl?jwt=$jwt")
     }
 
 }
