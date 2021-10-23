@@ -95,7 +95,7 @@ class IdeasController(
         @PathVariable ideaId: String
     ): EntityOrError<IdeaPayload> {
         return secure.idea.asMember(ideaId, user) {
-            ideaRepository.mutate(ideaId) {idea ->
+            ideaRepository.possibleMutate(ideaId) {idea ->
                 idea.addVote(user.id)
             }.map(IdeaPayload::onlyIdea)
         }
@@ -107,19 +107,19 @@ class IdeasController(
         @PathVariable ideaId: String
     ): EntityOrError<IdeaPayload> {
         return secure.idea.asMember(ideaId, user) {
-            ideaRepository.mutate(ideaId) {idea ->
+            ideaRepository.possibleMutate(ideaId) {idea ->
                 idea.removeVote(user.id)
             }.map(IdeaPayload::onlyIdea)
         }
     }
 
-    data class Assignee(val userId: String)
+    data class AssigneeBody(val userId: String)
 
     @PatchMapping("/{ideaId}/assignee")
     fun assign(
         @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String,
-        @RequestBody assignee: Assignee
+        @RequestBody assignee: AssigneeBody
     ): EntityOrError<IdeaPayload> {
         return secure.idea.withLevels(ideaId, user) {idea, levels ->
             either.eager<Exception, Either<Exception, Idea>> {
@@ -161,6 +161,35 @@ class IdeasController(
         }
     }
 
+    @DeleteMapping("/{ideaId}")
+    fun delete(@AuthenticationPrincipal user: User,
+               @PathVariable ideaId: String
+    ) : EntityOrError<IdeaPayload> {
+        return secure.idea.withLevels(ideaId, user){_,levels ->
+            ideaRepository.possibleMutate(ideaId) {idea ->
+                idea.delete(levels)
+            }.map(IdeaPayload::onlyIdea)
+        }
+    }
+
+    data class Archived(val archived: Boolean)
+    @PatchMapping("/{ideaId}/archived")
+    fun changeArchived(
+        @AuthenticationPrincipal user: User,
+        @PathVariable ideaId: String,
+        @RequestBody value: Archived
+    ) : EntityOrError<IdeaPayload> {
+        return secure.idea.withLevels(ideaId, user){_, levels ->
+            ideaRepository.possibleMutate(ideaId) {idea ->
+                if (value.archived) {
+                    idea.archive(levels)
+                } else {
+                    idea.unArchive(levels)
+                }
+            }.map(IdeaPayload::onlyIdea)
+        }
+    }
+
     @GetMapping
     @ResponseBody
     fun load(
@@ -171,6 +200,7 @@ class IdeasController(
         @RequestParam("assignee") assignee: Optional<String>,
         @RequestParam("implemented") implemented: Optional<Boolean>,
         @RequestParam("text") text: Optional<String>,
+        @RequestParam("archived",defaultValue = "false") archived : Boolean,
         pagination: Repository.Pagination
     )
             : EntityOrError<IdeasPayload> {
@@ -180,7 +210,9 @@ class IdeasController(
                 offeredBy = offeredBy.asOption(),
                 implemented = implemented.asOption(),
                 assignee = assignee.asOption(),
-                text = text.asOption()
+                text = text.asOption(),
+                archived = archived,
+                deleted = false
             )
             either.eager {
                 val ideas = ideaRepository.load(groupId, ordering, filtering, pagination).bind()

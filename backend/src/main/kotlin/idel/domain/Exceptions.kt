@@ -30,3 +30,5 @@ class EntityAlreadyExists(entityType: String, id : String) : IllegalArgumentExce
  *  Required operation is invalid because some of the precondition is failed checks.
  */
 class InvalidOperation(msg : String) : NoStacktraceRuntimeException(msg)
+
+class EntityLogicallyDeleted() : NoStacktraceRuntimeException("Entity is logically deleted")

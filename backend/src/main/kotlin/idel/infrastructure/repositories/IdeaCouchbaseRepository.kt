@@ -3,6 +3,7 @@ package idel.infrastructure.repositories
 import arrow.core.Either
 import arrow.core.Some
 import arrow.core.getOrElse
+import arrow.core.some
 import com.couchbase.client.core.error.DecodingFailureException
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.java.Cluster
@@ -15,8 +16,8 @@ import mu.KotlinLogging
 import java.util.*
 
 class IdeaCouchbaseRepository(
-        cluster: Cluster,
-        collection: Collection
+    cluster: Cluster,
+    collection: Collection
 ) : AbstractTypedCouchbaseRepository<Idea>(cluster, collection, TYPE, Idea::class.java), IdeaRepository {
 
     companion object {
@@ -25,9 +26,26 @@ class IdeaCouchbaseRepository(
 
     override val log = KotlinLogging.logger {}
 
+    override fun load(id: String): Either<Exception, Idea> {
+        val idea = super.load(id)
+        return when (idea) {
+            is Either.Left -> idea
+            is Either.Right -> {
+                if (!idea.value.deleted) {
+                    idea
+                } else {
+                    Either.Left(EntityNotFound(TYPE, id))
+                }
+            }
+        }
+    }
+
+    override fun exists(id: String): Either<Exception, Boolean> {
+        return load(id).map {true}
+    }
 
     override fun load(
-        groupId : String,
+        groupId: String,
         ordering: IdeaOrdering,
         filtering: IdeaFiltering,
         pagination: Repository.Pagination
@@ -44,7 +62,9 @@ class IdeaCouchbaseRepository(
             Some("groupId" to groupId),
             filtering.assignee.map {"assignee" to it},
             filtering.offeredBy.map {"offeredBy" to it},
-            filtering.implemented.map {"implemented" to it}
+            filtering.implemented.map {"implemented" to it},
+            Some("deleted" to filtering.deleted),
+            Some("archived" to filtering.archived)
         )
             .filter {it.isDefined()}
             .map {(it as Some).value}
@@ -63,8 +83,6 @@ class IdeaCouchbaseRepository(
             params.put("text", filterValue)
             filterQueryParts = filterQueryParts + """SEARCH(ie, ${'$'}text, {"index":"idea_fts"})"""
         }
-
-
 
         return load(
             filterQueryParts = filterQueryParts,
