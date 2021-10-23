@@ -31,4 +31,6 @@ class EntityAlreadyExists(entityType: String, id : String) : IllegalArgumentExce
  */
 class InvalidOperation(msg : String) : NoStacktraceRuntimeException(msg)
 
-class EntityLogicallyDeleted() : NoStacktraceRuntimeException("Entity is logically deleted")
+sealed class EntityReadOnly(msg: String) : NoStacktraceRuntimeException(msg)
+class EntityLogicallyDeleted : EntityReadOnly("Entity is deleted")
+class EntityArchived : EntityReadOnly("Entity is archived")

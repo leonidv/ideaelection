@@ -113,7 +113,7 @@ class Idea(
      *
      * User, which offered an idea, can't vote for it. In this case the method returns an Idea without any changes)
      */
-    fun addVote(userId: UserId): Either<EntityLogicallyDeleted,Idea> {
+    fun addVote(userId: UserId): Either<EntityReadOnly,Idea> {
         if (voters.contains(userId)) {
             return Either.Right(this)
         }
@@ -124,7 +124,7 @@ class Idea(
     /**
      * Remove voter's vote from this idea.
      */
-    fun removeVote(userId: UserId): Either<EntityLogicallyDeleted, Idea> {
+    fun removeVote(userId: UserId): Either<EntityReadOnly, Idea> {
         val newVoters = this.voters.minus(userId)
         return this.clone(voters = newVoters)
     }
@@ -150,10 +150,16 @@ class Idea(
         offeredBy: String = this.author,
         voters: List<String> = this.voters,
         archived: Boolean = this.archived,
-        deleted: Boolean = this.deleted,
-        restoreFromDeleted : Boolean = false
-    ): Either<EntityLogicallyDeleted, Idea> {
-        return if (!this.deleted || restoreFromDeleted) {
+        deleted: Boolean = this.deleted
+    ): Either<EntityReadOnly, Idea> {
+        val shouldRestoreFromArchive = this.archived && !archived
+        val shouldRestoreFromDeleted = this.deleted && !deleted
+
+        return if (this.deleted && !shouldRestoreFromDeleted) {
+            Either.Left(EntityLogicallyDeleted())
+        } else if (this.archived && !shouldRestoreFromArchive) {
+            Either.Left(EntityArchived())
+        } else {
             Either.Right(
                 Idea(
                     id = id,
@@ -168,11 +174,9 @@ class Idea(
                     author = offeredBy,
                     voters = voters,
                     archived = archived,
-                    deleted = deleted || restoreFromDeleted
+                    deleted = deleted
                 )
             )
-        } else {
-            Either.Left(EntityLogicallyDeleted())
         }
     }
 
