@@ -1,11 +1,11 @@
-package idel.tests.spec
+package idel.tests.scenario
 
 import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
 
-class IdeaAssigneeSpec : DescribeSpec({
+class IdeaAssigneeScenario : DescribeSpec({
     val couchbase = EntityStorage()
     beforeSpec {
         couchbase.clearAll()

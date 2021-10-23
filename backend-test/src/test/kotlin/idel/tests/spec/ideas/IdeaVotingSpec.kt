@@ -1,4 +1,4 @@
-package idel.tests.spec
+package idel.tests.spec.ideas
 
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*

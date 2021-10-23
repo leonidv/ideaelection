@@ -1,4 +1,4 @@
-package idel.tests.spec
+package idel.tests.spec.ideas
 
 import arrow.core.Some
 import idel.tests.apiobject.*
