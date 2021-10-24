@@ -171,6 +171,9 @@ suspend fun DescribeSpecContainerContext.checkIsBadRequest(response: HttpRespons
     }
 }
 
+object CustomErrors {
+    const val ENTITY_IS_ARCHIVED = 111
+}
 
 class ValidationError(
     /**

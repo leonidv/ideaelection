@@ -157,7 +157,7 @@ class Idea(
 
         return if (this.deleted && !shouldRestoreFromDeleted) {
             Either.Left(EntityLogicallyDeleted())
-        } else if (this.archived && !shouldRestoreFromArchive) {
+        } else if ((this.archived && !shouldRestoreFromArchive) && !deleted) {
             Either.Left(EntityArchived())
         } else {
             Either.Right(
@@ -272,9 +272,9 @@ class Idea(
     /**
      * Archive idea
      */
-    fun archive(changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
+    fun archive(changerLevels: Set<IdeaAccessLevel>): Either<Exception, Idea> {
         return if (isAdmin(changerLevels) || isAssignee(changerLevels) || isAuthor(changerLevels)) {
-            clone(archived = true).mapLeft {OperationNotPermitted()}
+            clone(archived = true)
         } else {
             Either.Left(OperationNotPermitted())
         }
@@ -294,14 +294,14 @@ class Idea(
     /**
      * Logically delete idea
      */
-    fun delete(changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
+    fun delete(changerLevels: Set<IdeaAccessLevel>): Either<Exception, Idea> {
         return when {
             votesCount() > 0 && isAdmin(changerLevels) -> {
-                clone(deleted = true).mapLeft {OperationNotPermitted()}
+                clone(deleted = true)
             }
 
             votesCount() == 0 && (isAdmin(changerLevels) || isAuthor(changerLevels)) -> {
-                clone(deleted = true).mapLeft {OperationNotPermitted()}
+                clone(deleted = true)
             }
 
             else -> {

@@ -1,6 +1,5 @@
 package idel.tests.spec.ideas
 
-import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
@@ -19,7 +18,7 @@ class IdeaLoadingSpec : DescribeSpec({
 
     val userA = User("userA", "group admin")
     val userB = User("userB", "member")
-    val userC = User("userC", "notmember")
+    val userC = User("userC", "not member")
 
     val voters = (1..9).map {User("user0$it", "voter")}.toTypedArray()
 
@@ -95,11 +94,11 @@ class IdeaLoadingSpec : DescribeSpec({
             row("another", arrayOf(idea2Summary))
         ).forAll {filter: String, ideasSummary: Array<String> ->
             describe("text = [$filter]") {
-                val response = userA.ideas.list(groupId = groupId, text = Some(filter))
+                val response = userA.ideas.list(groupId = groupId, text = filter)
 
                 val containsIdeaChecks = ideasSummary.map {ideasContainsIdeaWithSummary(it)}.toTypedArray()
 
-                checkIsOk(response, ideasCount(containsIdeaChecks.size), usersInfoCount(1),  *containsIdeaChecks)
+                checkIsOk(response, ideasCount(containsIdeaChecks.size), usersInfoCount(1), *containsIdeaChecks)
             }
         }
     }
@@ -118,7 +117,7 @@ class IdeaLoadingSpec : DescribeSpec({
                 }.toTypedArray()
             }
 
-            ideasForVoting = ideaIds.copyOfRange(5,15)
+            ideasForVoting = ideaIds.copyOfRange(5, 15)
 
             describe("first voter votes for nine ideas, second for eight ... last for one.") {
                 voters.mapIndexed {index, user -> user to ideasForVoting.copyOf(voters.size - index)}
@@ -131,22 +130,60 @@ class IdeaLoadingSpec : DescribeSpec({
         }
 
         describe("$userA load ideas sorted by votes") {
-            val response = userA.ideas.list(groupId, ordering = Some(IdeasApi.ORDER_VOTES_DESC))
+            val response = userA.ideas.list(groupId, ordering = IdeasApi.ORDER_VOTES_DESC)
             val expectedOrder = ideasForVoting.copyOf(voters.size).map {it!!}.toTypedArray()
             checkIsOk(response, ideasOrder(expectedOrder))
         }
 
         describe("$userA load latest 10 ideas (ctime desc)") {
-            val response = userA.ideas.list(groupId, ordering = Some(IdeasApi.ORDER_CTIME_DESC))
+            val response = userA.ideas.list(groupId, ordering = IdeasApi.ORDER_CTIME_DESC)
             val expectedOrder = ideaIds.reversedArray().copyOf(10).map {it!!}.toTypedArray()
             checkIsOk(response, ideasOrder(expectedOrder))
         }
 
         describe("$userA load earliest 10 ideas (ctime asc)") {
-            val response = userA.ideas.list(groupId, ordering = Some(IdeasApi.ORDER_CTIME_ASC))
+            val response = userA.ideas.list(groupId, ordering = IdeasApi.ORDER_CTIME_ASC)
             val expectedOrder = ideaIds.copyOf(10).map {it!!}.toTypedArray()
             checkIsOk(response, ideasOrder(expectedOrder))
         }
 
+    }
+
+    describe("archived") {
+        lateinit var groupId: String
+        lateinit var ideaId: String
+        describe("initialization") {
+            groupId = createGroup(userA, members = setOf(userB)).groupId
+            ideaId = userA.ideas.quickAdd(groupId, "1").extractId("idea")
+        }
+
+        describe("$userA see added idea in the group's ideas") {
+            val response = userA.ideas.list(groupId)
+            checkIsOk(
+                response,
+                includeIdea(ideaId)
+            )
+        }
+
+        describe("$userA archives idea") {
+            val response = userA.ideas.changeArchived(ideaId, archived = true)
+            checkIsOk(response)
+        }
+
+        describe("by default $userA don't see idea in the group's ideas") {
+            val response = userA.ideas.list(groupId)
+            checkIsOk(response,
+                notIncludesIdea(ideaId)
+            )
+        }
+
+        listOf(userA, userB).forEach {user ->
+            describe("$user see archived idea with query parameter [archived=true]") {
+                val response = userA.ideas.list(groupId, archived = "true")
+                checkIsOk(response,
+                    includeIdea(ideaId)
+                )
+            }
+        }
     }
 })

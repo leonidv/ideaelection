@@ -95,24 +95,22 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
 
     fun list(
         groupId: String,
-        ordering: Option<String> = None,
-        offeredBy: Option<String> = None,
-        assignee: Option<String> = None,
-        implemented: Option<String> = None,
-        text: Option<String> = None
+        ordering: String? = null,
+        offeredBy: String? = null,
+        assignee: String? = null,
+        implemented: String? = null,
+        text: String? = null,
+        archived: String? = null
     ): HttpResponse<JsonNode> {
-        val params = listOf(
-            Some("groupId=$groupId"),
-            ordering.map {"ordering=$it"},
-            offeredBy.map {"offered-by=$it"},
-            assignee.map {"assignee=$it"},
-            implemented.map {"implemented=$it"},
-            text.map {"text=$it"}
-        )
-            .map {it.getOrElse {""}}
-            .filter {it.isNotEmpty()}
-            .joinToString(separator = "&")
-
+        val params = listOfNotNull(
+            "groupId=$groupId",
+            ordering?.let {"ordering=$it"},
+            offeredBy?.let {"offered-by=$it"},
+            assignee?.let {"assignee=$it"},
+            implemented?.let {"implemented=$it"},
+            text?.let {"text=$it"},
+            archived?.let {"archived=$it"}
+        ).joinToString(separator = "&")
 
         return get("?$params")
     }
@@ -158,17 +156,16 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
     }
 
     fun delete(ideaId: String): HttpResponse<JsonNode> {
-        return delete("/$ideaId","")
+        return delete("/$ideaId", "")
     }
 
 
-
-    fun changeArchived(ideaId: String, archived : Boolean): HttpResponse<JsonNode> {
+    fun changeArchived(ideaId: String, archived: Boolean): HttpResponse<JsonNode> {
         val body = """{
                 "archived" : $archived
             }
         """.trimIndent()
-        return patch("/$ideaId/archived",body)
+        return patch("/$ideaId/archived", body)
     }
 
 }
@@ -190,16 +187,21 @@ fun ideaHasLink(link: String) = BodyFieldValueChecker.forField("idea.link", link
 fun ideaHasVoterCount(votersCount: Int) = BodyArraySize("has $votersCount voters", "$.data.idea.voters", votersCount)
 fun ideaHasVoter(user: User) = BodyArrayElementExists("has voter [${user.id}]", "$.data.idea.voters", user.id)
 
+val ideaIsDeleted = BodyFieldValueChecker.forField("idea.deleted", "true")
+
+val ideaIsArchived = BodyFieldValueChecker.forField("idea.archived", "true")
+val ideaIsNotArchived = BodyFieldValueChecker.forField("idea.archived", "false")
+
 fun ideasCount(count: Int) = BodyArraySize("response contains $count ideas", "$.data.ideas", count)
 fun ideasContainsIdeaWithSummary(summary: String) = BodyContainsObject(
     "contains idea with summary [$summary]", "$.data.ideas", arrayOf(Pair("summary", summary))
 )
 
-fun containsIdea(id: String) = BodyContainsObject(
+fun includeIdea(id: String) = BodyContainsObject(
     "contains idea [$id]", "$.data.ideas", arrayOf(Pair("id", id))
 )
 
-fun notContainsIdea(id:String) = NotBodyContainsObject(
+fun notIncludesIdea(id: String) = NotBodyContainsObject(
     "not contains idea [$id]", "$.data.ideas", arrayOf(Pair("id", id))
 )
 

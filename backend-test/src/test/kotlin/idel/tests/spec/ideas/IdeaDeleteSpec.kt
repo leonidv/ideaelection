@@ -2,11 +2,10 @@ package idel.tests.spec.ideas
 
 import idel.tests.apiobject.EntityStorage
 import idel.tests.apiobject.User
-import idel.tests.apiobject.containsIdea
-import idel.tests.apiobject.notContainsIdea
+import idel.tests.apiobject.includeIdea
+import idel.tests.apiobject.notIncludesIdea
 import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
-import io.kotest.core.spec.style.describeSpec
 
 class IdeaDeleteSpec : DescribeSpec({
     beforeSpec {
@@ -34,7 +33,7 @@ class IdeaDeleteSpec : DescribeSpec({
             val response = userA.ideas.list(groupId)
             checkIsOk(
                 response,
-                containsIdea(ideaId)
+                includeIdea(ideaId)
             )
         }
     }
@@ -47,7 +46,7 @@ class IdeaDeleteSpec : DescribeSpec({
     describe("$userA don't see idea in the list of group's idea") {
         val response = userA.ideas.list(groupId)
         checkIsOk(response,
-            notContainsIdea(ideaId)
+            notIncludesIdea(ideaId)
         )
     }
 
