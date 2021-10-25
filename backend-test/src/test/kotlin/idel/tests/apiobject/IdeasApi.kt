@@ -51,6 +51,7 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
             link = "http://somelink.io/$version"
         )
     }
+
     /**
      * Update idea by template. All field contains version. Use it for quick tests,
      * when values of field are not important.
@@ -92,25 +93,24 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
         return get("/$ideaId")
     }
 
-    fun list(groupId: String,
-             ordering : Option<String> = None,
-             offeredBy : Option<String> = None,
-             assignee: Option<String> = None,
-             implemented: Option<String> = None,
-             text : Option<String> = None
+    fun list(
+        groupId: String,
+        ordering: String? = null,
+        offeredBy: String? = null,
+        assignee: String? = null,
+        implemented: String? = null,
+        text: String? = null,
+        archived: String? = null
     ): HttpResponse<JsonNode> {
-        val params = listOf(
-            Some("groupId=$groupId"),
-            ordering.map {"ordering=$it"},
-            offeredBy.map {"offered-by=$it"},
-            assignee.map {"assignee=$it"},
-            implemented.map {"implemented=$it"},
-            text.map {"text=$it"}
-        )
-            .map {it.getOrElse {""}}
-            .filter {it.isNotEmpty()}
-            .joinToString(separator = "&")
-
+        val params = listOfNotNull(
+            "groupId=$groupId",
+            ordering?.let {"ordering=$it"},
+            offeredBy?.let {"offered-by=$it"},
+            assignee?.let {"assignee=$it"},
+            implemented?.let {"implemented=$it"},
+            text?.let {"text=$it"},
+            archived?.let {"archived=$it"}
+        ).joinToString(separator = "&")
 
         return get("?$params")
     }
@@ -147,38 +147,69 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
         return patch("/$ideaId/implemented", body)
     }
 
-    fun vote(ideaId: String) : HttpResponse<JsonNode> {
-        return post("/$ideaId/voters","")
+    fun vote(ideaId: String): HttpResponse<JsonNode> {
+        return post("/$ideaId/voters", "")
     }
 
-    fun devote(ideaId: String) : HttpResponse<JsonNode> {
-        return delete("/$ideaId/voters","")
+    fun devote(ideaId: String): HttpResponse<JsonNode> {
+        return delete("/$ideaId/voters", "")
     }
+
+    fun delete(ideaId: String): HttpResponse<JsonNode> {
+        return delete("/$ideaId", "")
+    }
+
+
+    fun changeArchived(ideaId: String, archived: Boolean): HttpResponse<JsonNode> {
+        val body = """{
+                "archived" : $archived
+            }
+        """.trimIndent()
+        return patch("/$ideaId/archived", body)
+    }
+
 }
 
 
 /**
  * Fields checks
  */
-fun ideaAssigneeIs(user: User) = BodyFieldValueChecker.forField("idea.assignee",user.id)
+fun ideaAssigneeIs(user: User) = BodyFieldValueChecker.forField("idea.assignee", user.id)
 fun ideaNotAssigned() = BodyFieldValueChecker("idea is not assigned", "$.data.idea.assignee", "")
 val ideaIsImplemented = BodyFieldValueChecker("idea is implemented", "$.data.idea.implemented", "true")
 val ideaIsNotImplemented = BodyFieldValueChecker("idea is not implemented", "$.data.idea.implemented", "false")
 fun ideaHasSummary(summary: String) = BodyFieldValueChecker.forField("idea.summary", summary)
 fun ideaHasDescription(description: String) = BodyFieldValueChecker.forField("idea.description", description)
-fun ideaHasDescriptionPlainText(description: String) = BodyFieldValueChecker.forField("idea.descriptionPlainText", description)
-fun ideaHasLink(link: String) = BodyFieldValueChecker.forField("idea.link", link)
-fun ideaHasVoterCount(votersCount : Int) = BodyArraySize("has $votersCount voters", "$.data.idea.voters",votersCount)
-fun ideaHasVoter(user : User) = BodyArrayElementExists("has voter [${user.id}]", "$.data.idea.voters", user.id)
+fun ideaHasDescriptionPlainText(description: String) =
+    BodyFieldValueChecker.forField("idea.descriptionPlainText", description)
 
-fun ideasCount(count : Int) = BodyArraySize("response contains $count ideas", "$.data.ideas", count)
+fun ideaHasLink(link: String) = BodyFieldValueChecker.forField("idea.link", link)
+fun ideaHasVoterCount(votersCount: Int) = BodyArraySize("has $votersCount voters", "$.data.idea.voters", votersCount)
+fun ideaHasVoter(user: User) = BodyArrayElementExists("has voter [${user.id}]", "$.data.idea.voters", user.id)
+
+val ideaIsDeleted = BodyFieldValueChecker.forField("idea.deleted", "true")
+
+val ideaIsArchived = BodyFieldValueChecker.forField("idea.archived", "true")
+val ideaIsNotArchived = BodyFieldValueChecker.forField("idea.archived", "false")
+
+fun ideasCount(count: Int) = BodyArraySize("response contains $count ideas", "$.data.ideas", count)
 fun ideasContainsIdeaWithSummary(summary: String) = BodyContainsObject(
     "contains idea with summary [$summary]", "$.data.ideas", arrayOf(Pair("summary", summary))
 )
-fun ideasOrder(ids : Array<String>) = BodyArrayOrder("has correct order", "$.data.ideas", "id", ids)
 
-fun usersInfoCount(count : Int) = BodyArraySize("response contains $count users", "$.data.users", count)
-fun usersInfoContains(user : Set<User>) = BodyArrayContainsObjects("has user's info", "$.data.users", "id", user.map {it.id}.toSet())
+fun includeIdea(id: String) = BodyContainsObject(
+    "contains idea [$id]", "$.data.ideas", arrayOf(Pair("id", id))
+)
+
+fun notIncludesIdea(id: String) = NotBodyContainsObject(
+    "not contains idea [$id]", "$.data.ideas", arrayOf(Pair("id", id))
+)
+
+fun ideasOrder(ids: Array<String>) = BodyArrayOrder("has correct order", "$.data.ideas", "id", ids)
+
+fun usersInfoCount(count: Int) = BodyArraySize("response contains $count users", "$.data.users", count)
+fun usersInfoContains(user: Set<User>) =
+    BodyArrayContainsObjects("has user's info", "$.data.users", "id", user.map {it.id}.toSet())
 
 
 

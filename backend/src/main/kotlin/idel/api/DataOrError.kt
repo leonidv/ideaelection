@@ -123,6 +123,9 @@ data class ErrorDescription(val code: Int,
             return ErrorDescription (109, description)
         }
 
+        fun logicallyDeleted() : ErrorDescription = ErrorDescription(110, "entity is not found")
+
+        fun entityIsArchived() : ErrorDescription = ErrorDescription(111, "entity is in an archive, can't be edited")
     }
 }
 
@@ -206,6 +209,8 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
                 is Either.Right -> ok(operationResult.value)
                 is Either.Left -> when (val ex = operationResult.value) {
                     is EntityNotFound -> notFound(ex)
+                    is EntityLogicallyDeleted -> errorResponse(ErrorDescription.logicallyDeleted(), HttpStatus.NOT_FOUND)
+                    is EntityArchived -> errorResponse(ErrorDescription.entityIsArchived(), HttpStatus.BAD_REQUEST)
                     is EntityAlreadyExists -> conflict(ex)
                     is OperationNotPermitted -> forbidden("operation is not permitted")
                     is ValidationException -> invalid(ex.errors)
@@ -239,7 +244,6 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
         fun <T> notFound(ex : EntityNotFound): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.entityNotFound(ex), HttpStatus.NOT_FOUND)
         }
-
 
         /**
          * Return [internal] error with message "not implemented". Use as [TODO] for MVC controllers.

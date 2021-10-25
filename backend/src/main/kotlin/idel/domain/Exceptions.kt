@@ -30,3 +30,7 @@ class EntityAlreadyExists(entityType: String, id : String) : IllegalArgumentExce
  *  Required operation is invalid because some of the precondition is failed checks.
  */
 class InvalidOperation(msg : String) : NoStacktraceRuntimeException(msg)
+
+sealed class EntityReadOnly(msg: String) : NoStacktraceRuntimeException(msg)
+class EntityLogicallyDeleted : EntityReadOnly("Entity is deleted")
+class EntityArchived : EntityReadOnly("Entity is archived")

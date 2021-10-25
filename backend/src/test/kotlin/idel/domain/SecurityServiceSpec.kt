@@ -164,16 +164,18 @@ fun user(name: String, roles: Set<String> = setOf(Roles.USER)): User = object : 
 
 fun idea(creator: User, group: Group, assignee: Option<User>, voters: Set<User> = emptySet()): Idea {
     return Idea(
-            id = generateId(),
-            groupId = group.id,
-            ctime = LocalDateTime.now(),
-            summary = "Test idea",
-            description = "[b]some[/b] description",
-            descriptionPlainText = "some description",
-            link = "",
-            assignee = assignee.map {it.id}.getOrElse {""},
-            implemented = false,
-            author = creator.id,
-            voters = voters.map {it.id}
+        id = generateId(),
+        groupId = group.id,
+        ctime = LocalDateTime.now(),
+        summary = "Test idea",
+        description = "[b]some[/b] description",
+        descriptionPlainText = "some description",
+        link = "",
+        assignee = assignee.map {it.id}.getOrElse {""},
+        implemented = false,
+        author = creator.id,
+        voters = voters.map {it.id},
+        archived = false,
+        deleted = false
     )
 }

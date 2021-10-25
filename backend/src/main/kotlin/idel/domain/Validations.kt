@@ -50,4 +50,12 @@ interface Validator<T> {
             is Valid -> Either.Right(action())
         }
     }
+
+    fun <X> ifValidEither(properties: T, action: () -> Either<Exception,X>): Either<Exception,X> {
+        val x: Either<Exception, Either<Exception, X>> = ifValid(properties,action)
+        return when (x) {
+            is Either.Left -> x
+            is Either.Right -> x.value
+        }
+    }
 }
