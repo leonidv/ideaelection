@@ -69,8 +69,8 @@ class IdeasController(
     fun load(@AuthenticationPrincipal user: User, @PathVariable ideaId: String): EntityOrError<IdeaPayload> {
         return secure.idea.asMember(ideaId, user) {idea ->
             either.eager {
-               val users = userRepository.enrichIdeas(listOf(idea),10).bind()
-               IdeaPayload(idea, users)
+                val users = userRepository.enrichIdeas(listOf(idea), 10).bind()
+                IdeaPayload(idea, users)
             }
         }
     }
@@ -162,10 +162,11 @@ class IdeasController(
     }
 
     @DeleteMapping("/{ideaId}")
-    fun delete(@AuthenticationPrincipal user: User,
-               @PathVariable ideaId: String
-    ) : EntityOrError<IdeaPayload> {
-        return secure.idea.withLevels(ideaId, user){_,levels ->
+    fun delete(
+        @AuthenticationPrincipal user: User,
+        @PathVariable ideaId: String
+    ): EntityOrError<IdeaPayload> {
+        return secure.idea.withLevels(ideaId, user) {_, levels ->
             ideaRepository.possibleMutate(ideaId) {idea ->
                 idea.delete(levels)
             }.map(IdeaPayload::onlyIdea)
@@ -173,19 +174,38 @@ class IdeasController(
     }
 
     data class Archived(val archived: Boolean)
+
     @PatchMapping("/{ideaId}/archived")
     fun changeArchived(
         @AuthenticationPrincipal user: User,
         @PathVariable ideaId: String,
         @RequestBody value: Archived
-    ) : EntityOrError<IdeaPayload> {
-        return secure.idea.withLevels(ideaId, user){_, levels ->
+    ): EntityOrError<IdeaPayload> {
+        return secure.idea.withLevels(ideaId, user) {_, levels ->
             ideaRepository.possibleMutate(ideaId) {idea ->
                 if (value.archived) {
                     idea.archive(levels)
                 } else {
                     idea.unArchive(levels)
                 }
+            }.map(IdeaPayload::onlyIdea)
+        }
+    }
+
+    data class ChangeGroup(val groupId: String)
+
+    @PatchMapping("/{ideaId}/group")
+    fun changeGroup(
+        @AuthenticationPrincipal user: User,
+        @PathVariable ideaId: String,
+        @RequestBody value: ChangeGroup
+    ): EntityOrError<IdeaPayload> {
+        return secure.group.asMember(groupId = value.groupId, user) {
+            either.eager<Exception, Idea> {
+                val userIdeaLevels = secure.idea.calculateLevels(ideaId, user).bind()
+                ideaRepository.possibleMutate(ideaId) {idea ->
+                    idea.changeGroup(value.groupId, userIdeaLevels)
+                }.bind()
             }.map(IdeaPayload::onlyIdea)
         }
     }
@@ -200,7 +220,7 @@ class IdeasController(
         @RequestParam("assignee") assignee: Optional<String>,
         @RequestParam("implemented") implemented: Optional<Boolean>,
         @RequestParam("text") text: Optional<String>,
-        @RequestParam("archived",defaultValue = "false") archived : Boolean,
+        @RequestParam("archived", defaultValue = "false") archived: Boolean,
         pagination: Repository.Pagination
     )
             : EntityOrError<IdeasPayload> {
