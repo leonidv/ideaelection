@@ -110,10 +110,10 @@ blocks:
         - name: Apply deployment
           commands:
             - cd scripts/containers
-            - >-
-              python rollup-up-deployment.py  docker.io/leonidv/idel-couchbase
-              --process-tag $PROCESS_TAG --label test
-              --deployment deployment/saedi --container-name couchbase
+#            - >-
+#              python rollup-up-deployment.py  docker.io/leonidv/idel-couchbase
+#              --process-tag $PROCESS_TAG --label test
+#              --deployment deployment/saedi --container-name couchbase
             - >-
               python rollup-up-deployment.py  docker.io/leonidv/idel-backend
               --process-tag $PROCESS_TAG --label test

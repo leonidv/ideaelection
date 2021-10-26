@@ -9,5 +9,5 @@ spec:
   ports:
     - port: 8080
       name: backend-api
-    - port: 8091
-      name: couchbase-ui
+#    - port: 8091
+#      name: couchbase-ui

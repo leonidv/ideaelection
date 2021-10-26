@@ -11,18 +11,21 @@ spec:
   template:
     spec:
       containers:
-        - name: couchbase
-          image: docker.io/leonidv/idel-couchbase:test
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8091
-            - containerPort: 8092
-            - containerPort: 8093
-            - containerPort: 8094
-            - containerPort: 11210
+#        - name: couchbase
+#          image: docker.io/leonidv/idel-couchbase:test
+#          imagePullPolicy: Always
+#          ports:
+#            - containerPort: 8091
+#            - containerPort: 8092
+#            - containerPort: 8093
+#            - containerPort: 8094
+#            - containerPort: 11210
 
         - name: backend
           image: docker.io/leonidv/idel-backend:test
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          env:
+            - name: couchbase.host
+              value: 185.173.94.184
