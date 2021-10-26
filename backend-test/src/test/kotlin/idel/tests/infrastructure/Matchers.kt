@@ -118,23 +118,24 @@ object ResponseMatchers {
         }
     }
 
-    fun hasArrayObjectsOrder(arrayPath: String, field: String, expectedValues: Array<String>) = object : Matcher<JsonNode> {
-        override fun test(value: JsonNode): MatcherResult {
-            val incorrectIndex = value.hasArrayObjectsOrder(arrayPath, field, expectedValues)
-            val failureMsg = if (incorrectIndex == -1) {
-                ""
-            } else {
-                "order is incorrect, first incorrect index is $incorrectIndex," +
-                        " incorrect value = [${expectedValues[incorrectIndex]}], expected order = [$expectedValues]"
-            }
+    fun hasArrayObjectsOrder(arrayPath: String, field: String, expectedValues: Array<String>) =
+        object : Matcher<JsonNode> {
+            override fun test(value: JsonNode): MatcherResult {
+                val incorrectIndex = value.hasArrayObjectsOrder(arrayPath, field, expectedValues)
+                val failureMsg = if (incorrectIndex == -1) {
+                    ""
+                } else {
+                    "order is incorrect, first incorrect index is $incorrectIndex," +
+                            " incorrect value = [${expectedValues[incorrectIndex]}], expected order = [$expectedValues]"
+                }
 
-            return MatcherResult(
-                passed = incorrectIndex == -1,
-                failureMessage = failureMsg,
-                negatedFailureMessage = "order is same as given, but should not"
-            )
+                return MatcherResult(
+                    passed = incorrectIndex == -1,
+                    failureMessage = failureMsg,
+                    negatedFailureMessage = "order is same as given, but should not"
+                )
+            }
         }
-    }
 
     fun containsObjects(arrayPath: String, field: String, expectedValues: Set<String>) = object : Matcher<JsonNode> {
         override fun test(value: JsonNode): MatcherResult {
@@ -159,7 +160,10 @@ object ResponseMatchers {
  */
 fun <T> HttpResponse<T>.shouldHasStatus(code: Int) = this should ResponseMatchers.hasStatus(code)
 
-fun <T> HttpResponse<T>.shouldBeOk() = this should ResponseMatchers.hasStatus(200)
+fun <T> HttpResponse<T>.shouldBeOk(): HttpResponse<T> {
+    this should ResponseMatchers.hasStatus(200)
+    return this
+}
 
 /**
  * Check that body contains data section.
@@ -205,5 +209,5 @@ fun JsonNode.shouldNotContainsObject(arrayPath: String, vararg fields: Pair<Stri
 fun JsonNode.shouldContainsObjects(arrayPath: String, field: String, expectedValues: Set<String>) =
     this should ResponseMatchers.containsObjects(arrayPath, field, expectedValues)
 
-fun JsonNode.shouldHasArrayObjectsOrder(arrayPath: String, field : String, values: Array<String>) =
+fun JsonNode.shouldHasArrayObjectsOrder(arrayPath: String, field: String, values: Array<String>) =
     this should ResponseMatchers.hasArrayObjectsOrder(arrayPath, field, values)
