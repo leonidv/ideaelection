@@ -164,7 +164,7 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
         val body = """{
             | "archived" : $archived
             |}
-        """
+        """.trimMargin()
         return patch("/$ideaId/archived", body)
     }
 
