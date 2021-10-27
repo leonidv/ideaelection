@@ -150,12 +150,18 @@ class IdeaSecurity(private val securityService: SecurityService,
     fun <T> withLevels(ideaId: String, user: User, action: IdeaActionWithLevels<T>): EntityOrError<T> {
         val result: Either<Exception, Either<Exception, T>> = either.eager {
             val idea = ideaRepository.load(ideaId).bind()
-            //val (group) = groupRepository.load(idea.groupId)
             val levels = securityService.ideaAccessLevels(idea, user).bind()
             action(idea, levels)
         }
 
         return DataOrError.fromEither(result.flatten(), controllerLog)
+    }
+
+    fun calculateLevels(ideaId: String, user: User) : Either<Exception, Set<IdeaAccessLevel>> {
+        return either.eager {
+            val idea = ideaRepository.load(ideaId).bind()
+            securityService.ideaAccessLevels(idea, user).bind()
+        }
     }
 
     fun <T> asMember(ideaId: String, user: User, action: IdeaAction<T>): EntityOrError<T> {

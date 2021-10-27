@@ -113,7 +113,7 @@ class Idea(
      *
      * User, which offered an idea, can't vote for it. In this case the method returns an Idea without any changes)
      */
-    fun addVote(userId: UserId): Either<EntityReadOnly,Idea> {
+    fun addVote(userId: UserId): Either<EntityReadOnly, Idea> {
         if (voters.contains(userId)) {
             return Either.Right(this)
         }
@@ -261,12 +261,16 @@ class Idea(
         }
     }
 
-
     /**
      * Moves idea to another group.
      */
-    fun changeGroup(groupId: String): Either<Exception, Idea> {
-        return clone(groupId = groupId)
+    fun changeGroup(groupId: String, changerLevels: Set<IdeaAccessLevel>): Either<Exception, Idea> {
+        return when {
+            isAdmin(changerLevels) ||
+                    ((hasAssignee() && isAssignee(changerLevels) || isAuthor(changerLevels))) ->
+                clone(groupId = groupId)
+            else -> Either.Left(OperationNotPermitted())
+        }
     }
 
     /**
@@ -435,10 +439,12 @@ data class IdeaWithVersion(val idea: Idea, val version: Long)
 
 interface IdeaRepository : BaseRepository<Idea> {
 
-    fun load(groupId: String,
-             ordering: IdeaOrdering,
-             filtering: IdeaFiltering,
-             pagination: Repository.Pagination):
+    fun load(
+        groupId: String,
+        ordering: IdeaOrdering,
+        filtering: IdeaFiltering,
+        pagination: Repository.Pagination
+    ):
             Either<Exception, List<Idea>>
 
     fun loadWithVersion(id: String): Optional<IdeaWithVersion>

@@ -77,6 +77,12 @@ Only a user himself can remove his vote for an idea. It is not a security logic,
 | Mark as done           | Group admin, Assignee
 | Mark as unimplemented  | Group admin, Assignee
 
+| Move to another group assigned idea
+| Group admin, Assignee. Must be member of the target group
+
+| Move to another group unassigned idea
+| Group admin, Author. Must be member of the target group
+
 | Archive                | Group admin, Assignee, Author
 | Return from archive    | Group admin, Assignee, Author
 

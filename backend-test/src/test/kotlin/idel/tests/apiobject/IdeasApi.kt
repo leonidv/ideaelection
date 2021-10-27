@@ -162,10 +162,19 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
 
     fun changeArchived(ideaId: String, archived: Boolean): HttpResponse<JsonNode> {
         val body = """{
-                "archived" : $archived
-            }
-        """.trimIndent()
+            | "archived" : $archived
+            |}
+        """.trimMargin()
         return patch("/$ideaId/archived", body)
+    }
+
+    fun changeGroup(ideaId: String, groupId: String): HttpResponse<JsonNode> {
+        val body = """{
+            | "groupId" : "$groupId"
+            | }
+        """.trimMargin()
+
+        return patch("/$ideaId/group", body)
     }
 
 }
@@ -174,6 +183,7 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
 /**
  * Fields checks
  */
+fun ideaHasGroup(groupId: String) = BodyFieldValueChecker.forField("idea.groupId", groupId)
 fun ideaAssigneeIs(user: User) = BodyFieldValueChecker.forField("idea.assignee", user.id)
 fun ideaNotAssigned() = BodyFieldValueChecker("idea is not assigned", "$.data.idea.assignee", "")
 val ideaIsImplemented = BodyFieldValueChecker("idea is implemented", "$.data.idea.implemented", "true")
@@ -186,6 +196,8 @@ fun ideaHasDescriptionPlainText(description: String) =
 fun ideaHasLink(link: String) = BodyFieldValueChecker.forField("idea.link", link)
 fun ideaHasVoterCount(votersCount: Int) = BodyArraySize("has $votersCount voters", "$.data.idea.voters", votersCount)
 fun ideaHasVoter(user: User) = BodyArrayElementExists("has voter [${user.id}]", "$.data.idea.voters", user.id)
+
+
 
 val ideaIsDeleted = BodyFieldValueChecker.forField("idea.deleted", "true")
 
