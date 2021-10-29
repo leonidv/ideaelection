@@ -67,6 +67,8 @@ fun joinRequestHasGroupId(groupId : String) = BodyFieldValueChecker.forField("jo
 fun joinRequestHasUserId(userId : String) = BodyFieldValueChecker.forField("joinRequest.userId",userId)
 fun joinRequestHasMessage(msg : String) = BodyFieldValueChecker.forField("joinRequest.message", msg)
 
+fun hasJoinRequestsCount(count : Int) = BodyArraySize("joinRequests count", "$.data.joinRequests", count)
+
 fun includeJoinRequest(joinRequestId : String) =
     BodyContainsObject("include joinRequest $joinRequestId", "$.data.joinRequests", arrayOf(Pair("id",joinRequestId)))
 

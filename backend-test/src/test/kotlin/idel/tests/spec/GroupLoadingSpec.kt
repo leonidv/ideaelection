@@ -6,6 +6,7 @@ import idel.tests.infrastructure.*
 import idel.tests.infrastructure.GroupInfo
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
+import io.kotest.matchers.reflection.beLateInit
 import java.util.*
 
 class GroupLoadingSpec : DescribeSpec({
@@ -36,9 +37,9 @@ class GroupLoadingSpec : DescribeSpec({
                 it("OK") {}
             }
 
-            describe("init users") {
-                registryUsers(userA, userB, userC)
-            }
+
+            registryUsers(userA, userB, userC)
+
 
             allGroups.forEach {groupName ->
                 describe("init group with name [$groupName]") {
@@ -77,7 +78,7 @@ class GroupLoadingSpec : DescribeSpec({
                 val loadGroupsResponse = userB.groups.loadForUser(name = Some("arch"))
                 checkIsOk(
                     loadGroupsResponse,
-                    dataListSize(1),
+                    hasGroupsCount(1),
                     includeGroup(groupsInfo[groupName_ArchitectsReports]!!.groupId)
                 )
             }
@@ -87,7 +88,7 @@ class GroupLoadingSpec : DescribeSpec({
                     val loadGroupResponse = userB.groups.loadForUser(name = Some("pub"))
                     checkIsOk(
                         loadGroupResponse,
-                        dataListSize(2),
+                        hasGroupsCount(2),
                         includeGroup(groupsInfo[groupName_ReportsInPub]!!.groupId),
                         includeGroup(groupsInfo[groupName_ThuesdayPub]!!.groupId),
                     )
@@ -106,7 +107,7 @@ class GroupLoadingSpec : DescribeSpec({
                 val loadGroupsResponse = userB.groups.loadAvailable(name = Some("aRch"))
                 checkIsOk(
                     loadGroupsResponse,
-                    dataListSize(1),
+                    hasGroupsCount(1),
                     includeGroup(groupsInfo[groupName_ArchitectsBestPractices]!!.groupId)
                 )
             }
@@ -116,7 +117,7 @@ class GroupLoadingSpec : DescribeSpec({
                     val loadGroupsResponse = userB.groups.loadAvailable(name = Some("pub"))
                     checkIsOk(
                         loadGroupsResponse,
-                        dataListSize(2),
+                        hasGroupsCount(2),
                         includeGroup(groupsInfo[groupName_ArchitectsBestPractices]!!.groupId),
                         includeGroup(groupsInfo[groupName_PubOnFriday]!!.groupId),
                     )
@@ -169,10 +170,7 @@ class GroupLoadingSpec : DescribeSpec({
                         it("OK") {}
                     }
 
-                    describe("init users") {
-                        registryUsers(userA, userB_mail, userC_email, userE_post)
-                    }
-
+                    registryUsers(userA, userB_mail, userC_email, userE_post)
 
                     val groupsInfo = mutableMapOf<GroupParams, GroupInfo>()
 
@@ -345,6 +343,145 @@ class GroupLoadingSpec : DescribeSpec({
             }
         }
     }
+
+    describe("attached joinrequests and invites") {
+        /*
+         *   |        | userB        | userC        |
+         *   |--------|--------------|--------------|
+         *   | group1 | join request | join request |
+         *   | group2 | invite       |              |
+         *   | group3 |              | invite       |
+         *   | group4 | join request | invite       |
+         */
+
+        val userA = User("userA", "admin")
+        val userB = User("userB")
+        val userC = User("userC")
+
+        lateinit var g1_id: String
+        lateinit var g1_key: String
+        lateinit var g2_id: String
+        lateinit var g3_id: String
+
+        lateinit var g4_id: String
+        lateinit var g4_key: String
+
+        lateinit var userB_g1_jr: String
+        lateinit var userB_g2_invite: String
+        lateinit var userB_g4_jr: String
+
+        lateinit var userC_g1_jr: String
+        lateinit var userC_g3_invite: String
+        lateinit var userC_g4_invite: String
+
+        describe("initialization") {
+            describe("clear storage") {
+                EntityStorage().clearAll()
+            }
+
+            registryUsers(userA, userB, userC)
+
+            var r = createGroup(userA, members = emptySet(), name = "group 1", entryMode = GroupsApi.CLOSED)
+            g1_id = r.groupId
+            g1_key = r.joiningKey
+
+            r = createGroup(userA, members = emptySet(), name = "group 2", entryMode = GroupsApi.CLOSED)
+            g2_id = r.groupId
+
+            r = createGroup(userA, members = emptySet(), name = "group 3", entryMode = GroupsApi.CLOSED)
+            g3_id = r.groupId
+
+            r = createGroup(userA, members = emptySet(), name = "group 4", entryMode = GroupsApi.CLOSED)
+            g4_id = r.groupId
+            g4_key = r.joiningKey
+
+            describe("$userB creates joinRequests to group[$g1_id]") {
+                userB_g1_jr = userB.joinRequests.create(g1_key).shouldBeOk().extractId("joinRequest")
+            }
+
+            describe("$userB invited to group[$g2_id]") {
+                val response =
+                    userA.invites.create(g2_id, registeredUsers = arrayOf(userB), newUsersEmails = emptyArray())
+                        .shouldBeOk()
+                userB_g2_invite = extractInviteId(userB, g2_id, response)
+            }
+
+            describe("$userC creates joinRequests to group[$g2_id]") {
+                userC_g1_jr = userC.joinRequests.create(g1_key).shouldBeOk().extractId("joinRequest")
+            }
+
+            describe("$userC invited to group[$g3_id]") {
+                val response =
+                    userA.invites.create(g3_id, registeredUsers = arrayOf(userC), newUsersEmails = emptyArray())
+                        .shouldBeOk()
+                userC_g3_invite = extractInviteId(userC, g3_id, response)
+            }
+
+            describe("$userB creates joinRequest to group [$g4_id]") {
+                userB_g4_jr = userB.joinRequests.create(g4_key).shouldBeOk().extractId("joinRequest")
+            }
+
+            describe("$userC invited to group [$g4_id]") {
+                val response =
+                    userA.invites.create(g4_id, registeredUsers = arrayOf(userC), newUsersEmails = emptyArray())
+                        .shouldBeOk()
+                userC_g4_invite = extractInviteId(userC, g4_id, response)
+            }
+        }
+
+        describe("$userB load available") {
+            val response = userB.groups.loadAvailable()
+            val body = response.body()
+            checkIsOk(
+                response,
+                includeGroup(g1_id, "group 1"),
+                includeGroup(g2_id, "group 2"),
+                includeGroup(g3_id, "group 3"),
+                includeGroup(g4_id, "group 4"),
+                hasJoinRequestsCount(2),
+                hasInvitesCount(1)
+            )
+
+            describe("include a joinrequest for group 1 [$g1_id]") {
+                includeJoinRequest(userB_g1_jr).check(body)
+            }
+
+            describe("include invite for group 2 [$g2_id]") {
+                includeInvite(userB_g2_invite).check(body)
+            }
+
+            describe("include a join request for group 4 [$g4_id]") {
+                includeJoinRequest(userB_g4_jr)
+            }
+        }
+
+       describe("$userC load available") {
+           val response = userC.groups.loadAvailable()
+           val body = response.body()
+           checkIsOk(response,
+               includeGroup(g1_id, "group 1"),
+               includeGroup(g2_id, "group 2"),
+               includeGroup(g3_id, "group 3"),
+               includeGroup(g4_id, "group 4"),
+               hasJoinRequestsCount(1),
+               hasInvitesCount(2)
+           )
+
+           describe("include a joinrequest for group 1 [$g1_id]") {
+               includeJoinRequest(userC_g1_jr).check(body)
+           }
+
+           describe("include an invite for group 3 [$g3_id]") {
+               includeInvite(userC_g3_invite).check(body)
+           }
+
+           describe("include an invite for group 4[$g4_id]") {
+               includeInvite(userC_g4_invite).check(body)
+           }
+
+
+       }
+    }
 })
 
 data class GroupParams(val entryMode: String, val domainsRestriction: Array<String>) {
@@ -394,21 +531,15 @@ suspend fun DescribeSpecContainerContext.testAvailableGroup(
         if (totalGroupsExpected == 0) {
             checkIsOk(loadGroupResponse, noGroups())
         } else {
-            checkIsOk(loadGroupResponse, dataListSize(totalGroupsExpected))
-
+            checkIsOk(loadGroupResponse, hasGroupsCount(totalGroupsExpected))
+            val responseBody = loadGroupResponse.body()
             entryModes.forEach {entryMode ->
                 domainRestrictions.forEach {restriction ->
                     val groupParams = GroupParams(entryMode, restriction)
                     val groupId = groupsInfo[groupParams]!!.groupId
 
-                    val checker = BodyContainsObject(
-                        testName = "includes groups $groupId, entryMode = ${entryMode}, restrictions = ${restriction.joinToString()}}",
-                        objectPath = "$.data",
-                        fields = arrayOf(Pair("id", groupId))
-                    )
-
-                    it(checker.testName) {
-                        checker.check(loadGroupResponse.body())
+                    describe("includes groups $groupId, entryMode = ${entryMode}, restrictions = ${restriction.joinToString()}}") {
+                        includeGroup(groupId).check(responseBody)
                     }
                 }
             }

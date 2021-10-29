@@ -81,6 +81,8 @@ fun extractInviteId(user: User, groupId: String, response : HttpResponse<JsonNod
 
 
 
+fun hasInvitesCount(count : Int) = BodyArraySize("invites count", "$.data.invites", count)
+
 fun hasInvitesToGroups(groupsIds: Array<String>) = BodyArrayContainsObjects(
     testName = "include invites to groups [$groupsIds]",
     arrayPath = "$.data.invites",
@@ -102,6 +104,12 @@ fun invitePersonSelectorFields(groupId: String, email: String) =
         Pair("userId", null),
         Pair("userEmail", email.toLowerCase())
     )
+
+fun includeInvite(inviteId: String) = BodyContainsObject(
+    testName = "include invite id = $inviteId",
+    objectPath = "$.data.invites",
+    fields = arrayOf(Pair("id",inviteId))
+)
 
 fun hasInviteForUser(groupId: String, user: User) = BodyContainsObject(
     testName = "include invite for user $user",

@@ -294,8 +294,8 @@ class GroupFactory {
 enum class GroupOrdering {
     CTIME_ASC,
     CTIME_DESC,
-    TITLE_ASC,
-    TITLE_DESC
+    NAME_ASC,
+    NAME_DESC
 }
 
 

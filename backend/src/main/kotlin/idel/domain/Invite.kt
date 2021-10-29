@@ -51,21 +51,29 @@ class Invite(
      */
     val mtime: LocalDateTime = ctime
 ) : Identifiable {
-    override val id = compositeId(key = "invt", groupId, userId ?: userEmail!!)
+    override val id = generateId(groupId, userId, userEmail)
 
     val isForPerson = userId == null
 
     val isForUser = userId != null
 
     init {
-        require((userId == null) && ((userEmail != null) && (emailWasSent != null)) ||
-                (userId != null) && ((userEmail == null) && (emailWasSent == null)))
+        require(
+            (userId == null) && ((userEmail != null) && (emailWasSent != null)) ||
+                    (userId != null) && ((userEmail == null) && (emailWasSent == null))
+        )
         {"person invite should be filled with userEmail and emailWasSent OR userId should be filled"}
 
     }
 
 
     companion object {
+        private fun generateId(groupId: String, userId: UserId?, userEmail: String?) =
+            compositeId(key = "invt", groupId, userId ?: userEmail!!)
+
+        fun id(user: User, group: Group): String = compositeId(key = "invt", group.id, user.id)
+
+
         fun createForRegisteredUser(groupId: String, userId: UserId, message: String, author: UserId) =
             Invite(
                 groupId = groupId,
@@ -149,6 +157,8 @@ class Invite(
 
 interface InviteRepository : BaseRepository<Invite> {
 
+    fun load(user : User, group: Group) : Either<Exception, Invite>
+
     fun loadByUser(
         userId: String,
         order: GroupMembershipRequestOrdering,
@@ -158,7 +168,7 @@ interface InviteRepository : BaseRepository<Invite> {
     fun loadByEmail(
         email: String,
         pagination: Repository.Pagination
-    ) : Either<Exception, List<Invite>>
+    ): Either<Exception, List<Invite>>
 
     fun loadByGroup(
         groupId: String,

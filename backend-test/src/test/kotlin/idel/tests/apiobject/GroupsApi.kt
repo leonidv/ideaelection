@@ -179,10 +179,11 @@ fun groupHasMember(user: User) = groupHasMemberWithRole(user, GroupsApi.MEMBER)
 
 fun groupHasNotMember(user: User) = NotBodyContainsObject("has member $user", "$.data", arrayOf(Pair("id", user.id)))
 
-fun noGroups() = BodyArraySize("no any groups", "$.data", 0)
-fun includeGroup(groupId: String) =
-    BodyContainsObject("includes groups $groupId", "$.data", arrayOf(Pair("id", groupId)))
+fun hasGroupsCount(count : Int) = BodyArraySize("groups count", "$.data.groups", count)
+fun noGroups() = BodyArraySize("no any groups", "$.data.groups", 0)
+fun includeGroup(groupId: String, groupInTestName : String? = null) =
+    BodyContainsObject("includes group [${groupInTestName?:groupId}]", "$.data.groups", arrayOf(Pair("id", groupId)))
 
-fun notIncludeGroup(groupId: String) = NotBodyContainsObject("doesn't include group $groupId", "$.data", arrayOf(Pair("id", groupId)))
+fun notIncludeGroup(groupId: String) = NotBodyContainsObject("doesn't include group $groupId", "$.data.groups", arrayOf(Pair("id", groupId)))
 
 val groupHasStateDeleted = BodyFieldValueChecker.forField("state",GroupsApi.DELETED)
