@@ -3,6 +3,7 @@ package idel.api
 import arrow.core.Either
 import arrow.core.None
 import arrow.core.computations.either
+import arrow.core.flatMap
 import arrow.core.flatten
 import idel.domain.*
 import idel.infrastructure.repositories.CouchbaseTransactions
@@ -19,10 +20,13 @@ class GroupController(
     private val groupRepository: GroupRepository,
     private val groupMemberRepository: GroupMemberRepository,
     private val groupService: GroupService,
+    private val joinRequestRepository: JoinRequestRepository,
+    private val inviteRepository: InviteRepository,
     apiSecurityFactory: ApiSecurityFactory
 ) {
     companion object {
-       const val NAME_FILTER_MIN_SYMBOLS = 3
+        const val NAME_FILTER_MIN_SYMBOLS = 3
+        private val notificationNameRegexp = "!!!N(\\d+)$".toRegex()
     }
 
     val log = KotlinLogging.logger {}
@@ -30,6 +34,63 @@ class GroupController(
     val factory = GroupFactory()
 
     val security = apiSecurityFactory.create(log)
+
+    // simple hack to debug notifications without notifications
+    val notificationsFromGroupName = "!!!N(\\d+)$".toRegex()
+
+    data class GroupsNotification(val groupId: String, val count: Int)
+
+    data class GroupsPayload(
+        val groups: List<Group>,
+        val joinRequests: Set<JoinRequest>?,
+        val invites: Set<Invite>?,
+        val notifications: Set<GroupsNotification>?
+    ) {
+        companion object {
+            fun onlyGroups(groups: List<Group>) = GroupsPayload(groups, null, null, null)
+        }
+    }
+
+
+    private fun enrichAvailableGroups(user: User, groups: List<Group>): Either<Exception, GroupsPayload> {
+        return either.eager {
+            val joinRequests = groups
+                .filter {
+                    // public group hasn't joinrequests, because they are auto approved
+                    it.entryMode != GroupEntryMode.PUBLIC
+                }
+                .mapNotNull {group ->
+                    val eJoinRequest = joinRequestRepository.load(user, group)
+                    notFoundToNull(eJoinRequest).bind()
+                }
+
+            val invites = groups.mapNotNull {group ->
+                val eInvite = inviteRepository.load(user, group)
+                notFoundToNull(eInvite).bind()
+            }
+
+            GroupsPayload(groups, joinRequests.toSet(), invites.toSet(), null)
+        }
+    }
+
+    private fun enrichUsersGroups(user: User, groups: List<Group>): Either<Exception, GroupsPayload> {
+        val notifications = groups.map {group ->
+            notificationsFromGroupName.find(group.name)?.let {it.groupValues[1].toIntOrNull()}
+        }.zip(groups).mapNotNull {(count, group) ->
+            if (count != null) {
+                GroupsNotification(group.id, count)
+            } else {
+                null
+            }
+        }.toSet()
+        val payload = GroupsPayload(
+            groups = groups,
+            joinRequests = null,
+            invites = null,
+            notifications = notifications
+        )
+        return Either.Right(payload)
+    }
 
     @PostMapping
     fun create(
@@ -88,37 +149,41 @@ class GroupController(
         }
     }
 
-    private fun <T>ifNameValid(name : String?, actionIfValid : () -> EntityOrError<T>) : EntityOrError<T> {
+    private fun <T> ifNameValid(name: String?, actionIfValid: () -> EntityOrError<T>): EntityOrError<T> {
         return if (!name.isNullOrBlank() && name.length < NAME_FILTER_MIN_SYMBOLS) {
-            DataOrError.incorrectArgument("name","name should contains minimum $NAME_FILTER_MIN_SYMBOLS symbols")
+            DataOrError.incorrectArgument("name", "name should contains minimum $NAME_FILTER_MIN_SYMBOLS symbols")
         } else {
             actionIfValid()
         }
     }
 
     @GetMapping(params = ["userId"])
-    fun loadByUser(
+    fun listByUser(
         @AuthenticationPrincipal user: User,
         @RequestParam userId: String,
         @RequestParam(required = false) name: String?,
         @RequestParam(required = false, defaultValue = "") order: GroupOrdering,
         pagination: Repository.Pagination
-    ): EntityOrError<List<Group>> {
+    ): EntityOrError<GroupsPayload> {
         return ifNameValid(name) {
             security.user.asHimSelf(userId, user) {
-                groupRepository.loadByUser(userId, name, pagination, order)
+                groupRepository
+                    .loadByUser(userId, name, pagination, order)
+                    .flatMap {groups -> enrichUsersGroups(user, groups)}
             }
         }
     }
 
     @GetMapping(params = ["onlyAvailable"])
-    fun loadAvailableForUser(
+    fun listAvailableForUser(
         @AuthenticationPrincipal user: User,
         @RequestParam(defaultValue = "true") onlyAvailable: Boolean,
-        @RequestParam(required = false) name : String?,
+        @RequestParam(required = false) name: String?,
+        @RequestParam(required = false, defaultValue = "false") onlyWithJoinRequest: Boolean,
+        @RequestParam(required = false, defaultValue = "false") onlyWithInvites: Boolean,
         @RequestParam(defaultValue = "") ordering: GroupOrdering,
         pagination: Repository.Pagination
-    ): EntityOrError<List<Group>> {
+    ): EntityOrError<GroupsPayload> {
         return ifNameValid(name) {
             val result = groupRepository.loadOnlyAvailable(
                 userId = user.id,
@@ -126,14 +191,15 @@ class GroupController(
                 partOfName = name,
                 pagination = pagination,
                 ordering = ordering
-            )
+            ).flatMap {enrichAvailableGroups(user, it)}
+
             DataOrError.fromEither(result, log)
         }
     }
 
 
     @GetMapping("/{groupId}/members")
-    fun loadUsers(
+    fun listUsers(
         @AuthenticationPrincipal user: User,
         @PathVariable groupId: String,
         @RequestParam username: Optional<String>,
@@ -178,7 +244,7 @@ class GroupController(
     fun resetJoiningKey(
         @AuthenticationPrincipal user: User,
         @PathVariable groupId: String
-    ) : EntityOrError<Group> {
+    ): EntityOrError<Group> {
         return security.group.asAdmin(groupId, user) {
             groupRepository.mutate(groupId) {entity: Group ->
                 entity.regenerateJoiningKey()

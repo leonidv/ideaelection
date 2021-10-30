@@ -3,6 +3,7 @@ package idel.tests.infrastructure
 import idel.tests.apiobject.*
 import io.kotest.core.spec.style.scopes.DescribeScope
 import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
+import java.time.LocalDateTime
 
 
 suspend fun DescribeSpecContainerContext.registryUsers(vararg users: User) {
@@ -24,7 +25,8 @@ suspend fun DescribeSpecContainerContext.createGroup(
     groupAdmin: User,
     members: Set<User>,
     entryMode: String = GroupsApi.PUBLIC,
-    domainRestrictions: Array<String> = emptyArray()
+    domainRestrictions: Array<String> = emptyArray(),
+    name: String? = null
 ): GroupInfo {
 
     lateinit var groupId: String
@@ -36,9 +38,11 @@ suspend fun DescribeSpecContainerContext.createGroup(
         ""
     }
 
-    describe("$groupAdmin creates group. entryMode = [$entryMode]$domainRestrictionLabel") {
+    val nameFmt = name?.let {"[$name]"}
+
+    describe("$groupAdmin creates group${nameFmt?:""}. entryMode = [$entryMode]$domainRestrictionLabel") {
         val createGroupResponse = groupAdmin.groups.create(
-            name = "assignee spec group",
+            name = name?:"created from test ${LocalDateTime.now()}",
             entryMode = entryMode,
             domainRestrictions = domainRestrictions
         )

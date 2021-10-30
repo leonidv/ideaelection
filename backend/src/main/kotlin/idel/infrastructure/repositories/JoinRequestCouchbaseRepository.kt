@@ -16,6 +16,11 @@ class JoinRequestCouchbaseRepository(
 
     override val log = KotlinLogging.logger {}
 
+    override fun load(user: User, group: Group): Either<Exception, JoinRequest> {
+        val id = JoinRequest.id(user, group)
+        return load(id)
+    }
+
     override fun loadByUser(
         userId: UserId,
         ordering: GroupMembershipRequestOrdering,
