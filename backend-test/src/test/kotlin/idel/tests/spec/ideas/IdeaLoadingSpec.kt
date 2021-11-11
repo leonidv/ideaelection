@@ -55,6 +55,81 @@ class IdeaLoadingSpec : DescribeSpec({
         }
     }
 
+    describe("filter by author") {
+        lateinit var groupId: String
+        lateinit var ideaId_userB: String
+        lateinit var ideaId_userC: String
+
+        describe("initialization") {
+            groupId = createGroup(userA, members = setOf(userB, userC)).groupId
+            userB.role = "member"
+            userC.role = "member"
+
+            describe("$userB creates an idea") {
+                ideaId_userB = userB.ideas.quickAdd(groupId, "1").shouldBeOk().extractId("idea")
+            }
+
+            describe("$userC creates an idea") {
+                ideaId_userC = userC.ideas.quickAdd(groupId, "1").shouldBeOk().extractId("idea")
+            }
+        }
+
+        arrayOf(userA, userB, userC).forEach {user ->
+            describe("$user load idea offered by $userB") {
+                val response = user.ideas.list(groupId, author = userB.id)
+                checkIsOk(response,
+                    includeIdea(ideaId_userB),
+                    notIncludesIdea(ideaId_userC)
+                )
+            }
+            describe("$user load idea offered by $userC") {
+                val response = user.ideas.list(groupId,author = userC.id)
+                checkIsOk(response,
+                    includeIdea(ideaId_userC),
+                    notIncludesIdea(ideaId_userB)
+                )
+            }
+        }
+    }
+
+    describe("filter voted-by-me") {
+        lateinit var groupId: String
+        lateinit var ideaId : String
+        lateinit var ideaId_notVoted : String
+        describe("initialization") {
+            groupId = createGroup(userA, members = setOf(userB, userC)).groupId
+            userB.role = "member"
+            userC.role = "member"
+
+            describe("$userB adds ideas") {
+                ideaId = userB.ideas.quickAdd(groupId,"1").shouldBeOk().extractId("idea")
+                ideaId_notVoted = userB.ideas.quickAdd(groupId,"1").shouldBeOk().extractId("idea")
+            }
+        }
+
+        describe("$userB get empty list voted-by-me") {
+            val response = userB.ideas.list(groupId, votedByMe = true)
+            checkIsOk(response,
+                noIdeas
+            )
+        }
+
+        arrayOf(userA, userB, userC).forEach {user ->
+            describe("$user votes for idea") {
+                user.ideas.vote(ideaId).shouldBeOk()
+            }
+
+            describe("$user load idea for that him voted") {
+               val response = user.ideas.list(groupId, votedByMe = true)
+               checkIsOk(response,
+                   ideasCount(1),
+                   includeIdea(ideaId),
+                   notIncludesIdea(ideaId_notVoted)
+               )
+            }
+        }
+    }
+
     describe("filter by text") {
         lateinit var groupId: String
         describe("init group") {
@@ -172,7 +247,8 @@ class IdeaLoadingSpec : DescribeSpec({
 
         describe("by default $userA don't see idea in the group's ideas") {
             val response = userA.ideas.list(groupId)
-            checkIsOk(response,
+            checkIsOk(
+                response,
                 notIncludesIdea(ideaId)
             )
         }
@@ -180,7 +256,8 @@ class IdeaLoadingSpec : DescribeSpec({
         listOf(userA, userB).forEach {user ->
             describe("$user see archived idea with query parameter [archived=true]") {
                 val response = userA.ideas.list(groupId, archived = "true")
-                checkIsOk(response,
+                checkIsOk(
+                    response,
                     includeIdea(ideaId)
                 )
             }

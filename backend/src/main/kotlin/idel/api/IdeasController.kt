@@ -1,6 +1,8 @@
 package idel.api
 
 import arrow.core.Either
+import arrow.core.None
+import arrow.core.Some
 import arrow.core.computations.either
 import arrow.core.flatten
 import idel.domain.*
@@ -216,23 +218,33 @@ class IdeasController(
         @AuthenticationPrincipal user: User,
         @RequestParam(required = true) groupId: String,
         @RequestParam(required = false, defaultValue = "") ordering: IdeaOrdering,
-        @RequestParam("offered-by") offeredBy: Optional<String>,
+        @RequestParam("author") author: Optional<String>,
         @RequestParam("assignee") assignee: Optional<String>,
         @RequestParam("implemented") implemented: Optional<Boolean>,
         @RequestParam("text") text: Optional<String>,
         @RequestParam("archived", defaultValue = "false") archived: Boolean,
+        @RequestParam("voted-by-me") votedByMy: Optional<Boolean>,
         pagination: Repository.Pagination
     )
             : EntityOrError<IdeasPayload> {
 
         return secure.group.asMember(groupId, user) {
+            val votedBy = votedByMy.asOption().flatMap {
+                if (it) {
+                    Some(user.id)
+                } else {
+                    None
+                }
+            }
+
             val filtering = IdeaFiltering(
-                offeredBy = offeredBy.asOption(),
+                author = author.asOption(),
                 implemented = implemented.asOption(),
                 assignee = assignee.asOption(),
                 text = text.asOption(),
                 archived = archived,
-                deleted = false
+                deleted = false,
+                votedBy = votedBy
             )
             either.eager {
                 val ideas = ideaRepository.load(groupId, ordering, filtering, pagination).bind()

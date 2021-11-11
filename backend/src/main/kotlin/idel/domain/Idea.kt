@@ -414,17 +414,19 @@ fun requireNoneOrNotEmptyValue(opt: Option<String>, field: String) {
 }
 
 data class IdeaFiltering(
-    val offeredBy: Option<String>,
+    val author: Option<String>,
     val implemented: Option<Boolean>,
     val assignee: Option<String>,
     val text: Option<String>,
     val deleted: Boolean,
-    val archived: Boolean
+    val archived: Boolean,
+    val votedBy: Option<String>
 ) {
     init {
-        requireNoneOrNotEmptyValue(offeredBy, "offeredBy")
+        requireNoneOrNotEmptyValue(author, "offeredBy")
         requireNoneOrNotEmptyValue(assignee, "assigned")
         requireNoneOrNotEmptyValue(text, "text")
+        requireNoneOrNotEmptyValue(votedBy,"votedBy")
     }
 
 }

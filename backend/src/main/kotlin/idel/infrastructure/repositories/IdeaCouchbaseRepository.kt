@@ -3,7 +3,6 @@ package idel.infrastructure.repositories
 import arrow.core.Either
 import arrow.core.Some
 import arrow.core.getOrElse
-import arrow.core.some
 import com.couchbase.client.core.error.DecodingFailureException
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.java.Cluster
@@ -61,7 +60,7 @@ class IdeaCouchbaseRepository(
         val filters = listOf(
             Some("groupId" to groupId),
             filtering.assignee.map {"assignee" to it},
-            filtering.offeredBy.map {"offeredBy" to it},
+            filtering.author.map {"author" to it},
             filtering.implemented.map {"implemented" to it},
             Some("deleted" to filtering.deleted),
             Some("archived" to filtering.archived)
@@ -83,6 +82,13 @@ class IdeaCouchbaseRepository(
             params.put("text", filterValue)
             filterQueryParts = filterQueryParts + """SEARCH(ie, ${'$'}text, {"index":"idea_fts"})"""
         }
+
+        if (filtering.votedBy is Some) {
+            val filterValue = filtering.votedBy.value
+            params.put("votedBy", filterValue)
+            filterQueryParts = filterQueryParts + """ARRAY_CONTAINS(ie.voters,${'$'}votedBy)"""
+        }
+
 
         return load(
             filterQueryParts = filterQueryParts,
