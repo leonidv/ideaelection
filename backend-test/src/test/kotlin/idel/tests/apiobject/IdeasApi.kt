@@ -1,13 +1,8 @@
 package idel.tests.apiobject
 
-import arrow.core.None
-import arrow.core.Option
-import arrow.core.Some
-import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
 import idel.tests.infrastructure.*
-import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import java.net.http.HttpResponse
 
 class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "ideas") {
@@ -96,20 +91,22 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
     fun list(
         groupId: String,
         ordering: String? = null,
-        offeredBy: String? = null,
+        author: String? = null,
         assignee: String? = null,
         implemented: String? = null,
         text: String? = null,
-        archived: String? = null
+        archived: String? = null,
+        votedByMe: Boolean? = null
     ): HttpResponse<JsonNode> {
         val params = listOfNotNull(
             "groupId=$groupId",
             ordering?.let {"ordering=$it"},
-            offeredBy?.let {"offered-by=$it"},
+            author?.let {"author=$it"},
             assignee?.let {"assignee=$it"},
             implemented?.let {"implemented=$it"},
             text?.let {"text=$it"},
-            archived?.let {"archived=$it"}
+            archived?.let {"archived=$it"},
+            votedByMe?.let {"voted-by-me=$it"}
         ).joinToString(separator = "&")
 
         return get("?$params")
@@ -198,12 +195,12 @@ fun ideaHasVoterCount(votersCount: Int) = BodyArraySize("has $votersCount voters
 fun ideaHasVoter(user: User) = BodyArrayElementExists("has voter [${user.id}]", "$.data.idea.voters", user.id)
 
 
-
 val ideaIsDeleted = BodyFieldValueChecker.forField("idea.deleted", "true")
 
 val ideaIsArchived = BodyFieldValueChecker.forField("idea.archived", "true")
 val ideaIsNotArchived = BodyFieldValueChecker.forField("idea.archived", "false")
 
+val noIdeas = ideasCount(0)
 fun ideasCount(count: Int) = BodyArraySize("response contains $count ideas", "$.data.ideas", count)
 fun ideasContainsIdeaWithSummary(summary: String) = BodyContainsObject(
     "contains idea with summary [$summary]", "$.data.ideas", arrayOf(Pair("summary", summary))
