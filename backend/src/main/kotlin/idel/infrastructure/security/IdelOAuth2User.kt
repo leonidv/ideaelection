@@ -1,5 +1,6 @@
 package idel.infrastructure.security
 
+import idel.domain.SubscriptionPlan
 import idel.domain.User
 import mu.KotlinLogging
 import org.springframework.security.core.GrantedAuthority
@@ -43,6 +44,8 @@ open class IdelOAuth2User(
     override val id = "${externalId}@${provider}"
 
     override val roles = IdelAuthorities.asRoles(this.authorities).toSet()
+
+    override val subscriptionPlan: SubscriptionPlan = SubscriptionPlan.FREE
 
     fun copy(authorities: MutableCollection<out GrantedAuthority>) : IdelOAuth2User {
         return IdelOAuth2User(

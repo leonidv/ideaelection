@@ -7,10 +7,13 @@ import mu.KotlinLogging
 
 typealias UserId = String
 
+enum class SubscriptionPlan { FREE, BASIC, ENTERPRISE }
+
 interface IUserInfo : Identifiable {
     val email: String
     val displayName: String
     val avatar: String
+    val subscriptionPlan: SubscriptionPlan
 }
 
 interface User : IUserInfo {
@@ -27,6 +30,7 @@ data class UserInfo(
     override val email: String,
     override val displayName: String,
     override val avatar: String,
+    override val subscriptionPlan: SubscriptionPlan
 ) : IUserInfo {
     companion object {
         fun ofUser(user: User): UserInfo {
@@ -34,7 +38,8 @@ data class UserInfo(
                 id = user.id,
                 avatar = user.avatar,
                 email = user.email,
-                displayName = user.displayName
+                displayName = user.displayName,
+                subscriptionPlan = user.subscriptionPlan
             )
         }
     }
@@ -63,8 +68,9 @@ interface UserRepository : BaseRepository<User> {
 }
 
 class UserService(
-   private val userRepository: UserRepository,
-   private val groupMembershipService: GroupMembershipService
+    private val userRepository: UserRepository,
+    private val userSettingsRepository: UserSettingsRepository,
+    private val groupMembershipService: GroupMembershipService
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -72,9 +78,11 @@ class UserService(
      * Register new user in the system.
      */
     fun register(user: User): Either<Exception, User> {
-       return either.eager<Exception, User> {
+        return either.eager<Exception, User> {
             userRepository.add(user).bind()
-            val linkedInvitesCount = groupMembershipService.convertPersonInviteToUserInvite(user).bind()
+            val userSettings = UserSettingsFactory().createDefault(user)
+            userSettingsRepository.add(userSettings).bind()
+            groupMembershipService.convertPersonInviteToUserInvite(user).bind()
             user
         }
     }

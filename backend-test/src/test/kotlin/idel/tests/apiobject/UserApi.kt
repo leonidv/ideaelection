@@ -8,12 +8,20 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.LocalDateTime
 
+
 class UserApi (user : User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "users") {
+
+    companion object {
+        const val PLAN_FREE = "FREE"
+        const val PLAN_BASIC = "BASIC"
+        const val PLAN_ENTERPRISE = "ENTERPRISE"
+    }
+
     private val log = KotlinLogging.logger {}
 
 
 
-    fun register(user: User, email : String = user.email) : HttpResponse<JsonNode> {
+    fun register(user: User, email : String = user.email, plan : String = PLAN_FREE) : HttpResponse<JsonNode> {
         val body = """
             {
                 "id": "${user.id}",
@@ -22,7 +30,8 @@ class UserApi (user : User, idelUrl: String = Idel.URL) : AbstractObjectApi(user
                 "avatar": "",
                 "roles": [
                     "ROLE_USER"
-                ]
+                ],
+                "subscriptionPlan": "$plan"
             }
         """.trimIndent()
 

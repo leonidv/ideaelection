@@ -18,7 +18,8 @@ class GroupMember(
     override val avatar: String,
     override val displayName: String,
     override val email: String,
-    override val roles: Set<String>
+    override val roles: Set<String>,
+    override val subscriptionPlan: SubscriptionPlan
 
 ) : Identifiable, User {
     override val id = calculateId(groupId, userId)
@@ -39,7 +40,8 @@ class GroupMember(
                     avatar = user.avatar,
                     displayName = user.displayName,
                     email = user.email,
-                    roles = user.roles
+                    roles = user.roles,
+                    subscriptionPlan = user.subscriptionPlan
             )
         }
     }
@@ -52,7 +54,8 @@ class GroupMember(
         avatar: String = this.avatar,
         displayName: String = this.displayName,
         email: String = this.email,
-        roles: Set<String> = this.roles
+        roles: Set<String> = this.roles,
+        subscriptionPlan: SubscriptionPlan = this.subscriptionPlan
     ) : GroupMember {
         return GroupMember(
             userId = userId,
@@ -62,7 +65,8 @@ class GroupMember(
             avatar = avatar,
             displayName = displayName,
             email = email,
-            roles = roles
+            roles = roles,
+            subscriptionPlan = subscriptionPlan
         )
     }
 

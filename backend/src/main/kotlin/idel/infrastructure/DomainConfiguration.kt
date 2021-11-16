@@ -34,6 +34,11 @@ class DomainConfiguration {
     }
 
     @Bean
+    fun userSettingRepository() : UserSettingsRepository {
+        return UserSettingsCouchbaseRepository(couchbaseCluster, couchbaseCollection)
+    }
+
+    @Bean
     fun joinRequestRepository() : JoinRequestRepository {
         return JoinRequestCouchbaseRepository(couchbaseCluster, couchbaseCollection)
     }
@@ -82,8 +87,8 @@ class DomainConfiguration {
     }
 
     @Bean
-    fun userService(userRepository: UserRepository, groupMembershipService: GroupMembershipService) : UserService {
-        return UserService(userRepository, groupMembershipService)
+    fun userService(userRepository: UserRepository, userSettingsRepository: UserSettingsRepository, groupMembershipService: GroupMembershipService) : UserService {
+        return UserService(userRepository, userSettingsRepository, groupMembershipService)
     }
 
 
