@@ -160,6 +160,7 @@ fun user(name: String, roles: Set<String> = setOf(Roles.USER)): User = object : 
     override val displayName: String = "$name"
     override val avatar: String = ""
     override val roles: Set<String> = roles;
+    override val subscriptionPlan = SubscriptionPlan.FREE
 }
 
 fun idea(creator: User, group: Group, assignee: Option<User>, voters: Set<User> = emptySet()): Idea {
