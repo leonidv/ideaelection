@@ -5,7 +5,7 @@ import mu.KotlinLogging
 import java.net.HttpURLConnection
 
 
-class EntityStorage(idelUrl: String = Idel.URL) : AbstractObjectApi(User.instanceAdmin, idelUrl, "configs/storage") {
+class EntityStorage(idelUrl: String = Idel.URL) : AbstractObjectApi(User.instanceAdmin, idelUrl, "storage") {
 
     val log = KotlinLogging.logger {}
 
@@ -24,12 +24,7 @@ class EntityStorage(idelUrl: String = Idel.URL) : AbstractObjectApi(User.instanc
     }
 
     fun clearAll() {
-        clearIdeas()
-        clearUsers()
-        clearGroups()
-        clearJoinRequests()
-        clearGroupMembers()
-        clearInvites()
+        deleteEntity("flush")
     }
 
     /**
@@ -58,5 +53,8 @@ class EntityStorage(idelUrl: String = Idel.URL) : AbstractObjectApi(User.instanc
     }
     fun clearInvites() {
         this.deleteEntity("invite")
+    }
+    fun clearUserSettings() {
+        this.deleteEntity("userSettings")
     }
 }

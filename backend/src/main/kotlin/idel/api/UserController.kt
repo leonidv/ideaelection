@@ -2,8 +2,9 @@ package idel.api
 
 import arrow.core.Either
 import arrow.core.Option
+import arrow.core.computations.either
 import arrow.core.flatMap
-import com.couchbase.client.core.error.DocumentExistsException
+import arrow.core.some
 import idel.domain.*
 import idel.infrastructure.repositories.PersistsUser
 import mu.KLogger
@@ -18,18 +19,22 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/users")
 class UserController(
     private val userRepository: UserRepository,
+    private val userSettingsRepository: UserSettingsRepository,
     private val userService: UserService
 ) {
-    data class MeResult(val id: String,
-                        val domain : String,
-                        val displayName: String,
-                        val avatar: String,
-                        val email: String,
-                        val authorities: List<String>)
+    data class MeResult(
+        val id: String,
+        val domain: String,
+        val displayName: String,
+        val avatar: String,
+        val email: String,
+        val authorities: List<String>
+    )
 
 
-    val log: KLogger = KotlinLogging.logger {}
+    private val log: KLogger = KotlinLogging.logger {}
 
+    private val userSettingsFactory = UserSettingsFactory()
 
     @GetMapping("/me")
     @ResponseBody
@@ -38,12 +43,12 @@ class UserController(
 
         return if (principal is User) {
             val result = MeResult(
-                    id = principal.id,
-                    domain = principal.domain,
-                    displayName = principal.displayName,
-                    avatar = principal.avatar,
-                    email = principal.email,
-                    authorities = authentication.authorities.map {it.authority}
+                id = principal.id,
+                domain = principal.domain,
+                displayName = principal.displayName,
+                avatar = principal.avatar,
+                email = principal.email,
+                authorities = authentication.authorities.map {it.authority}
             )
             DataOrError.ok(result)
         } else {
@@ -52,16 +57,20 @@ class UserController(
     }
 
     @GetMapping("/me2")
-    fun me2(@AuthenticationPrincipal user : User) : User {
+    fun me2(@AuthenticationPrincipal user: User): User {
         return user
     }
+
     /**
      * Check [roles] and if it correct call [actionIfCorrect]
      *
      * @param roles - roles which should be checked
      * @param actionIfCorrect - function which will be called if roles are correct
      */
-    private fun <T> rolesAreNotMisspelled(roles: Set<String>, actionIfCorrect: () -> ResponseEntity<DataOrError<T>>): ResponseEntity<DataOrError<T>> {
+    private fun <T> rolesAreNotMisspelled(
+        roles: Set<String>,
+        actionIfCorrect: () -> ResponseEntity<DataOrError<T>>
+    ): ResponseEntity<DataOrError<T>> {
         val incorrectRoles = Roles.findIncorrect(roles)
         return if (incorrectRoles.isEmpty()) {
             actionIfCorrect()
@@ -73,61 +82,120 @@ class UserController(
 
     @PutMapping("/{userId}/roles")
     @ResponseBody
-    fun putRoles(@PathVariable(name = "userId", required = true) userId: String,
-                 @RequestBody(required = true) roles: Set<String>): EntityOrError<User> =
-            rolesAreNotMisspelled(roles) {
-                val eUser = userRepository.load(userId).flatMap {user ->
-                    if (user.roles == roles) {
-                        Either.Right(user)
-                    } else {
-                        val pUser = PersistsUser.of(user).copy(roles = roles)
-                        userRepository.update(pUser)
-                    }
+    fun putRoles(
+        @PathVariable(name = "userId", required = true) userId: String,
+        @RequestBody(required = true) roles: Set<String>
+    ): EntityOrError<User> =
+        rolesAreNotMisspelled(roles) {
+            val eUser = userRepository.load(userId).flatMap {user ->
+                if (user.roles == roles) {
+                    Either.Right(user)
+                } else {
+                    val pUser = PersistsUser.of(user).copy(roles = roles)
+                    userRepository.update(pUser)
                 }
-
-                DataOrError.fromEither(eUser, log)
             }
+
+            DataOrError.fromEither(eUser, log)
+        }
 
 
     @PostMapping
     fun register(@RequestBody userInfo: PersistsUser): ResponseEntity<out DataOrError<out User>> {
         return rolesAreNotMisspelled<User>(userInfo.roles) {
-            try {
-                userService.register(userInfo)
-                DataOrError.ok(userInfo)
-            } catch (ex: DocumentExistsException) {
-                DataOrError.incorrectArgument("id", "User with same id already registered")
+            val result = either.eager<Exception,User> {
+                userService.register(userInfo).bind()
             }
-
+            DataOrError.fromEither(result, log)
         }
     }
 
     @GetMapping
-    fun list(@AuthenticationPrincipal user : User,
-             @RequestParam filter : String?,
-             pagination: Repository.Pagination): ResponseEntity<DataOrError<List<User>>> {
+    fun list(
+        @AuthenticationPrincipal user: User,
+        @RequestParam filter: String?,
+        pagination: Repository.Pagination
+    ): ResponseEntity<DataOrError<List<User>>> {
         return DataOrError.fromEither(userRepository.load(Option.fromNullable(filter), pagination), log)
     }
 
     @GetMapping("/{userId}")
-    fun load(@PathVariable(name = "userId", required = true) userId: String): ResponseEntity<out DataOrError<out User>> {
+    fun load(
+        @PathVariable(
+            name = "userId",
+            required = true
+        ) userId: String
+    ): ResponseEntity<out DataOrError<out User>> {
         val eUser = userRepository.load(userId)
         return DataOrError.fromEither(eUser, log)
 
     }
+
+    @GetMapping("/settings")
+    fun settings(@AuthenticationPrincipal user: User): EntityOrError<UserSettingsEditableProperties> {
+        val settings = userSettingsRepository
+                        .loadForUser(user)
+                        .map(UserSettingsEditableProperties::of)
+        return DataOrError.fromEither(settings, log)
+    }
+
+    data class EditableSettings(
+        val displayName: String,
+        val subscriptionPlan: SubscriptionPlan,
+        val settings: UserSettingsEditableProperties
+    )
+
+    data class UpdateSettingsResult(
+        val mustReissueJwt: Boolean,
+        val settings: IUserSettingsEditableProperties
+    )
+
+    @PutMapping("/settings")
+    fun updateSettings(
+        @AuthenticationPrincipal user: User,
+        @RequestBody settings: EditableSettings
+    ): EntityOrError<UpdateSettingsResult> {
+        val result = either.eager<Exception, UpdateSettingsResult> {
+            val userFromStorage = userRepository.load(user.id).bind()
+
+            val mustReissueJwt =
+                if (userFromStorage.displayName != settings.displayName ||
+                    userFromStorage.subscriptionPlan != settings.subscriptionPlan
+                ) {
+                    val nextUser = PersistsUser.of(user)
+                        .copy(
+                            displayName = settings.displayName,
+                            subscriptionPlan = settings.subscriptionPlan
+                        )
+                    userRepository.update(nextUser).bind()
+                    true
+                } else {
+                    false
+                }
+
+            val userSettings = userSettingsFactory.fromProperties(user, settings.settings)
+            val nextSettings = userSettingsRepository
+                                    .replace(userSettings)
+                                    .map(UserSettingsEditableProperties::of)
+                                    .bind()
+            UpdateSettingsResult(mustReissueJwt, nextSettings)
+        }
+
+        return DataOrError.fromEither(result, log)
+    }
 }
 
-class UserSecurity(private val controllerLog : KLogger) {
+class UserSecurity(private val controllerLog: KLogger) {
 
     /**
      * Check that user is owner of resource.
      */
-    fun <T> asHimSelf(userId : String, user: User, action : () -> Either<Exception,T>) : EntityOrError<T>  {
-       val result = if (userId == user.id) {
-           action()
-       } else {
-           Either.Left(OperationNotPermitted())
-       }
+    fun <T> asHimSelf(userId: String, user: User, action: () -> Either<Exception, T>): EntityOrError<T> {
+        val result = if (userId == user.id) {
+            action()
+        } else {
+            Either.Left(OperationNotPermitted())
+        }
 
         return DataOrError.fromEither(result, controllerLog)
     }

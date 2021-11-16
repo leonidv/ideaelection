@@ -16,6 +16,7 @@ data class PersistsUser(
     override val displayName: String,
     override val avatar: String,
     override val roles: Set<String>,
+    override val subscriptionPlan: SubscriptionPlan
 ) : User {
 
 
@@ -26,7 +27,8 @@ data class PersistsUser(
                 email = user.email,
                 displayName = user.displayName,
                 avatar = user.avatar,
-                roles = user.roles
+                roles = user.roles,
+                subscriptionPlan = user.subscriptionPlan
             )
         }
     }
