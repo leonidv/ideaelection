@@ -4,10 +4,10 @@ import arrow.core.Either
 
 
 enum class NotificationsFrequency {
-    Instantly,
-    Daily,
-    Weekly,
-    Disabled
+    INSTANTLY,
+    DAILY,
+    WEEKLY,
+    DISABLED
 }
 
 interface IUserSettingsEditableProperties {
@@ -43,7 +43,7 @@ class UserSettingsFactory {
     fun createDefault(user: User): UserSettings = UserSettings(
         id = UserSettings.generateId(user),
         userId = user.id,
-        notificationsFrequency = NotificationsFrequency.Instantly,
+        notificationsFrequency = NotificationsFrequency.INSTANTLY,
         subscribedToNews = false
     )
 

@@ -27,7 +27,7 @@ data class IdelPrincipal(
                 displayName = loadClaim("displayName"),
                 avatar = loadClaim("avatar"),
                 roles = loadClaim("roles").split(",").toSet(),
-                subscriptionPlan = SubscriptionPlan.valueOf(loadClaim(loadClaim("subscriptionPlan")))
+                subscriptionPlan = SubscriptionPlan.valueOf(loadClaim("subscriptionPlan"))
             )
         }
 

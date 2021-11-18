@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.Option
 import arrow.core.computations.either
 import arrow.core.flatMap
-import arrow.core.some
 import idel.domain.*
 import idel.infrastructure.repositories.PersistsUser
 import mu.KLogger
@@ -103,7 +102,7 @@ class UserController(
     @PostMapping
     fun register(@RequestBody userInfo: PersistsUser): ResponseEntity<out DataOrError<out User>> {
         return rolesAreNotMisspelled<User>(userInfo.roles) {
-            val result = either.eager<Exception,User> {
+            val result = either.eager<Exception, User> {
                 userService.register(userInfo).bind()
             }
             DataOrError.fromEither(result, log)
@@ -132,10 +131,10 @@ class UserController(
     }
 
     @GetMapping("/settings")
-    fun settings(@AuthenticationPrincipal user: User): EntityOrError<UserSettingsEditableProperties> {
+    fun settings(@AuthenticationPrincipal user: User): EntityOrError<SettingsResult> {
         val settings = userSettingsRepository
-                        .loadForUser(user)
-                        .map(UserSettingsEditableProperties::of)
+            .loadForUser(user)
+            .map {SettingsResult(mustReissueJwt = null, settings = UserSettingsEditableProperties.of(it))}
         return DataOrError.fromEither(settings, log)
     }
 
@@ -145,8 +144,8 @@ class UserController(
         val settings: UserSettingsEditableProperties
     )
 
-    data class UpdateSettingsResult(
-        val mustReissueJwt: Boolean,
+    data class SettingsResult(
+        val mustReissueJwt: Boolean?,
         val settings: IUserSettingsEditableProperties
     )
 
@@ -154,8 +153,8 @@ class UserController(
     fun updateSettings(
         @AuthenticationPrincipal user: User,
         @RequestBody settings: EditableSettings
-    ): EntityOrError<UpdateSettingsResult> {
-        val result = either.eager<Exception, UpdateSettingsResult> {
+    ): EntityOrError<SettingsResult> {
+        val result = either.eager<Exception, SettingsResult> {
             val userFromStorage = userRepository.load(user.id).bind()
 
             val mustReissueJwt =
@@ -175,10 +174,10 @@ class UserController(
 
             val userSettings = userSettingsFactory.fromProperties(user, settings.settings)
             val nextSettings = userSettingsRepository
-                                    .replace(userSettings)
-                                    .map(UserSettingsEditableProperties::of)
-                                    .bind()
-            UpdateSettingsResult(mustReissueJwt, nextSettings)
+                .replace(userSettings)
+                .map(UserSettingsEditableProperties::of)
+                .bind()
+            SettingsResult(mustReissueJwt, nextSettings)
         }
 
         return DataOrError.fromEither(result, log)
