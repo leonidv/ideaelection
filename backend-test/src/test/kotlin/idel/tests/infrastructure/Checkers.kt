@@ -21,8 +21,14 @@ class BodyFieldValueChecker(
     private val expectedValue: String
 ) : ResponseChecker {
     companion object {
-        fun forField(fieldName: String, expectedValue: String) =
-            BodyFieldValueChecker("$fieldName is [$expectedValue]", "$.data.$fieldName", expectedValue)
+        fun forField(fieldName: String, expectedValue: String, inData : Boolean = true) : BodyFieldValueChecker {
+            val fieldPath = if (inData) {
+                "$.data.$fieldName"
+            } else {
+                "$.$fieldName"
+            }
+            return BodyFieldValueChecker("$fieldName is [$expectedValue]", fieldPath, expectedValue)
+        }
     }
 
     override fun check(jsonNode: JsonNode) {

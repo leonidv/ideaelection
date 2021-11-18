@@ -17,6 +17,7 @@ class User(val name: String, var role : String = "", val domain : String = DEFAU
     val invites = InvitesApi(this, idelUrl)
     val ideas = IdeasApi(this, idelUrl)
     val users = UserApi(this, idelUrl)
+    val jwt = JwtApi(this, idelUrl)
 
     override fun toString(): String {
         val fmtRole = if (role.isBlank()) {

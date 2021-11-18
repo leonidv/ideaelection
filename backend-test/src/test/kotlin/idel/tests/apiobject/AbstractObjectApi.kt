@@ -22,7 +22,7 @@ abstract class AbstractObjectApi(
     val resource: String) {
     private val log = KotlinLogging.logger {}
 
-    private val resourceUri: URI = URI.create("$idelUrl/$resource")
+    protected val resourceUri: URI = URI.create("$idelUrl/$resource")
 
     protected val client: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(1))
@@ -47,7 +47,7 @@ abstract class AbstractObjectApi(
 
     }
 
-    private fun send(request: HttpRequest, bodyForLog: String): HttpResponse<JsonNode> {
+    protected fun send(request: HttpRequest, bodyForLog: String): HttpResponse<JsonNode> {
         val bodyMsg = if (bodyForLog.length < 2000) {
             bodyForLog
         } else {
