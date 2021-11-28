@@ -2,7 +2,6 @@ package idel.domain
 
 
 import arrow.core.Either
-import arrow.core.Option
 import arrow.core.Some
 import arrow.core.computations.either
 import arrow.core.flatten
@@ -344,7 +343,11 @@ data class GroupMetrics(
  */
 class GroupService(val groupMemberRepository: GroupMemberRepository) {
 
-    private fun checkNoLastAdmin(groupId: String): Either<Exception, Boolean> {
+    companion object {
+        val TRY_REMOVE_LAST_ADMIN_ERROR = Either.Left(InvalidOperation("Group should contains at least one admin, you try to remove last admin"))
+    }
+
+    private fun hasSeveralAdmin(groupId: String): Either<Exception, Boolean> {
         val pagination = Repository.Pagination(0, 2)
         val admins = groupMemberRepository.loadByGroup(
             groupId,
@@ -355,18 +358,35 @@ class GroupService(val groupMemberRepository: GroupMemberRepository) {
         return admins.map {it.size > 1}
     }
 
+    fun removeUser(groupId: String, userId: UserId): Either<Exception,Unit> {
+        return either.eager<Exception, Either<Exception,Unit>> {
+            val user = groupMemberRepository.load(groupId, userId).bind()
+            val canChange : Boolean = if(user.roleInGroup == GroupMemberRole.GROUP_ADMIN) {
+                hasSeveralAdmin(groupId).bind()
+            } else {
+                true
+            }
+
+            if (canChange) {
+                groupMemberRepository.removeFromGroup(groupId,userId)
+            } else {
+                TRY_REMOVE_LAST_ADMIN_ERROR
+            }
+        }.flatten()
+    }
+
     fun changeRoleInGroup(groupId: String, userId: String, nextRole: GroupMemberRole): Either<Exception, GroupMember> {
         return either.eager<Exception, Either<Exception, GroupMember>> {
             val canChange = when (nextRole) {
                 GroupMemberRole.GROUP_ADMIN -> Either.Right(true)
-                GroupMemberRole.MEMBER -> checkNoLastAdmin(groupId)
+                GroupMemberRole.MEMBER -> hasSeveralAdmin(groupId)
             }.bind()
 
             if (canChange) {
                 val member = groupMemberRepository.load(groupId, userId).bind()
                 groupMemberRepository.changeRole(member.changeRole(nextRole))
             } else {
-                Either.Left(InvalidOperation("Group should contains at least one admin, you try to remove last admin"))
+                TRY_REMOVE_LAST_ADMIN_ERROR
             }
 
         }.flatten()

@@ -268,14 +268,14 @@ class GroupController(
     }
 
 
-    @DeleteMapping("/{groupId}/members/{memberId}")
+    @DeleteMapping("/{groupId}/members/{removedUserId}")
     fun removeMember(
         @AuthenticationPrincipal user: User,
         @PathVariable groupId: String,
-        @PathVariable memberId: String
+        @PathVariable removedUserId: String
     ): EntityOrError<String> {
-        return security.groupMember.asAdminOrHimSelf(groupId, memberId, user) {
-            groupMemberRepository.removeFromGroup(groupId, memberId).map {"ok"}
+        return security.groupMember.asAdminOrHimSelf(groupId, removedUserId, user) {
+            groupService.removeUser(groupId, removedUserId).map {"OK"}
         }
     }
 }

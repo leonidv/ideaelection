@@ -225,6 +225,11 @@ class GroupsSpec : DescribeSpec({
                     groupHasMember(userE)
                 )
             }
+
+            describe("$userA can leave group, because he is last admin") {
+                val response = userA.groups.deleteMember(groupId, userA.id)
+                checkIsBadRequest(response, 109)
+            }
         }
 
         describe("changes members role") {
