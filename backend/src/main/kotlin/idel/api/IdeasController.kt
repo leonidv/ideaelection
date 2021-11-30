@@ -6,6 +6,7 @@ import arrow.core.Some
 import arrow.core.computations.either
 import arrow.core.flatten
 import idel.domain.*
+import idel.infrastructure.repositories.PersistsUser
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.http.HttpStatus
@@ -61,7 +62,7 @@ class IdeasController(
             either.eager {
                 val idea = factory.createIdea(properties, properties.groupId, user.id).bind()
                 ideaRepository.add(idea)
-                IdeaPayload.onlyIdea(idea)
+                IdeaPayload(idea, setOf(PersistsUser.of(user)))
             }
         }
     }
