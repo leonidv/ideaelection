@@ -89,14 +89,14 @@ class GroupSecurity(
     class IdGroupIdentity(val id: String) : GroupIdentity(errorMessage = id)
     class JoiningKeyGroupIdentity(val key : String) : GroupIdentity(errorMessage = "joiningKey = $key")
 
-    fun <T> asDomainMember(groupIdentity: GroupIdentity, user: User, action: Action<T>) : EntityOrError<T> {
+    fun <T> asDomainMemberOrCreator(groupIdentity: GroupIdentity, user: User, action: Action<T>) : EntityOrError<T> {
        val result : Either<Exception, Either<Exception, T>> = either.eager {
             val group = when(groupIdentity) {
                 is IdGroupIdentity -> groupRepository.load(groupIdentity.id)
                 is JoiningKeyGroupIdentity -> groupRepository.loadByJoiningKey(groupIdentity.key)
             }.bind()
 
-            if (group.userDomainAllowed(user.domain)) {
+            if (group.userDomainAllowed(user.domain) || (group.creator.id == user.id)) {
                 action()
             } else {
                 Either.Left(EntityNotFound("group", groupIdentity.errorMessage))

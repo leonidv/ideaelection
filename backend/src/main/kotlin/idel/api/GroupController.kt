@@ -119,7 +119,7 @@ class GroupController(
         @PathVariable groupId: String
     ): EntityOrError<Group> {
         val identity = GroupSecurity.IdGroupIdentity(groupId)
-        return security.group.asDomainMember(identity, user) {
+        return security.group.asDomainMemberOrCreator(identity, user) {
             val result = either.eager<Exception, Either<Exception, Group>> {
                 val group = groupRepository.load(groupId).bind()
                 if (group.entryMode == GroupEntryMode.PRIVATE) {
@@ -144,7 +144,7 @@ class GroupController(
         @RequestParam key: String
     ): EntityOrError<Group> {
         val identity = GroupSecurity.JoiningKeyGroupIdentity(key)
-        return security.group.asDomainMember(identity, user) {
+        return security.group.asDomainMemberOrCreator(identity, user) {
             groupRepository.loadByJoiningKey(key)
         }
     }

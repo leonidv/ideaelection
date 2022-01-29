@@ -154,7 +154,7 @@ class GroupLoadingSpec : DescribeSpec({
         val userC_email = User("userC", domain = "email")
         val userE_post = User("userE", domain = "post")
 
-        val allRestrictions = listOf(
+        val allRestrictions = arrayOf(
             RESTRICTION_MAIL,
             RESTRICTION_EMAIL,
             RESTRICTION_COMPANY,
@@ -214,7 +214,16 @@ class GroupLoadingSpec : DescribeSpec({
                         )
                     }
 
-                    describe("load by joining key") {
+                    describe("load") {
+                        testLoadGroup(
+                            user = userA, // creator can load regardless of domain restriction
+                            canLoad = true,
+                            isCreator = true,
+                            groupsInfo = groupsInfo,
+                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE),
+                            domainRestrictions = allRestrictions
+                        )
+
                         testLoadGroup(
                             user = userB_mail,
                             canLoad = true,
@@ -553,10 +562,13 @@ suspend fun DescribeSpecContainerContext.testAvailableGroup(
 suspend fun DescribeSpecContainerContext.testLoadGroup(
     user: User,
     canLoad: Boolean,
+    isCreator : Boolean = false,
     groupsInfo: Map<GroupParams, GroupInfo>,
     entryModes: Array<String>,
     vararg domainRestrictions: Array<String>
 ) {
+    if (isCreator) require(canLoad) {"creator can load any group which he is created"}
+
     val fmtAccess = if (canLoad) {
         "can load"
     } else {
@@ -570,7 +582,7 @@ suspend fun DescribeSpecContainerContext.testLoadGroup(
 
             describe("$user $fmtAccess group by id, ${groupParams.msgString()}") {
                 val loadResponse = user.groups.load(groupInfo.groupId)
-                if (canLoad && (entryMode != GroupsApi.PRIVATE)) {
+                if ((canLoad && (entryMode != GroupsApi.PRIVATE)) || isCreator) {
                     checkIsOk(loadResponse)
                 } else {
                     checkIsNotFound(loadResponse)
