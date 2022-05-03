@@ -1,0 +1,32 @@
+.groupMainScreenMember {
+  justify-content: flex-start !important;
+  padding: 8px 0;
+
+  &__avatar {
+    margin-left: 16px !important;
+    margin-right: 16px !important;
+  }
+
+  &__name {
+    margin: 0;
+  }
+
+  &__role {
+    margin: 0;
+    margin-top: 8px;
+    font-size: 14px;
+    color: grey;
+  }
+
+  &--active {
+    background-color: #e3f2fd;
+  }
+
+  &--pointer {
+    cursor: pointer;
+  }
+
+  .MuiIconButton-root {
+    margin-left: auto;
+  }
+}

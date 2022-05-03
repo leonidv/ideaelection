@@ -1,0 +1,25 @@
+.search {
+  &__root {
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
+    width: 300px !important;
+    box-shadow: none !important;
+    border: 1px solid;
+    border-radius: 20px !important;
+  }
+
+  &__iconButton {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 1300px) {
+  .search {
+    &__root {
+      width: 100% !important;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+    }
+  }
+}

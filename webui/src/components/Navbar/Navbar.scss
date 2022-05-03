@@ -1,0 +1,94 @@
+.navbar {
+    &__current-link {
+        display: none;
+    }
+
+    &__container {
+        margin-left: 400px !important;
+        width: calc(100% - 400px) !important;
+    }
+
+    &__appBar {
+        margin-left: auto;
+        background-color: #2296F3 !important;
+        height: 74px;
+
+        justify-content: center;
+    }
+
+    &__toolbar {
+        justify-content: flex-end;
+        align-items: center !important;
+    }
+
+    &__button {
+        margin-right: auto !important;
+        color: white !important;
+    }
+
+    &__icon-left, &__icon-right {
+        display: none !important;
+    }
+}
+
+
+@media (max-width: 1300px) {
+    .navbar {
+        &__container {
+            margin-left: 0 !important;
+            display: flex !important;
+            margin-right: initial  !important;
+            justify-content: space-between;
+            width: 100% !important;
+            align-items: center;
+
+            button {
+                height: fit-content;
+            }
+        }
+
+        &__icon-left, &__icon-right {
+            display: block !important;
+        }
+
+        &__toolbar {
+            width: 100%;
+        }
+    }
+}
+
+@media (max-width: 410px) {
+    .navbar {
+        &__container {
+            padding: 0;
+        }
+
+        &__icon-left {
+            margin-left: 16px;
+        }
+
+        &__toolbar {
+            width: 70%;
+            padding: 0;
+            justify-content: flex-start;
+        }
+
+        &__group-name {
+            max-width: 50%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        &__button {
+            width: fit-content;
+            margin-right: 0 !important;
+        }
+    }
+
+}
+
+@media (min-width: 1280px) {
+    .MuiContainer-maxWidthLg {
+        max-width: none !important;
+    }
+}

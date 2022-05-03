@@ -1,0 +1,21 @@
+.loginButton {
+  display: flex;
+  align-items: center;
+  border: none;
+  padding: 8px;
+  font-size: 32px;
+  opacity: 70%;
+  margin-bottom: 64px;
+  background-color: white;
+  transition: 0.7s ease all;
+
+  cursor: pointer;
+
+  &:hover {
+    opacity: 90%;
+  }
+
+  &__img {
+    margin-right: 32px;
+  }
+}

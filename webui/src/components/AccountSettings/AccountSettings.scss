@@ -1,0 +1,85 @@
+.accountSettings {
+  &__title {
+    margin: 0;
+    margin-bottom: 32px;
+    font-size: 18px;
+  }
+
+  &__subtitle {
+    margin: 0;
+    margin-bottom: 16px;
+    font-size: 16px;
+
+    &--noMargin {
+      margin-bottom: 0;
+    }
+  }
+
+  &__row {
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 32px;
+
+    &--center {
+      align-items: center !important;
+    }
+  }
+
+  &__textField {
+    margin-bottom: 8px !important;
+  }
+
+  &__plan-text {
+    color: gray;
+    margin: 0;
+    font-size: 14px;
+    margin-bottom: 8px;
+    max-width: 250px;
+  }
+
+  &__notifications-text {
+    margin: 0;
+    color: gray;
+    font-size: 14px;
+  }
+
+  &__select {
+    width: 70%;
+    text-align: center;
+    color: gray !important;
+    cursor: pointer;
+    margin-right: 32px;
+    font-size: 14px !important;
+  }
+
+  &__option {
+    padding: 8px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+  }
+
+  .MuiAvatar-circular {
+    width: 15%;
+    height: 15%;
+    margin-right: 16px;
+  }
+
+  .MuiInput-underline.Mui-disabled:before {
+    border-bottom-style: solid;
+  }
+
+  .MuiInputBase-input.Mui-disabled {
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  .MuiSvgIcon-root {
+    fill: #2296f3 !important;
+  }
+
+  .MuiFormControlLabel-label {
+    color: gray !important;
+  }
+}

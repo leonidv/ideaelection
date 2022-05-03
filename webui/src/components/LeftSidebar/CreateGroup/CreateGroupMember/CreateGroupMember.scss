@@ -1,0 +1,35 @@
+.createGroupMember {
+    &__row {
+        justify-content: initial;
+    }
+
+    &__btn {
+        margin-right: 8px !important;
+        margin-left: auto !important;
+        border: 1px solid grey !important;
+        width: 8px !important;
+        height: 8px !important;
+        color: grey !important;
+        padding: 10px !important;
+
+        svg {
+            font-size: 1rem !important;
+        }
+    }
+
+    &__mail {
+        margin-top: 0;
+        color: grey;
+        font-size: 14px;
+    }
+
+    &__name {
+        font-size: 16px;
+        margin-bottom: 8px;
+        margin-top: 8px;
+    }
+
+    &__avatar {
+        margin-right: 8px;
+    }
+}

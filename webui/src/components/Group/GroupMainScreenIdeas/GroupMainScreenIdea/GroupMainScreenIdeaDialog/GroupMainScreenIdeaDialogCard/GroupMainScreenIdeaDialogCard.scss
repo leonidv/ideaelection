@@ -1,0 +1,42 @@
+.groupMainScreenIdeaDialogCard {
+  .MuiCardContent-root {
+    background-color: transparent;
+  }
+
+  &__card {
+    box-shadow: none;
+    border: none;
+    padding-bottom: 64px;
+  }
+
+  .MuiCardActions-root {
+    padding: 8px 0 !important;
+  }
+
+  .MuiCardContent-root {
+    padding: 8px 0 !important;
+    background-color: #e3f2fd;
+    margin-bottom: 16px;
+  }
+
+  .MuiCardHeader-root {
+    padding: 8px 0 !important;
+  }
+
+  .MuiCardContent-root {
+    background: none;
+  }
+
+  .MuiCard-root {
+    box-shadow: none !important;
+  }
+
+  .groupMainScreenIdeaCardContent {
+    border-top: 1px solid #dfdfdf;
+  }
+
+  .DraftEditor-editorContainer {
+    max-height: none !important;
+
+  }
+}

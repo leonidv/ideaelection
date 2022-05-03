@@ -1,0 +1,98 @@
+body {
+    font-family: 'Roboto';
+    overflow-y: hidden;
+  }
+
+* {
+  scrollbar-color: #2296F3 #E2F1FF !important;
+  scrollbar-width: thin !important;
+}
+
+.avatar {
+  color: transparent;
+
+  object-fit: cover;
+  text-align: center;
+  text-indent: 10000px;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  display: block;
+  overflow: hidden;
+  line-height: 1;
+  user-select: none;
+  border-radius: 50%;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app {
+  &__suspense {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+  }
+}
+
+.MuiCircularProgress-root {
+  width: 100px !important;
+  height: 100px !important;
+  color: #2296f3 !important;
+}
+
+// .Mui-focused {
+//   color: #2296f3 !important;
+// }
+
+.Mui-focused  .MuiOutlinedInput-notchedOutline {
+  border-color: #2296f3 !important;
+}
+
+.MuiButton-containedPrimary {
+  background-color: #2296f3 !important;
+}
+
+.infinite-scroll-component {
+  overflow: hidden !important;
+}
+
+header {
+  max-width: none !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #2296F3;
+}
+*::-webkit-scrollbar {
+    width: 4px;
+      background-color: #E2F1FF;
+}
+
+.MuiInputLabel-asterisk {
+  color: red;
+}
+
+.editorDraft:hover {
+  border-color: rgba(0, 0, 0, 0.87)
+}
+
+.editorDraft:focus, .editorDraft:active, .editorDraft:target, .editorDraft:focus-within {
+  border-color: #2296F3;
+  border-width: 2px;
+}
+
+
+@media (min-width: 1920px) {
+  .app {
+    max-width: 1920px;
+    margin: 0 auto;
+    position: relative;
+  }
+}
+

@@ -1,0 +1,13 @@
+.modalButtons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 32px;
+
+  &__cancel {
+    margin-right: 8px !important;
+  }
+
+  &__accept {
+    background-color: #2296f3 !important;
+  }
+}

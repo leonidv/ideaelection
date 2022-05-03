@@ -1,0 +1,10 @@
+.group {
+  padding-left: 400px;
+  position: relative;
+}
+
+@media (max-width: 1300px) {
+  .group {
+    padding-left: 0;
+  }
+}
