@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: docker.io/leonidv/idel-backend:test
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: couchbase.host
+              value: 185.173.94.184
+
+            - name: jwt.frontend.url
+              value: https://test.saedi.io
+
+            - name: security.cors.allowed-origins
+              value: https://test.saedi.io, https://saedi.zap-it.ru
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 8080
+      name: backend-http

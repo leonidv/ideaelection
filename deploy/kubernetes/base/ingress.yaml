@@ -8,7 +8,10 @@ spec:
   tls:
     - hosts:
         - api.test.saedi.io
-      secretName: tls-ap.test.saedi.io
+      secretName: tls-api.test.saedi.io
+    - hosts:
+        - test.saedi.io
+      secretName: tls-test.saedi.io
 
   rules:
 #    - host: couchbase.test.saedi.io
@@ -29,6 +32,17 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: saedi-service
+                name: backend-service
                 port:
-                  name: backend-api
+                  name: backend-http
+    - host: test.saedi.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: webui-service
+                port:
+                  name: webui-http
+
