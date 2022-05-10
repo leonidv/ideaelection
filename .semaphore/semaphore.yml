@@ -91,7 +91,7 @@ blocks:
             - sudo ./backend-run.sh
             - cd ../backend-test
             - ./gradlew --console=plain test allureReport
-            - sudo podman push docker.io/leonidv/saedi-backend docker.io/leonidv/saedi-backend:$PROCESS_TAG
+            - sudo podman push docker.io/leonidv/idel-backend docker.io/leonidv/idel-backend:$PROCESS_TAG
 
   - name: webui building
     task:
