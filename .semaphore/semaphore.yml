@@ -93,24 +93,25 @@ blocks:
             - ./gradlew --console=plain test allureReport
             - sudo podman push docker.io/leonidv/saedi-backend docker.io/leonidv/saedi-backend:$PROCESS_TAG
 
-#  - name: webui building
-#    env_vars:
-#      - name: BUILD_DIR
-#        value: /home/semaphore/ideaelection
-#      - name: LOG_DIR
-#        value: /home/semaphore/ideaelection/logs
+  - name: webui building
+    tasks:
+      env_vars:
+        - name: BUILD_DIR
+          value: /home/semaphore/ideaelection
+        - name: LOG_DIR
+          value: /home/semaphore/ideaelection/logs
 
-#    prologue:
-#      commands:
-#        - checkout
+      prologue:
+        commands:
+          - checkout
 
-#    jobs:
-#      - name: Build backend application
-#        commands:
-#          - cd $BUILD_DIR/webui
-#          - npm run build
-#          - sudo podman build --quiet -t docker.io/leonidv/saedi-webui
-#          - sudo podman push docker.io/leonidv/saedi-webui docker.io/leonidv/saedi-webui:$PROCESS_TAG
+      jobs:
+        - name: Build backend application
+          commands:
+            - cd $BUILD_DIR/webui
+            - npm run build
+            - sudo podman build --quiet -t docker.io/leonidv/saedi-webui
+            - sudo podman push docker.io/leonidv/saedi-webui docker.io/leonidv/saedi-webui:$PROCESS_TAG
 
   - name: Deploy to test
     run:
