@@ -1,0 +1,25 @@
+.modal {
+  position: absolute;
+  width: 400px;
+  border: none;
+  padding: 32px;
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  background-color: #fff;
+  max-height: 85vh;
+  overflow-y: auto;
+
+  &__title {
+    margin: 0;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 1300px) {
+  .modal {
+    box-sizing: border-box;
+    padding: 16px;
+    width: 98% !important;
+  }
+} 

@@ -1,0 +1,247 @@
+.groupMainScreen {
+  width: calc(100% - 240px);
+
+  &__rightSightbar {
+    height: 100% !important;
+    justify-content: space-between;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__drawer--right,
+  &__drawer--right .MuiDrawer-paper {
+    left: auto;
+    right: 0;
+    top: 0;
+    position: absolute;
+    overflow: visible;
+    height: calc(100vh - 74.81px);
+    background-color: white;
+    border-left: 1px solid rgba(0, 0, 0, 0.12);
+    max-width: 240px;
+    width: 100%;
+    overflow-y: auto;
+  }
+
+  &__drawer--right .MuiPaper-root svg {
+    margin-right: 16px;
+  }
+
+  &__drawer--left {
+    width: 240px;
+    flex-shrink: 0;
+  }
+
+  &__drawerPaper {
+    width: 240px;
+  }
+
+  &Groups,
+  &__invites,
+  &__ideas,
+  &__groups,
+  &Ideas,
+  &__available {
+    height: calc(100vh - 176px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    margin-right: -24px !important;
+    padding-right: 20px !important;
+  }
+
+  &__invites {
+    display: flex;
+
+    .infinite-scroll-component__outerdiv {
+      width: 100%;
+    }
+  }
+
+  &__found {
+    padding: 64px !important;
+
+    .groupMainScreenInvite {
+      max-width: none !important;
+    }
+  }
+
+  &__container {
+    position: relative;
+    padding: 16px 0;
+    box-sizing: border-box;
+    margin-left: 0 !important;
+  }
+
+  &__row {
+    margin-bottom: 32px;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+  }
+
+  &__select {
+    width: 200px !important;
+  }
+
+  &__description {
+    padding-left: 16px;
+    padding-right: 16px;
+    color: grey;
+  }
+
+  &__filter {
+    height: fit-content;
+    min-height: initial !important;
+
+    .MuiAccordionSummary-content {
+      margin: 0 !important;
+      font-weight: bold;
+
+      .MuiAccordionSummary-expandIcon {
+        padding: 0 !important;
+      }
+    }
+  }
+
+  &__filterList {
+    width: 100%;
+  }
+
+  &__filterListItem {
+    padding: 0 !important;
+  }
+
+  &__filterText {
+    margin: 0 !important;
+    & span {
+      font-size: 14px;
+    }
+  }
+
+  &__progress {
+    text-align: center;
+    overflow: hidden;
+
+    margin: 0 auto;
+
+    .MuiCircularProgress-root {
+      width: 40px !important;
+      height: 40px !important;
+    }
+}
+
+  &__expandIcon,
+  .MuiAccordionSummary-expandIcon {
+    padding: 0 !important;
+  }
+
+  &__settings-btn {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  &__accordeon {
+    box-shadow: none !important;
+  }
+
+  &__invites .infinite-scroll-component, &__invites .infinite-scroll-component ,
+  &__available .infinite-scroll-component  {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -2%;
+    justify-content: space-between;
+    overflow-x: hidden;
+    padding-bottom: 50px;
+  }
+
+  &__title-member {
+    padding: 0 16px !important;
+  }
+
+  &__top-member {
+    margin-top: 32px;
+  }
+
+  &__title-member h2 {
+    font-weight: normal !important;
+  }
+  &__drawer--right {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between !important;
+    overflow-y: auto !important;
+  }
+}
+
+@media (max-width: 1300px) {
+  .groupMainScreen {
+    width: 100%;
+
+    &__row {
+      flex-direction: column;
+
+      .makeStyles-root-9 {
+        width: 100%;
+        margin-bottom: 32px;
+      }
+    }
+
+    &__select {
+      width: 100% !important;
+    }
+
+    .MuiCardHeader-root {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .MuiCardHeader-action {
+      order: -1;
+      margin-left: auto;
+    }
+
+    &Groups,
+    &__invites,
+    &__ideas,
+    &__groups,
+    &Ideas,
+    &__available {
+      height: calc(100vh - 226px) !important;
+      margin-right: 0 !important;
+    }
+
+    &__drawer,
+    &__drawer--right {
+      display: none !important;
+    }
+
+    &__drawer--open,
+    &__drawer--right-open {
+      display: block !important;
+    }
+  }
+
+  .PrivateHiddenCss-xsDown-3 {
+    display: block !important;
+  }
+}
+
+.makeStyles-drawerPaper-13 .search__root,
+.jss13 .search__root {
+  margin: 16px !important;
+}
+
+@media (min-width: 1500px) {
+    .groupMainScreen {
+        width: calc(100% - 400px);
+
+        &__drawer--right {
+            width: 400px;
+            border-right: 1px solid rgba(0, 0, 0, 0.12);
+        }
+
+        &__drawerPaper {
+            max-width: 400px;
+        }
+    }
+}

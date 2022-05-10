@@ -1,0 +1,87 @@
+.createIdea {
+  position: absolute;
+  right: 32px;
+  top: calc(100vh - 140px);
+  z-index: 999;
+
+  &__button {
+    font-weight: bold;
+    color: #fff !important;
+    background-color: #ff7042 !important;
+    border: 1px solid transparent !important;
+    transition: all ease 0.5s !important;
+
+    &:hover {
+      color: #ff7042 !important;
+      background-color: #fff !important;
+      border: 1px solid #ff7042 !important;
+    }
+  }
+  &__modal {
+    .modal {
+      width: 60%;
+    }
+
+    .DraftEditor-root {
+      height: 250px;
+      overflow: auto;
+      padding: 16px;
+      border-top: 1px solid rgba(0, 0, 0, 0.23);
+    }
+  
+    .editorDraft {
+      width: 100%;
+      border: 1px solid rgba(0, 0, 0, 0.23);
+      border-radius: 4px;
+      margin-bottom: 16px;
+      height: 250px;
+  
+      &__row {
+        padding: 8px;
+        justify-content: flex-start !important;
+        flex-wrap: wrap;
+      }
+  
+      &__button {
+        margin-right: 8px !important;
+  
+        &--active {
+          background-color: #2296f3 !important;
+        }
+      }
+    }
+  }
+
+  &__summary {
+    margin-bottom: 16px !important;
+    max-width: 60%;
+  }
+
+  &__description-label {
+    background: white;
+    padding: 0 8px !important;
+    transform: translate(8px, -6px) scale(0.75) !important;
+  }
+
+  
+}
+
+.editor-statusbar {
+  display: none;
+}
+
+.MuiFormControl-root {
+  margin-bottom: 16px;
+}
+
+.CodeMirror {
+  margin-bottom: 16px;
+  min-height: 100px !important;
+  max-height: 250px !important;
+}
+
+@media (max-width: 900px) {
+  .createIdea {
+    right: 32px;
+  }
+}

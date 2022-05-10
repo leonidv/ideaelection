@@ -1,0 +1,39 @@
+// .DraftEditor-root {
+//     height: 250px;
+//     overflow: auto;
+//     padding: 16px;
+//     border-top: 1px solid rgba(0, 0, 0, 0.23);
+// }
+
+// .editorDraft {
+//     border: 1px solid rgba(0, 0, 0, 0.23);
+//     border-radius: 4px;
+//     margin-bottom: 16px;
+
+//     &__row {
+//         padding: 8px;
+//         justify-content: flex-start !important;
+//         flex-wrap: wrap;
+//     }
+
+//     &__button {
+//         margin-right: 8px !important;
+
+//         &--active {
+//             background-color: #2296f3 !important;
+//         }
+//     }
+// }
+
+.DraftEditor-editorContainer, .DraftEditor-root, .public-DraftEditor-content {
+    height: initial !important;
+}
+
+.rdw-editor-wrapper {
+    width: 100%;
+}
+
+.editorDraft:focus {
+    border-color: #2296F3;
+    border-width: 2px;
+}

@@ -1,0 +1,15 @@
+.searchShortList {
+  &__list {
+    // height: 300px;
+    overflow-y: auto;
+  }
+
+  .search__root {
+    border: 1px solid grey;
+    width: auto !important;
+    border-radius: 10px;
+    margin-bottom: 32px;
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+}

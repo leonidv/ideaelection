@@ -1,0 +1,14 @@
+.availiableGroups {
+  &__container {
+    padding-left: 400px;
+    position: relative;
+  }
+}
+
+@media (max-width: 1300px) {
+  .availiableGroups {
+    &__container {
+      padding-left: 0px;
+    }
+  }
+}

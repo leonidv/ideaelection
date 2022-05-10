@@ -1,0 +1,204 @@
+.groupMainScreenInvite {
+  max-width: 48%;
+  margin-right: 2%;
+  width: 100%;
+
+  &__description {
+    height: 130px;
+    overflow-y: auto;
+    background: none !important;
+    border-top: 1px solid #dfdfdf;
+    padding: 8px;
+  }
+
+  &__resolved {
+    text-align: center;
+    margin-top: 0 !important;
+  }
+
+  &__btnGroup {
+    margin-left: auto;
+  }
+
+  &__card {
+    overflow: visible !important;
+    position: relative;
+  }
+
+  .MuiCardHeader-root,
+  .MuiCardContent-root,
+  .MuiCardActions-root {
+    padding: 8px !important;
+  }
+
+  .MuiCardHeader-title {
+    font-size: 24px;
+    white-space: pre;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-top: 1px solid #dfdfdf;
+  }
+
+  &__avatar {
+    margin-right: 0;
+    margin-left: auto;
+  }
+
+  &__alert {
+    // width: fit-content !important;
+
+    p {
+      margin-top: 0 !important;
+    }
+
+    a {
+      color: #FFF !important;
+      text-decoration: none !important;
+    }
+  }
+
+  &__info {
+    // border-bottom: 1px dashed !important;
+    padding-bottom: 0 !important;
+    border-radius: 0 !important;
+
+    .MuiButton-label {
+      border-bottom: 1px dashed #444444 !important;
+      color: #444444 !important;
+      font-size: 14px !important;
+      font-weight: 400 !important;
+    }
+  }
+
+  &__deny {
+    margin-right: 8px !important;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid gray;
+  }
+
+  &__counts, .tooltip__date {
+    font-size: 14px;
+    color: gray;
+    margin: 0;
+  }
+
+  &__text {
+    margin: 0;
+    padding: 8px;
+  }
+
+  &__accept {
+    background-color: #2296f3 !important;
+  }
+
+  .MuiCardHeader-content {
+    order: -1;
+    margin-right: 8px;
+    max-width: 85% !important;
+  }
+
+  &__popper {
+    transform: initial !important;
+    background: white !important;
+    border: 1px solid #9E9D9E;
+    box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.5);
+    top: 98% !important;
+    left: 14px !important;
+    width: 100%;
+    z-index: 99999;
+    max-width: 360px;
+    box-sizing: border-box;
+    border-radius: 4px;
+  }
+
+  &__cardHeader {
+    justify-content: space-between !important;
+  }
+}
+
+.MuiOutlinedInput-input {
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+.modalRequest {
+  &__title {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  &__description {
+    margin: 0;
+    color: gray;
+  }
+
+  &__message {
+    margin-bottom: 16px !important;
+  }
+
+  &__btns {
+    justify-content: flex-end !important;
+  }
+
+  &__cancel {
+    margin-right: 8px !important;
+    color: gray !important;
+  }
+
+  &__accept {
+    background-color: #2296f3 !important;
+  }
+
+  &__question {
+    margin-top: 8px !important;
+  }
+}
+
+.cardHeader {
+  padding: 8px !important;
+  align-items: flex-start !important;
+
+  &__avatar {
+    margin-right: 8px;
+  }
+
+  &__name {
+    margin: 0;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  &__email {
+    margin: 0;
+    color: gray;
+    font-size: 14px;
+  }
+
+  &__time {
+    margin: 0;
+    font-size: 14px;
+    position: absolute;
+    right: 8px;
+  }
+}
+
+@media (max-width: 1300px) {
+  .groupMainScreenInvite {
+    max-width: none;
+    margin-right: 0;
+  }
+}
+
+.modal .groupMainScreenInvite {
+  margin-right: 0;
+}

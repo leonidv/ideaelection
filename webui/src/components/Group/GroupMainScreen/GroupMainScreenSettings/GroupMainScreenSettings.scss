@@ -1,0 +1,108 @@
+.groupMainScreenSettings {
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  &__fileInput svg {
+    visibility: hidden;
+  }
+
+  &__delete {
+    margin-right: auto !important;
+  }
+
+  &__cancel {
+    margin-left: auto !important;
+  }
+
+  &__update-btn {
+    margin-left: 8px !important;
+
+    svg {
+      margin-left: 0 !important;
+      width: 1em !important;
+      height: 1em !important;
+    }
+  }
+
+  &__inviteLink input {
+      cursor: pointer;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 18px;
+    margin-bottom: 32px;
+  }
+
+  &__text {
+    color: gray;
+  }
+
+  &__row,
+  &__field {
+    margin-bottom: 16px !important;
+  }
+
+  &__listMembers {
+    height: 250px;
+    overflow-y: auto;
+  }
+
+  &__tooltip .MuiSvgIcon-root {
+    margin-left: 16px;
+    color: grey;
+  }
+
+  &__based {
+    margin: 0;
+    color: gray;
+    white-space: pre;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    margin-bottom: 16px;
+    margin-top: -8px;
+    font-size: 14px;
+    overflow: hidden;
+  }
+
+  &__fileInput {
+    & button {
+      padding: 8px;
+      background-color: white;
+      cursor: pointer;
+      border-radius: 50%;
+      height: fit-content;
+      width: 45px;
+      margin-left: 8px;
+      border: 1px solid #1976d2;
+      color: #1976d2;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+    }
+
+    & > div {
+      margin: 0 !important;
+    }
+  }
+
+  &--limit {
+    color: #c00000;
+  }
+
+  .MuiSelect-select {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
+.MuiDialog-paperWidthSm {
+  max-width: 400px !important;
+  width: 400px;
+}
+
+.MuiFormControl-root {
+  width: 100%;
+}

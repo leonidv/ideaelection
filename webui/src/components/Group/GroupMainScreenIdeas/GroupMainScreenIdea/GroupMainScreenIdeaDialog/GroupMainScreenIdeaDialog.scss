@@ -1,0 +1,19 @@
+.groupMainScreenIdeaDialog {
+
+    &__dialog {
+        .MuiDialog-paperWidthSm  {
+            width: 100% !important;
+            max-width: 800px !important;
+        }
+    }
+
+    &__modal .modal {
+        width: 60%;
+
+    }
+}
+
+.MuiDialog-paperWidthSm[aria-labelledby="groupMainScreenIdeaDialog"]  {
+    width: 100% !important;
+    max-width: 600px !important;
+}

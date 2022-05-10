@@ -3,5 +3,4 @@ resources:
 
 namespace: saedi-test
 commonLabels:
-  app: saedi-test
   environment: test
