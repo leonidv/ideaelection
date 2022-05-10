@@ -66,7 +66,7 @@ blocks:
         commands:
           - checkout
 
-      epilogue:asus
+      epilogue:
         on_fail:
           commands:
             - cp -r $BUILD_DIR/backend-test/build/reports $LOG_DIR
