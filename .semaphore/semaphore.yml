@@ -109,6 +109,7 @@ blocks:
         - name: Build backend application
           commands:
             - cd $BUILD_DIR/webui
+            - npm install
             - npm run build
             - sudo podman build --quiet -t docker.io/leonidv/saedi-webui
             - sudo podman push docker.io/leonidv/saedi-webui docker.io/leonidv/saedi-webui:$PROCESS_TAG
