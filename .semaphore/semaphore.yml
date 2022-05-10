@@ -34,10 +34,10 @@ global_job_config:
 
 blocks:
   - name: Couchbase building
-    run:
-      when: "change_in('/deploy/couchbase/')"
-#    skip:
-#      when: true
+#    run:
+#      when: "change_in('/deploy/couchbase/')"
+    skip:
+      when: true
     task:
       jobs:
         - name: Build Couchbase container
@@ -53,8 +53,8 @@ blocks:
   - name: Backend building
 #    run:
 #      when: "change_in(['/backend/', '/backend-test/'])"
-#    skip:
-#      when: true
+    skip:
+      when: true
     task:
       env_vars:
         - name:  BUILD_DIR
