@@ -94,7 +94,7 @@ blocks:
             - sudo podman push docker.io/leonidv/saedi-backend docker.io/leonidv/saedi-backend:$PROCESS_TAG
 
   - name: webui building
-    tasks:
+    task:
       env_vars:
         - name: BUILD_DIR
           value: /home/semaphore/ideaelection
