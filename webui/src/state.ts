@@ -14,6 +14,8 @@ import { Members } from './types/Members'
 
 import jwt_decode from "jwt-decode";
 
+const BACKEND_API_URL = process.env.BACKEND_API_URL;
+
 export const token = selector({
   key: 'token',
   get: ({ get }) => get(tokenState),
@@ -81,7 +83,7 @@ export const allUserGroups = selector<Groups[]>({
           const token = get(tokenState)
 
           const response = await fetch(
-            `https://api.test.saedi.io/groups?userId=${userId} `,
+            `${BACKEND_API_URL}/groups?userId=${userId} `,
             {
               credentials: 'include',
               headers: {

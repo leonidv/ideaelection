@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next'
 
 import './LoginButton.scss'
 
+const BACKEND_API_URL = process.env.BACKEND_API_URL;
+
 export const LoginButton: React.FC = () => {
   try {
     const me: Me = useRecoilValue(meInfoState) || null
@@ -31,7 +33,7 @@ export const LoginButton: React.FC = () => {
 
     const handleClick = () => {
       window.location.href =
-        'https://api.test.saedi.io/oauth2/authorization/google'
+        `${BACKEND_API_URL}/oauth2/authorization/google`
     }
 
     return (
@@ -49,7 +51,7 @@ export const LoginButton: React.FC = () => {
 
     const handleClick = () => {
       window.location.href =
-        'https://api.test.saedi.io/oauth2/authorization/google'
+        `${BACKEND_API_URL}/oauth2/authorization/google`
     }
 
     return (
