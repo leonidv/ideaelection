@@ -23,6 +23,8 @@ import { getAllUrlParams } from './functions'
 import './App.scss'
 import { JoinRequestsModal } from './components/JoinRequests/JoinRequestsModal/JoinRequestsModal'
 import { fetchAllGroups } from './functionsRequests'
+
+const localToken = null
 //import { localToken } from '../localToken.js'
 
 const LeftSidebar = React.lazy(() =>
@@ -76,7 +78,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!token) {
-      console.log(token)
       if (window.location.href == 'http://127.0.0.1:8080/' || window.location.href == 'http://localhost:8080/') {
         // Для локальной разработки нужен файл localToken.js в папке webui  с export const localToken = 'Токе любого пользователя'
         if (localToken) {
