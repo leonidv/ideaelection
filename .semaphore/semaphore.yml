@@ -138,4 +138,8 @@ blocks:
             - >-
               python rollup-up-deployment.py  docker.io/leonidv/idel-backend
               --process-tag $PROCESS_TAG --label test
-              --deployment deployment/saedi --container-name backend
+              --deployment deployment/backend --container-name backend
+            - >-
+              python rollup-up-deployment.py  docker.io/leonidv/saedi-webui
+              --process-tag $PROCESS_TAG --label test
+              --deployment deployment/webui --container-name webui
