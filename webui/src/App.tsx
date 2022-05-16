@@ -23,7 +23,7 @@ import { getAllUrlParams } from './functions'
 import './App.scss'
 import { JoinRequestsModal } from './components/JoinRequests/JoinRequestsModal/JoinRequestsModal'
 import { fetchAllGroups } from './functionsRequests'
-import { localToken } from '../localToken.js'
+//import { localToken } from '../localToken.js'
 
 const LeftSidebar = React.lazy(() =>
   import('./components/LeftSidebar/LeftSidebar')
