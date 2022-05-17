@@ -76,11 +76,6 @@ module.exports = {
       },
     ],
   },
-  externals: {
-    config: JSON.stringify({
-      BACKEND_API_URL: "https://app.saedi.io/api",
-    }),
-  },
   plugins: [
     new HtmlWebpackPlugin({
       template: path.join(__dirname, "src", "index.html"),
@@ -93,7 +88,7 @@ module.exports = {
       process: "process/browser",
     }),
     new webpack.EnvironmentPlugin({
-      BACKEND_API_URL: "https://api.test.saedi.io",
+      BACKEND_API_URL: JSON.stringify(process.env.BACKEND_API_URL) || "https://api.test.saedi.io",
       BUILD_INFO: `build: ${dateInfo}#${versionInfo}`,
     }),
     // ,new BundleAnalyzerPlugin()
