@@ -46,16 +46,16 @@ target_image = f"{args.image}:{args.label}"
 if not find_image_with_tag(image=args.image, tag=args.process_tag):
     sys.exit(0)
 
-print(f"pull image and add tag {args.process_tag}", end="")
+print(f"pull image and add tag {args.process_tag}")
 safely_exec(["podman", "pull", process_image])
 safely_exec(["podman", "tag", process_image, target_image])
 print("ok")
 
-print(f"push {target_image}", end="")
+print(f"push {target_image}")
 safely_exec(cmd=["podman", "push", target_image],
             dry_run=args.dry_run)
 print("ok")
-print("start rollupdate", end="")
+print("start rollupdate")
 safely_exec(cmd=["kubectl", "set", "image", args.deployment, f"{args.container_name}={process_image}", "--record"],
             dry_run=args.dry_run)
 print("ok")
