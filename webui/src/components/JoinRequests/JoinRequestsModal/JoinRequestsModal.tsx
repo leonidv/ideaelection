@@ -9,7 +9,7 @@ import './JoinRequestsModal.scss'
 import { useHistory } from 'react-router'
 import { JoinRequestsModalProps } from './JoinRequestsModalInterfaces'
 
-export const JoinRequestsModal = (props: JoinRequestsModalProps) => {
+const JoinRequestsModal = (props: JoinRequestsModalProps) => {
   const { showAlert } = props
   const [request, setRequest]: any = useRecoilState(groupByKeyState)
   const [open, setOpen] = useState(true)
@@ -40,3 +40,5 @@ export const JoinRequestsModal = (props: JoinRequestsModalProps) => {
     )
   )
 }
+
+export default JoinRequestsModal;

@@ -6,7 +6,7 @@
   "scripts": {
     "webpack": "webpack",
     "start": "webpack serve",
-    "build": "webpack --mode production",
+    "build": "webpack --mode=production",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --fix ./*.js ./src/index.tsx \"**/*.tsx\"",
     "lint:fix": "eslint --fix ./*.js ./src/index.tsx ./src/components/*.tsx"
@@ -23,6 +23,7 @@
     "autoprefixer": "^10.3.1",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.2.2",
+    "babel-plugin-minify-dead-code-elimination": "^0.5.2",
     "coffee-loader": "^3.0.0",
     "coffeescript": "^2.6.1",
     "css-loader": "^5.1.0",
@@ -32,13 +33,14 @@
     "eslint-watch": "^7.0.0",
     "file-loader": "^6.2.0",
     "git-revision-webpack-plugin": "^5.0.0",
-    "html-webpack-plugin": "^5.2.0",
+    "html-webpack-plugin": "^5.5.0",
     "path": "^0.12.7",
     "postcss-loader": "^6.1.1",
     "prettier": "2.4.0",
     "sass": "^1.50.1",
     "sass-loader": "^10.2.1",
     "style-loader": "^2.0.0",
+    "terser-webpack-plugin": "^5.3.1",
     "ts-loader": "^9.2.5",
     "webpack": "^5.24.2",
     "webpack-bundle-analyzer": "^4.5.0",
@@ -48,7 +50,6 @@
   "dependencies": {
     "@draft-js-plugins/editor": "^4.1.2",
     "@draft-js-plugins/image": "^4.1.2",
-    "@fontsource/roboto": "^4.5.3",
     "@material-ui/core": "^4.12.3",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
@@ -81,6 +82,7 @@
     "recoil": "^0.4.0",
     "rich-markdown-editor": "^11.21.3",
     "styled-components": "^5.3.3",
+    "tslib": "^2.4.0",
     "typeface-roboto": "^1.1.13",
     "typescript": "^4.3.5",
     "webfontloader": "^1.6.28"

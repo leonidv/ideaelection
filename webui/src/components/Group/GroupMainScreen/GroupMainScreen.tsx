@@ -30,13 +30,15 @@ import { GroupMainScreenDrawer } from './GroupMainScreenDrawer/GroupMainScreenDr
 import { Search } from '../../Search/Search'
 
 import { GroupMainScreenProps } from './GroupMainScreenInterfaces'
-
-import './GroupMainScreen.scss'
 import { useLocation } from 'react-router'
 import { ShowAlert } from '../../Alert/Alert'
 import { getOrdering } from '../../../functions'
 
-export const GroupMainScreen: React.FC<GroupMainScreenProps> = (
+import './GroupMainScreen.scss'
+import '../GroupMainScreenIdeas/GroupMainScreenIdea/groupMainScreenIdea.scss'
+//import '../GroupMainScreenIdeas/GroupMainScreenIdeas.scss'
+
+const GroupMainScreen: React.FC<GroupMainScreenProps> = (
   props: GroupMainScreenProps
 ) => {
   const {
@@ -511,3 +513,5 @@ export const GroupMainScreen: React.FC<GroupMainScreenProps> = (
     </div>
   )
 }
+
+export default GroupMainScreen;

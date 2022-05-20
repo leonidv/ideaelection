@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { GroupMainScreen } from '../Group/GroupMainScreen/GroupMainScreen'
+import GroupMainScreen from '../Group/GroupMainScreen/GroupMainScreen'
 
 import { switchParamsOrderingGroups } from '../../functions'
 
@@ -16,7 +16,7 @@ const states = {
   ordering: ''
 }
 
-export const AvailiableGroups = props => {
+const AvailiableGroups = props => {
   const { fetchMoreData, showAlert } = props
   const { t } = useTranslation()
   const setGroup = useSetRecoilState(currentGroupState)
@@ -53,3 +53,5 @@ export const AvailiableGroups = props => {
     </div>
   )
 }
+
+export default AvailiableGroups;

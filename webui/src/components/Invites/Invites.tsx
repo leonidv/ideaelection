@@ -2,14 +2,14 @@ import { useEffect } from 'react'
 import { currentGroupState } from '../../state'
 import { useSetRecoilState } from 'recoil'
 
-import { GroupMainScreen } from '../Group/GroupMainScreen/GroupMainScreen'
+import GroupMainScreen from '../Group/GroupMainScreen/GroupMainScreen'
 
 import { switchParamsOrdering } from '../../functions'
 import { defaultGroups } from '../../types/Groups'
 
 import './Invites.scss'
 
-export const Invites = props => {
+const Invites = props => {
   const { fetchMoreData, showAlert } = props
   const setGroup = useSetRecoilState(currentGroupState)
 
@@ -33,3 +33,5 @@ export const Invites = props => {
     </div>
   )
 }
+
+export default Invites

@@ -38,11 +38,9 @@ export const LoginButton: React.FC = () => {
 
     return (
       <button onClick={handleClick} className='loginButton'>
-        <img
-          alt='login'
+        <div
           className='loginButton__img'
-          src='../../images/google.svg'
-        />
+        ></div>
         {t('Login with Google')}
       </button>
     )
@@ -56,11 +54,9 @@ export const LoginButton: React.FC = () => {
 
     return (
       <button onClick={handleClick} className='loginButton'>
-        <img
-          alt='login'
+        <div
           className='loginButton__img'
-          src='../../images/google.svg'
-        />
+        ></div>
         {t('Login with Google')}
       </button>
     )

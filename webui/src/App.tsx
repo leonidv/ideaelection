@@ -1,11 +1,4 @@
-import React, { Suspense, useState, useEffect } from 'react'
-import CircularProgress from '@material-ui/core/CircularProgress'
-import { MainScreen } from './components/MainScreen/MainScreen'
-import Navbar from './components/Navbar/Navbar'
-import { Group } from './components/Group/Group'
-import { AvailiableGroups } from './components/AvailiableGroups/AvailiableGroups'
-import { Invites } from './components/Invites/Invites'
-import { JoinRequests } from './components/JoinRequests/JoinRequests'
+import React, { Suspense, useState, useEffect, lazy } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import {
   allUserGroupsState,
@@ -15,14 +8,18 @@ import {
 } from './state'
 import { tokenState } from './state'
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
-import { ShowAlert } from './components/Alert/Alert'
-import { NotFound } from './components/NotFound'
-
 import { getAllUrlParams } from './functions'
-
-import './App.scss'
-import { JoinRequestsModal } from './components/JoinRequests/JoinRequestsModal/JoinRequestsModal'
 import { fetchAllGroups } from './functionsRequests'
+import CircularProgress from '@material-ui/core/CircularProgress'
+const MainScreen = lazy(() => import('./components/MainScreen/MainScreen'))
+const Navbar = lazy(() => import('./components/Navbar/Navbar'))
+const Group = lazy(() => import('./components/Group/Group'))
+const AvailiableGroups = lazy(() => import('./components/AvailiableGroups/AvailiableGroups'))
+const Invites = lazy(() => import('./components/Invites/Invites'))
+const JoinRequests = lazy(() => import('./components/JoinRequests/JoinRequests'))
+const JoinRequestsModal = lazy(() => import('./components/JoinRequests/JoinRequestsModal/JoinRequestsModal'))
+import { ShowAlert } from './components/Alert/Alert'
+const NotFound = lazy(() => import('./components/NotFound'))
 
 const localToken = null
 //import { localToken } from '../localToken.js'
@@ -30,6 +27,8 @@ const localToken = null
 const LeftSidebar = React.lazy(() =>
   import('./components/LeftSidebar/LeftSidebar')
 )
+
+import './App.scss'
 
 const App: React.FC = () => {
   const info: any = useRecoilValue(infoMeAtomState)

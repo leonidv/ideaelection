@@ -37,6 +37,7 @@ import { Alert } from '../../Alert/Alert'
 
 import { GroupMainScreenIdea } from './GroupMainScreenIdea/GroupMainScreenIdea'
 
+import '../GroupMainScreen/GroupMainScreen.scss'
 import './GroupMainScreenIdeas.scss'
 
 import InfiniteScroll from 'react-infinite-scroll-component'
