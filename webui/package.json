@@ -23,6 +23,7 @@
     "autoprefixer": "^10.3.1",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.2.2",
+    "babel-plugin-import": "^1.13.5",
     "babel-plugin-minify-dead-code-elimination": "^0.5.2",
     "coffee-loader": "^3.0.0",
     "coffeescript": "^2.6.1",

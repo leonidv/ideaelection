@@ -23,7 +23,7 @@ module.exports = {
     publicPath: "/",
     clean: true,
   },
-  devtool: "source-map",
+  devtool: false,
   optimization: {
     minimize: true,
     minimizer: [new TerserPlugin()],
