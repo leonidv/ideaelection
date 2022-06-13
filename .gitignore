@@ -11,3 +11,4 @@ nohup.out
 *.log
 allure-results
 __pycache__/
+webui/package-lock.json

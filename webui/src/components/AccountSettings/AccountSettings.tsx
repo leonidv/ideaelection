@@ -30,6 +30,7 @@ import { Me } from '../../types/Me'
 import './AccountSettings.scss'
 
 const notificationsOptions = ['Instantly', 'Daily', 'Weekly']
+const BUILD_INFO = process.env.BUILD_INFO
 
 export const AccountSettings = (props: AccountSettingsProps): JSX.Element => {
   const { pictureUrl, setOpenModal } = props
@@ -282,6 +283,7 @@ export const AccountSettings = (props: AccountSettingsProps): JSX.Element => {
         label={t('I want to receive news about platform updates')}
       />
       <ModalButtons
+        textInfo={BUILD_INFO}
         acceptText={t('UPDATE')}
         handleAccept={handleAccept}
         handleClose={handleClose}

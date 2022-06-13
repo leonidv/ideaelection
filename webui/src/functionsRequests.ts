@@ -1,3 +1,5 @@
+const BACKEND_API_URL = process.env.BACKEND_API_URL;
+
 const fetchRequest: any = async (
   token,
   url,
@@ -27,7 +29,7 @@ const fetchRequest: any = async (
 }
 
 export const fetchAuthor = async (authorId: string, token: string) => {
-  const url = `https://api.test.saedi.io/users/${authorId}`
+  const url = `${BACKEND_API_URL}/users/${authorId}`
   const request = await fetchRequest(token, url, 'GET', null)
   if ((await request) && authorId) {
     return await request.displayName
@@ -37,7 +39,7 @@ export const fetchAuthor = async (authorId: string, token: string) => {
 }
 
 export const fetchMe = async (token: string, userId: string) => {
-  const url = `https://api.test.saedi.io/users/${userId}`
+  const url = `${BACKEND_API_URL}/users/${userId}`
   const request = await fetchRequest(token, url, 'GET', null)
   if ((await request) && userId) {
     return await request
@@ -47,7 +49,7 @@ export const fetchMe = async (token: string, userId: string) => {
 }
 
 export const fetchGroup = async (token: string, groupId: string) => {
-  const url = `https://api.test.saedi.io/groups/${groupId}`
+  const url = `${BACKEND_API_URL}/groups/${groupId}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
@@ -57,7 +59,7 @@ export const fetchGroup = async (token: string, groupId: string) => {
 }
 
 export const fetchGroupByKey = async (token: string, key: string) => {
-  const url = `https://api.test.saedi.io/groups?key=${key}`
+  const url = `${BACKEND_API_URL}/groups?key=${key}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
@@ -67,7 +69,7 @@ export const fetchGroupByKey = async (token: string, key: string) => {
 }
 
 export const updateToken = async token => {
-  const url = `https://api.test.saedi.io/token`
+  const url = `${BACKEND_API_URL}/token`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
@@ -83,7 +85,7 @@ export const fetchRequests = async (
   first = 0,
   limit = 10
 ) => {
-  const url = `https://api.test.saedi.io/joinrequests?userId=${userId}&${
+  const url = `${BACKEND_API_URL}/joinrequests?userId=${userId}&${
     urlParams ? urlParams : ''
   }first=${first}&limit=${limit}&last=${limit + first}`
   const request = await fetchRequest(token, url, 'GET', null)
@@ -95,7 +97,7 @@ export const fetchRequests = async (
 }
 
 export const fetchAllGroups = async (token, userId, first = 0, limit = 10) => {
-  const url = `https://api.test.saedi.io/groups?userId=${userId}&first=${first}&limit=${limit}&last=${limit +
+  const url = `${BACKEND_API_URL}/groups?userId=${userId}&first=${first}&limit=${limit}&last=${limit +
     first}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
@@ -107,8 +109,8 @@ export const fetchAllGroups = async (token, userId, first = 0, limit = 10) => {
 
 export const fetchGroups = async (token, userId, name = '') => {
   const url = name
-    ? `https://api.test.saedi.io/groups?userId=${userId}&name=${name}`
-    : `https://api.test.saedi.io/groups?userId=${userId}`
+    ? `${BACKEND_API_URL}/groups?userId=${userId}&name=${name}`
+    : `${BACKEND_API_URL}/groups?userId=${userId}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request.groups
@@ -118,7 +120,7 @@ export const fetchGroups = async (token, userId, name = '') => {
 }
 
 export const searchMembersByName = async (letters, token) => {
-  const url = `https://api.test.saedi.io/users?filter=${letters}`
+  const url = `${BACKEND_API_URL}/users?filter=${letters}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
@@ -130,7 +132,7 @@ export const searchMembersByNameFromGroup = async (
   userId,
   groupName
 ) => {
-  const url = `https://api.test.saedi.io/groups?userId=${userId}&name=${groupName}`
+  const url = `${BACKEND_API_URL}/groups?userId=${userId}&name=${groupName}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
@@ -138,7 +140,7 @@ export const searchMembersByNameFromGroup = async (
 }
 
 export const deleteIdea = async (token, ideaId) => {
-  const url = `https://api.test.saedi.io/ideas/${ideaId}`
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}`
   const request = await fetchRequest(token, url, 'DELETE', null)
   if (await request) {
     return await request.idea
@@ -148,7 +150,7 @@ export const deleteIdea = async (token, ideaId) => {
 }
 
 export const removeMember = async (token, groupId, memberId) => {
-  const url = `https://api.test.saedi.io/groups/${groupId}/members/${memberId}`
+  const url = `${BACKEND_API_URL}/groups/${groupId}/members/${memberId}`
   const request = await fetchRequest(token, url, 'DELETE', null)
   if (await request) {
     return await request
@@ -158,7 +160,7 @@ export const removeMember = async (token, groupId, memberId) => {
 }
 
 export const resoluteInvite = async (inviteId, token, status) => {
-  const url = `https://api.test.saedi.io/invites/${inviteId}/status`
+  const url = `${BACKEND_API_URL}/invites/${inviteId}/status`
   const body = JSON.stringify({ status: status })
   const request = await fetchRequest(
     token,
@@ -173,7 +175,7 @@ export const resoluteInvite = async (inviteId, token, status) => {
 }
 
 export const resoluteJoinRequest = async (joinRequestId, token, status) => {
-  const url = `https://api.test.saedi.io/joinrequests/${joinRequestId}/status`
+  const url = `${BACKEND_API_URL}/joinrequests/${joinRequestId}/status`
   const body = JSON.stringify({ status: status })
   const request = await fetchRequest(
     token,
@@ -188,7 +190,7 @@ export const resoluteJoinRequest = async (joinRequestId, token, status) => {
 }
 
 export const patchAssignee = async (token, ideaId, body) => {
-  const url = `https://api.test.saedi.io/ideas/${ideaId}/assignee`
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}/assignee`
   const request = await fetchRequest(
     token,
     url,
@@ -204,7 +206,7 @@ export const patchAssignee = async (token, ideaId, body) => {
 }
 
 export const patchMoveToGroup = async (token, ideaId, body) => {
-  const url = `https://api.test.saedi.io/ideas/${ideaId}/group`
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}/group`
   const request = await fetchRequest(
     token,
     url,
@@ -223,7 +225,7 @@ export const patchIdeaArchive = async (token, ideaId, archived) => {
   const body = JSON.stringify({
     archived: archived
   })
-  const url = `https://api.test.saedi.io/ideas/${ideaId}/archived`
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}/archived`
   const request = await fetchRequest(
     token,
     url,
@@ -242,7 +244,7 @@ export const patchIdeaImplemented = async (token, ideaId, implemented) => {
   const body = JSON.stringify({
     implemented: implemented
   })
-  const url = `https://api.test.saedi.io/ideas/${ideaId}/implemented`
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}/implemented`
   const request = await fetchRequest(
     token,
     url,
@@ -258,7 +260,7 @@ export const patchIdeaImplemented = async (token, ideaId, implemented) => {
 }
 
 export const postVote = async (token, ideaId, method) => {
-  const url = `https://api.test.saedi.io/ideas/${ideaId}/voters`
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}/voters`
   const request = await fetchRequest(
     token,
     url,
@@ -279,7 +281,7 @@ export const postInvites = async (token, groupId, members, message) => {
     members.forEach(member => users.push(member.id))
   }
 
-  const url = `https://api.test.saedi.io/invites/`
+  const url = `${BACKEND_API_URL}/invites/`
   const body = JSON.stringify({
     groupId: groupId,
     message: message,
@@ -304,7 +306,7 @@ export const putSettings = async (
   planSettings,
   tariff = 'FREE'
 ) => {
-  const url = `https://api.test.saedi.io/users/settings`
+  const url = `${BACKEND_API_URL}/users/settings`
   const body = JSON.stringify({
     displayName: planSettings.name,
     subscriptionPlan: tariff,
@@ -345,7 +347,7 @@ export const postNewIdea = async (
 }
 
 export const postNewGroup = async (token: string, groupParams) => {
-  const url = `https://api.test.saedi.io/groups`
+  const url = `${BACKEND_API_URL}/groups`
   const params = Object.assign({}, groupParams)
   if (params.domainRestrictions.length) {
     params.domainRestrictions = groupParams.domainRestrictions.split(',')
@@ -367,7 +369,7 @@ export const postNewGroup = async (token: string, groupParams) => {
 }
 
 export const patchGroup = async (token: string, groupParams, groupId) => {
-  const url = `https://api.test.saedi.io/groups/${groupId}`
+  const url = `${BACKEND_API_URL}/groups/${groupId}`
   if (groupParams.domainRestrictions.length) {
     groupParams.domainRestrictions = groupParams.domainRestrictions.split(',')
   } else {
@@ -388,7 +390,7 @@ export const patchGroup = async (token: string, groupParams, groupId) => {
 }
 
 export const postJoinRequest = async (token, joiningKey, message) => {
-  const url = `https://api.test.saedi.io/joinrequests/`
+  const url = `${BACKEND_API_URL}/joinrequests/`
   const body = JSON.stringify({
     joiningKey: joiningKey,
     message: message
@@ -406,7 +408,7 @@ export const postJoinRequest = async (token, joiningKey, message) => {
 }
 
 export const fetchMembers = async (token, groupId) => {
-  const url = `https://api.test.saedi.io/groups/${groupId}/members`
+  const url = `${BACKEND_API_URL}/groups/${groupId}/members`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
@@ -414,7 +416,7 @@ export const fetchMembers = async (token, groupId) => {
 }
 
 export const fetchGroupRequests = async (token, groupId) => {
-  const url = `https://api.test.saedi.io/joinrequests?groupId=${groupId}`
+  const url = `${BACKEND_API_URL}/joinrequests?groupId=${groupId}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
@@ -428,7 +430,7 @@ export const fetchIdeas = async (
   first = 0,
   limit = 10
 ) => {
-  const url = `https://api.test.saedi.io/ideas?groupId=${groupId}&first=${first}&limit=${limit}&last=${limit +
+  const url = `${BACKEND_API_URL}/ideas?groupId=${groupId}&first=${first}&limit=${limit}&last=${limit +
     first}&${urlParams}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
@@ -439,7 +441,7 @@ export const fetchIdeas = async (
 }
 
 export const fetchIdeaById = async (token, ideaId) => {
-  const url = `https://api.test.saedi.io/ideas/${ideaId}`
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return request
@@ -455,7 +457,7 @@ export const fetchInvites = async (
   first = 0,
   limit = 10
 ) => {
-  const url = `https://api.test.saedi.io/invites?userId=${userId}&${
+  const url = `${BACKEND_API_URL}/invites?userId=${userId}&${
     urlParams ? urlParams : ''
   }first=${first}&limit=${limit}&last=${limit + first}`
   const request = await fetchRequest(token, url, 'GET', null)
@@ -472,7 +474,7 @@ export const fetchAvailibaleGroups = async (
   first = 0,
   limit = 10
 ) => {
-  const url = `https://api.test.saedi.io/groups?onlyAvailable=true&${
+  const url = `${BACKEND_API_URL}/groups?onlyAvailable=true&${
     urlParams ? urlParams : ''
   }first=${first}&limit=${limit}&last=${limit + first}`
   const request = await fetchRequest(token, url, 'GET', null)
@@ -482,7 +484,7 @@ export const fetchAvailibaleGroups = async (
 }
 
 export const fetchMembersSearch = async (token, groupId, search) => {
-  const url = `https://api.test.saedi.io/groups/${groupId}/members?username=${search}`
+  const url = `${BACKEND_API_URL}/groups/${groupId}/members?username=${search}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
@@ -490,7 +492,7 @@ export const fetchMembersSearch = async (token, groupId, search) => {
 }
 
 export const revokeRequest = async (token, requestId) => {
-  const url = `https://api.test.saedi.io/joinrequests/${requestId}`
+  const url = `${BACKEND_API_URL}/joinrequests/${requestId}`
   const request = await fetchRequest(token, url, 'DELETE', null)
   if (await request) {
     return await request
@@ -498,7 +500,7 @@ export const revokeRequest = async (token, requestId) => {
 }
 
 export const updateJoiningKey = async (token, groupId) => {
-  const url = `https://api.test.saedi.io/groups/${groupId}/joining-key`
+  const url = `${BACKEND_API_URL}/groups/${groupId}/joining-key`
   const request = await fetchRequest(token, url, 'DELETE', null)
   if (await request) {
     return await request
@@ -510,7 +512,7 @@ export const leaveGroup = async (
   groupId: string,
   userId: string
 ) => {
-  const url = `https://api.test.saedi.io/groups/${groupId}/members/${userId}`
+  const url = `${BACKEND_API_URL}/groups/${groupId}/members/${userId}`
   const request = await fetchRequest(token, url, 'DELETE', null)
   if (await request) {
     return await request
@@ -518,7 +520,7 @@ export const leaveGroup = async (
 }
 
 export const deleteGroup = async (token: string, groupId: string) => {
-  const url = `https://api.test.saedi.io/groups/${groupId}`
+  const url = `${BACKEND_API_URL}/groups/${groupId}`
   const request = await fetchRequest(token, url, 'DELETE', null)
   if (await request) {
     return await request
@@ -526,7 +528,7 @@ export const deleteGroup = async (token: string, groupId: string) => {
 }
 
 export const fetchAccoutSettings = async (token: string) => {
-  const url = `https://api.test.saedi.io/users/settings`
+  const url = `${BACKEND_API_URL}/users/settings`
 
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
@@ -535,7 +537,7 @@ export const fetchAccoutSettings = async (token: string) => {
 }
 
 export const tryGetToken = async token => {
-  const url = `https://api.test.saedi.io/token`
+  const url = `${BACKEND_API_URL}/token`
   const request = await fetchRequest(token, url, 'GET', null)
 
   if (await request) {

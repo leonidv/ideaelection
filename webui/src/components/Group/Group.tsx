@@ -1,4 +1,3 @@
-import { GroupMainScreenIdeas } from './GroupMainScreenIdeas/GroupMainScreenIdeas'
 import {
   useRecoilState,
   useRecoilValue,
@@ -14,7 +13,10 @@ import {
 } from '../../state'
 import { fetchAllGroups, fetchGroup } from '../../functionsRequests'
 
+import { GroupMainScreenIdeas } from './GroupMainScreenIdeas/GroupMainScreenIdeas'
+
 import './Group.scss'
+
 import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
 import { Groups } from '../../types/Groups'
@@ -30,7 +32,7 @@ const states = {
   ordering: null
 }
 
-export const Group = (props: GroupProp) => {
+const Group = (props: GroupProp) => {
   const { openId, allGroups } = props
   const me = useRecoilValue(meInfoState)
   const [group, setGroup] = useRecoilState<Groups>(currentGroupState)
@@ -155,3 +157,5 @@ export const Group = (props: GroupProp) => {
     )
   } else return <></>
 }
+
+export default Group;

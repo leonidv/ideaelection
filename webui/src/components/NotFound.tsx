@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 
 
-export const NotFound: React.FC = () => {
+const NotFound: React.FC = () => {
     const { t } = useTranslation()
   
     return (
@@ -18,4 +18,6 @@ export const NotFound: React.FC = () => {
         <p className='mainScreen__copyright'>(C) saedi.io 2021</p>
       </div>
     )
-  }
+}
+  
+export default NotFound

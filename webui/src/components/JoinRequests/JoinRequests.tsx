@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { lazy, useEffect } from 'react'
 import { useSetRecoilState } from 'recoil'
-import { GroupMainScreen } from '../Group/GroupMainScreen/GroupMainScreen'
+import GroupMainScreen from '../Group/GroupMainScreen/GroupMainScreen'
 import { currentGroupState } from './../../state'
 
 import { switchParamsOrdering } from '../../functions'
@@ -8,7 +8,7 @@ import { defaultGroups } from '../../types/Groups'
 
 import './JoinRequests.scss'
 
-export const JoinRequests = props => {
+const JoinRequests = props => {
   const { showAlert } = props
 
   const setGroup = useSetRecoilState(currentGroupState)
@@ -32,3 +32,5 @@ export const JoinRequests = props => {
     </div>
   )
 }
+
+export default JoinRequests;

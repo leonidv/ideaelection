@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import React, { Suspense , lazy } from 'react'
 import ReactDOM from 'react-dom'
 import App from './App'
 import { RecoilRoot } from 'recoil'
@@ -8,9 +8,9 @@ import './i18n'
 import { CircularProgress } from '@material-ui/core'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ShowAlert } from './components/Alert/Alert'
-import { MainScreen } from './components/MainScreen/MainScreen'
+import MainScreen from './components/MainScreen/MainScreen'
 
-import '@fontsource/roboto'
+import './fonts/stylesheet.css'
 
 function ErrorFallback ({ error, resetErrorBoundary }) {
   const { t } = useTranslation()

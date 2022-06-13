@@ -17,6 +17,8 @@ import './CreateIdea.scss'
 
 import { useTranslation } from 'react-i18next'
 
+const BACKEND_API_URL = process.env.BACKEND_API_URL;
+
 export const CreateIdea = (props: CreateIdeaProps) => {
   const {
     groupId,
@@ -82,12 +84,12 @@ export const CreateIdea = (props: CreateIdeaProps) => {
 
   const createNewIdea = () => {
     let method = 'POST'
-    let url = `https://api.test.saedi.io/ideas`
+    let url = `${BACKEND_API_URL}/ideas`
 
     if (isValidate(ideaParams)) {
       if (param == 'EDIT') {
         method = 'PATCH'
-        url = `https://api.test.saedi.io/ideas/${ideaEdit.id}`
+        url = `${BACKEND_API_URL}/ideas/${ideaEdit.id}`
       }
 
       ;(async () => {

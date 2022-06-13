@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import './MainScreen.scss'
 
-export const MainScreen: React.FC = () => {
+const MainScreen: React.FC = () => {
   const { t } = useTranslation()
 
   return (
@@ -19,3 +19,5 @@ export const MainScreen: React.FC = () => {
     </div>
   )
 }
+
+export default MainScreen;
