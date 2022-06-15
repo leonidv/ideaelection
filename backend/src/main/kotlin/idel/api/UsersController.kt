@@ -1,7 +1,6 @@
 package idel.api
 
 import arrow.core.Either
-import arrow.core.Option
 import arrow.core.computations.either
 import arrow.core.flatMap
 import idel.domain.*
@@ -12,17 +11,19 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 
 @RestController
 @RequestMapping("/users")
-class UserController(
+class UsersController(
     private val userRepository: UserRepository,
     private val userSettingsRepository: UserSettingsRepository,
     private val userService: UserService
 ) {
     data class MeResult(
-        val id: String,
+        val id: UUID,
+        val externalId: String,
         val domain: String,
         val displayName: String,
         val avatar: String,
@@ -43,6 +44,7 @@ class UserController(
         return if (principal is User) {
             val result = MeResult(
                 id = principal.id,
+                externalId = principal.externalId,
                 domain = principal.domain,
                 displayName = principal.displayName,
                 avatar = principal.avatar,
@@ -82,16 +84,18 @@ class UserController(
     @PutMapping("/{userId}/roles")
     @ResponseBody
     fun putRoles(
-        @PathVariable(name = "userId", required = true) userId: String,
+        @PathVariable(name = "userId", required = true) userId: UUID,
         @RequestBody(required = true) roles: Set<String>
-    ): EntityOrError<User> =
+    ): ResponseDataOrError<User> =
         rolesAreNotMisspelled(roles) {
-            val eUser = userRepository.load(userId).flatMap {user ->
-                if (user.roles == roles) {
-                    Either.Right(user)
-                } else {
-                    val pUser = PersistsUser.of(user).copy(roles = roles)
-                    userRepository.update(pUser)
+            val eUser = fTransaction {
+                userRepository.load(userId).flatMap {user ->
+                    if (user.roles == roles) {
+                        Either.Right(user)
+                    } else {
+                        val pUser = PersistsUser.of(user).copy(roles = roles)
+                        userRepository.update(pUser)
+                    }
                 }
             }
 
@@ -102,8 +106,9 @@ class UserController(
     @PostMapping
     fun register(@RequestBody userInfo: PersistsUser): ResponseEntity<out DataOrError<out User>> {
         return rolesAreNotMisspelled<User>(userInfo.roles) {
-            val result = either.eager<Exception, User> {
-                userService.register(userInfo).bind()
+            val result = either.eager<DomainError, User> {
+                val normalizedUserInfo = PersistsUser.of(userInfo)
+                userService.register(normalizedUserInfo).bind()
             }
             DataOrError.fromEither(result, log)
         }
@@ -115,7 +120,10 @@ class UserController(
         @RequestParam filter: String?,
         pagination: Repository.Pagination
     ): ResponseEntity<DataOrError<List<User>>> {
-        return DataOrError.fromEither(userRepository.load(Option.fromNullable(filter), pagination), log)
+        val result = fTransaction {
+            userRepository.list(filter, pagination)
+        }
+        return DataOrError.fromEither(result, log)
     }
 
     @GetMapping("/{userId}")
@@ -123,18 +131,20 @@ class UserController(
         @PathVariable(
             name = "userId",
             required = true
-        ) userId: String
+        ) userId: UserId
     ): ResponseEntity<out DataOrError<out User>> {
-        val eUser = userRepository.load(userId)
+        val eUser = fTransaction {userRepository.load(userId)}
         return DataOrError.fromEither(eUser, log)
 
     }
 
     @GetMapping("/settings")
-    fun settings(@AuthenticationPrincipal user: User): EntityOrError<SettingsResult> {
-        val settings = userSettingsRepository
-            .loadForUser(user)
-            .map {SettingsResult(mustReissueJwt = null, settings = UserSettingsEditableProperties.of(it))}
+    fun loadSettings(@AuthenticationPrincipal user: User): ResponseDataOrError<SettingsResult> {
+        val settings = fTransaction {
+            userSettingsRepository
+                .loadForUser(user)
+                .map {SettingsResult(mustReissueJwt = null, settings = UserSettingsEditableProperties.of(it))}
+        }
         return DataOrError.fromEither(settings, log)
     }
 
@@ -153,49 +163,33 @@ class UserController(
     fun updateSettings(
         @AuthenticationPrincipal user: User,
         @RequestBody settings: EditableSettings
-    ): EntityOrError<SettingsResult> {
-        val result = either.eager<Exception, SettingsResult> {
-            val userFromStorage = userRepository.load(user.id).bind()
+    ): ResponseDataOrError<SettingsResult> {
+        val result = fTransaction {
+            either.eager<DomainError, SettingsResult> {
+                val userFromStorage = userRepository.load(user.id).bind()
 
-            val mustReissueJwt =
-                if (userFromStorage.displayName != settings.displayName ||
-                    userFromStorage.subscriptionPlan != settings.subscriptionPlan
-                ) {
-                    val nextUser = PersistsUser.of(user)
-                        .copy(
-                            displayName = settings.displayName,
-                            subscriptionPlan = settings.subscriptionPlan
-                        )
-                    userRepository.update(nextUser).bind()
-                    true
-                } else {
-                    false
-                }
+                val mustReissueJwt =
+                    if (userFromStorage.displayName != settings.displayName ||
+                        userFromStorage.subscriptionPlan != settings.subscriptionPlan
+                    ) {
+                        val nextUser = PersistsUser.of(user)
+                            .copy(
+                                displayName = settings.displayName,
+                                subscriptionPlan = settings.subscriptionPlan
+                            )
+                        userRepository.update(nextUser).bind()
+                        true
+                    } else {
+                        false
+                    }
 
-            val userSettings = userSettingsFactory.fromProperties(user, settings.settings)
-            val nextSettings = userSettingsRepository
-                .replace(userSettings)
-                .map(UserSettingsEditableProperties::of)
-                .bind()
-            SettingsResult(mustReissueJwt, nextSettings)
+                val nextSettings = userSettingsRepository
+                    .update(user.id, settings.settings)
+                    .bind()
+                SettingsResult(mustReissueJwt, nextSettings)
+            }
         }
 
         return DataOrError.fromEither(result, log)
-    }
-}
-
-class UserSecurity(private val controllerLog: KLogger) {
-
-    /**
-     * Check that user is owner of resource.
-     */
-    fun <T> asHimSelf(userId: String, user: User, action: () -> Either<Exception, T>): EntityOrError<T> {
-        val result = if (userId == user.id) {
-            action()
-        } else {
-            Either.Left(OperationNotPermitted())
-        }
-
-        return DataOrError.fromEither(result, controllerLog)
     }
 }

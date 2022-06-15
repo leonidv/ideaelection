@@ -67,6 +67,9 @@ object JsonNodeExtensions {
             val parsed = JsonPath.parse(this, conf)
             val data = parsed.read(jsonPath, listOfAny) as List<Any>
             data.isNotEmpty()
+        } catch (e: InvalidPathException) {
+            println("${e.message} for jsonPath=[${jsonPath}]")
+            throw e
         } catch (e: PathNotFoundException) {
             false
         }
@@ -110,7 +113,7 @@ object JsonNodeExtensions {
         return try {
             val parsed = JsonPath.parse(this, conf)
             val x = parsed.read<Any>(jsonPath)
-            when(x) {
+            when (x) {
                 is TextNode -> Option.fromNullable(x.textValue())
                 is IntNode -> Option.fromNullable(x.intValue().toString()) // ugly dirty hack, only for test :)
                 is BooleanNode -> Option.fromNullable(x.booleanValue().toString())
@@ -127,7 +130,7 @@ object JsonNodeExtensions {
             None
         } catch (e: PathNotFoundException) {
             None
-        } catch (e : InvalidPathException) {
+        } catch (e: InvalidPathException) {
             throw IllegalArgumentException("invalid path [$jsonPath], syntax error = ${e.message}")
         }
 

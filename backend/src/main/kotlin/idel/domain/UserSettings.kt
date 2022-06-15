@@ -29,11 +29,10 @@ class UserSettingsEditableProperties(
 }
 
 data class UserSettings(
-    override val id: String,
-    val userId: UserId,
+    val user_id: UserId,
     override val notificationsFrequency: NotificationsFrequency,
     override val subscribedToNews: Boolean
-) : Identifiable, IUserSettingsEditableProperties {
+) :  IUserSettingsEditableProperties {
     companion object {
         fun generateId(user: User) = compositeId("us", user.id)
     }
@@ -41,29 +40,32 @@ data class UserSettings(
 
 class UserSettingsFactory {
     fun createDefault(user: User): UserSettings = UserSettings(
-        id = UserSettings.generateId(user),
-        userId = user.id,
+        user_id = user.id,
         notificationsFrequency = NotificationsFrequency.INSTANTLY,
         subscribedToNews = false
     )
 
     fun fromProperties(user: User, editableProperties: IUserSettingsEditableProperties) =
         UserSettings(
-            id = UserSettings.generateId(user),
-            userId = user.id,
+            user_id = user.id,
             notificationsFrequency = editableProperties.notificationsFrequency,
             subscribedToNews = editableProperties.subscribedToNews
         )
 }
 
-interface UserSettingsRepository : BaseRepository<UserSettings> {
+interface UserSettingsRepository  {
     /**
      * Load settings for user.
      */
-    fun loadForUser(user: User): Either<Exception, UserSettings>
+    fun loadForUser(user: User): Either<DomainError, UserSettings>
 
     /**
      * Replace settings by new.
      */
-    fun replace(userSettings: UserSettings) : Either<Exception,UserSettings>
+    fun update(userId: UserId, userSettings: IUserSettingsEditableProperties): Either<DomainError, IUserSettingsEditableProperties>
+
+    /**
+     * Add new user's settings
+     */
+    fun add(userSettings: UserSettings) : Either<DomainError, UserSettings>
 }

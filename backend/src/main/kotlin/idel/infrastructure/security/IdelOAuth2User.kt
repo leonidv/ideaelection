@@ -2,9 +2,11 @@ package idel.infrastructure.security
 
 import idel.domain.SubscriptionPlan
 import idel.domain.User
+import idel.domain.generateId
 import mu.KotlinLogging
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User
+import java.util.*
 
 
 open class IdelOAuth2User(
@@ -35,13 +37,13 @@ open class IdelOAuth2User(
     /**
      * Identifier of user in provider's system.
      */
-    val externalId = safeAttribute(attributesNames.externalId,"externalId")
+    override val externalId = safeAttribute(attributesNames.externalId,"externalId")
 
-    override val email: String = safeAttribute(attributesNames.email, "email")
+    override val email: String = safeAttribute(attributesNames.email.lowercase(), "email")
     override val displayName: String = safeAttribute(attributesNames.displayName,"displayName")
     override val avatar: String = safeAttribute(attributesNames.avatar, "avatar", required = false)
 
-    override val id = "${externalId}@${provider}"
+    override val id: UUID = UUID.randomUUID()
 
     override val roles = IdelAuthorities.asRoles(this.authorities).toSet()
 

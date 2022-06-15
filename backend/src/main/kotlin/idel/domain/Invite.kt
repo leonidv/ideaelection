@@ -1,16 +1,32 @@
 package idel.domain
 
 import arrow.core.Either
+import arrow.core.computations.either
+import arrow.core.flatten
 import java.time.LocalDateTime
+import java.util.*
+
+enum class InviteEmailStatus {
+    /**
+     *   Email is waiting to be sent
+     */
+    WAIT_TO_SENT,
+
+    /*
+     Email has been sent
+     */
+    SENT
+}
 
 /**
  * Group admin creates an invite when wants a user to join a group.
  */
 class Invite(
+    val id: UUID,
     /**
      * Group's identifier
      */
-    val groupId: String,
+    val groupId: GroupId,
     /**
      * User's identifier. May be null if a person are yet not registered in the application.
      */
@@ -21,15 +37,12 @@ class Invite(
      */
     val author: UserId,
 
-    /**
-     * User's email. Filled only for a person which yet is not application's user.
-     */
-    val userEmail: String?,
+    val userEmail: String,
 
     /**
      * Invitation email was sent to a person.
      */
-    val emailWasSent: Boolean?,
+    val emailStatus: InviteEmailStatus,
 
     /**
      * Resolution status of invite.
@@ -50,22 +63,11 @@ class Invite(
      * Invite modification time.
      */
     val mtime: LocalDateTime = ctime
-) : Identifiable {
-    override val id = generateId(groupId, userId, userEmail)
+) {
 
     val isForPerson = userId == null
 
     val isForUser = userId != null
-
-    init {
-        require(
-            (userId == null) && ((userEmail != null) && (emailWasSent != null)) ||
-                    (userId != null) && ((userEmail == null) && (emailWasSent == null))
-        )
-        {"person invite should be filled with userEmail and emailWasSent OR userId should be filled"}
-
-    }
-
 
     companion object {
         private fun generateId(groupId: String, userId: UserId?, userEmail: String?) =
@@ -74,63 +76,82 @@ class Invite(
         fun id(user: User, group: Group): String = compositeId(key = "invt", group.id, user.id)
 
 
-        fun createForRegisteredUser(groupId: String, userId: UserId, message: String, author: UserId) =
+        fun createForRegisteredUser(groupId: GroupId, user: User, message: String, author: UserId) =
             Invite(
+                id = UUID.randomUUID(),
                 groupId = groupId,
-                userId = userId,
+                userId = user.id,
                 author = author,
-                userEmail = null,
-                emailWasSent = null,
+                userEmail = user.email,
+                emailStatus = InviteEmailStatus.WAIT_TO_SENT,
                 status = AcceptStatus.UNRESOLVED,
                 message = message
             )
 
-        fun createForPerson(groupId: String, email: String, message: String, author: UserId) =
+        fun createForPerson(groupId: GroupId, email: String, message: String, authorId: UserId) =
             Invite(
+                id = UUID.randomUUID(),
                 groupId = groupId,
                 userId = null,
-                author = author,
+                author = authorId,
                 userEmail = email.lowercase(),
-                emailWasSent = false,
+                emailStatus = InviteEmailStatus.WAIT_TO_SENT,
                 status = AcceptStatus.UNRESOLVED,
                 message = message
             )
     }
 
     private fun clone(
-        groupId: String = this.groupId,
         userId: UserId? = this.userId,
-        userEmail: String? = this.userEmail,
-        emailWasSent: Boolean? = this.emailWasSent,
         status: AcceptStatus = this.status,
-        ctime: LocalDateTime = this.ctime
-    ): Invite {
-        return Invite(
-            groupId = groupId,
-            userId = userId,
-            author = this.author,
-            userEmail = userEmail,
-            emailWasSent = emailWasSent,
-            status = status,
-            message = message,
-            ctime = this.ctime,
-            mtime = LocalDateTime.now()
-        )
-    }
-
-    fun resolve(resolution: AcceptStatus): Invite {
-        require(resolution != AcceptStatus.UNRESOLVED) {"Can't resolve to ${AcceptStatus.UNRESOLVED}"}
-        return clone(status = resolution)
-    }
-
-    fun convertToUserInvite(user: User): Invite {
-        require(userId == null) {"invite already belongs to user, userId = ${userId}"}
-        require(this.userEmail == user.email.lowercase()) {
-            "invites not belongs to the user. Emails are different:" +
-                    " invite.userEmail = [${this.userEmail}], user.email = [${user.email.lowercase()}]"
+        emailStatus: InviteEmailStatus = this.emailStatus,
+    ): Either<EntityReadOnly, Invite> {
+        return when {
+            this.status.readOnly -> Either.Left(EntityReadOnly)
+            else -> {
+                Either.Right(
+                    Invite(
+                        id = this.id,
+                        ctime = this.ctime,
+                        mtime = LocalDateTime.now(),
+                        userId = userId,
+                        groupId = this.groupId,
+                        status = status,
+                        author = this.author,
+                        userEmail = this.userEmail,
+                        emailStatus = emailStatus,
+                        message = this.message
+                    )
+                )
+            }
         }
+    }
 
-        return this.clone(userId = user.id, userEmail = null, emailWasSent = null)
+    fun revoke() = resolve(AcceptStatus.REVOKED)
+
+    fun accept() = resolve(AcceptStatus.APPROVED)
+
+    fun decline() = resolve(AcceptStatus.DECLINED)
+
+    private fun resolve(resolution: AcceptStatus): Either<DomainError, Invite> {
+        return when (resolution) {
+            AcceptStatus.UNRESOLVED -> Either.Left(InvalidOperation("Can't resolve to $resolution"))
+            AcceptStatus.APPROVED,
+            AcceptStatus.REVOKED,
+            AcceptStatus.DECLINED -> this.clone(status = resolution)
+        }
+    }
+
+    fun convertToUserInvite(user: User): Either<DomainError, Invite> {
+        return when {
+            userId != null -> Either.Left(InvalidArgument("Invite already belongs to user"))
+            // adds email validation
+            !userEmail.equals(user.email, ignoreCase = true) ->
+                Either.Left(InvalidArgument("invites email [${this.userEmail}] is not equals to user email [${user.email}]"))
+            else -> {
+                this.clone(userId = user.id)
+            }
+        }
     }
 
 
@@ -155,25 +176,71 @@ class Invite(
 
 }
 
-interface InviteRepository : BaseRepository<Invite> {
+interface InviteRepository {
+    /**
+     * Add entity to collection
+     */
+    fun add(invite: Invite): Either<DomainError, Invite>
 
-    fun load(user : User, group: Group) : Either<Exception, Invite>
+    /**
+     * Load entity by id.
+     */
+    fun load(id: UUID): Either<DomainError, Invite>
+
+    /**
+     * Replace entity by id with mutation.
+     */
+    fun update(invite: Invite): Either<DomainError, Invite>
+
+    fun loadUnresolved(user: User, group: Group): Either<DomainError, Invite>
 
     fun loadByUser(
-        userId: String,
+        userId: UserId,
+        statuses: Set<AcceptStatus>,
         order: GroupMembershipRequestOrdering,
         pagination: Repository.Pagination
-    ): Either<Exception, List<Invite>>
+    ): Either<DomainError, List<Invite>>
 
     fun loadByEmail(
         email: String,
         pagination: Repository.Pagination
-    ): Either<Exception, List<Invite>>
+    ): Either<DomainError, List<Invite>>
 
     fun loadByGroup(
-        groupId: String,
+        groupId: GroupId,
+        statuses: Set<AcceptStatus>,
         order: GroupMembershipRequestOrdering,
         pagination: Repository.Pagination
-    ): Either<Exception, List<Invite>>
+    ): Either<DomainError, List<Invite>>
 
+}
+
+typealias InviteSecuredAction<T> = (invite: Invite, level: InviteAccessLevel) -> Either<DomainError, T>
+
+enum class InviteAccessLevel {
+    OWNER,
+    GROUP_ADMIN
+}
+
+class InviteSecurity(
+    private val inviteRepository: InviteRepository,
+    private val groupSecurity: GroupSecurity
+) {
+    fun <T> asOwnerOrGroupAdmin(user: User, inviteId: UUID, action: InviteSecuredAction<T>): Either<DomainError, T> {
+        return fTransaction {
+            either.eager<DomainError, Either<DomainError, T>> {
+                val invite = inviteRepository.load(inviteId).bind()
+                if (user.id == invite.userId) {
+                    action(invite, InviteAccessLevel.OWNER)
+                } else {
+                    val isGroupAdmin = groupSecurity.isAdmin(invite.groupId, user).bind()
+                    if (isGroupAdmin) {
+                        action(invite, InviteAccessLevel.GROUP_ADMIN)
+                    } else {
+                        Either.Left(OperationNotPermitted())
+                    }
+                }
+            }
+        }.flatten()
+    }
 }

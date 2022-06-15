@@ -28,7 +28,7 @@ class IdeaEditSpec : DescribeSpec({
 
     context("$userAdmin creates group, userB, userC, userD are members") {
         describe("initialization") {
-            registryUsers(userAdmin, userB, userC, userD, userX)
+            registerUsers(userAdmin, userB, userC, userD, userX)
 
             groupId = createGroup(groupAdmin = userAdmin, members = setOf(userB, userC, userD)).groupId
         }

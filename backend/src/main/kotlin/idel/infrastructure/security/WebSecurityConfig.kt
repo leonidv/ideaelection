@@ -5,9 +5,9 @@ import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.RSASSASigner
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
-import idel.domain.User
-import idel.domain.UserRepository
-import idel.domain.UserService
+import idel.api.ApiSecurity
+import idel.domain.*
+import idel.domain.security.SecurityService
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -129,6 +129,16 @@ class WebSecurityConfig(private val userRepository: UserRepository, private val 
         auth.authenticationProvider(authProvider)
     }
 
+    @Bean
+    fun ApiSecurity(
+        userSecurity: UserSecurity ,
+        groupSecurity: GroupSecurity,
+        ideaSecurity: IdeaSecurity,
+        groupMemberSecurity: GroupMemberSecurity,
+        inviteSecurity: InviteSecurity
+    ): ApiSecurity {
+        return idel.api.ApiSecurity(userSecurity,groupSecurity,ideaSecurity,groupMemberSecurity, inviteSecurity)
+    }
 }
 
 @Configuration

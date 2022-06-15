@@ -21,7 +21,7 @@ class AccessToPrivateGroupScenarios : DescribeSpec({
     }
 
     describe("create users") {
-        registryUsers(userA, userB, userC)
+        registerUsers(userA, userB, userC)
     }
 
 

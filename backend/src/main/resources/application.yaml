@@ -2,23 +2,18 @@
 # Don't use it in production, it's very dangerous!
 testmode: false
 
-
-couchbase:
-  host: localhost
-  port:
-  username: admin
-  password: password
-  bucket: ideaelection
-
-
 security:
   httpbasic:
     realm: ideaelection
   cors:
     allowed-origins: https://saedi.zap-it.ru, http://saedi.zap-it.ru, https://api.zap-it.ru, http://api.zap-it.ru,
 
-
 spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/saedi
+    username: admin
+    password: password
+
   security:
     oauth2:
       client:

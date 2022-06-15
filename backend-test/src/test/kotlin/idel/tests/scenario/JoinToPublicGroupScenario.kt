@@ -19,7 +19,7 @@ class JoinToPublicGroupScenario : DescribeSpec({
         val userC = User("userC")
         val userD = User("userD", "not member")
 
-        registryUsers(userA, userB, userC, userD)
+        registerUsers(userA, userB, userC, userD)
 
         lateinit var groupId: String
         lateinit var joiningKey: String

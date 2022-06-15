@@ -6,7 +6,6 @@ import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
 import idel.tests.infrastructure.*
-import mu.KotlinLogging
 import java.net.http.HttpResponse
 
 interface GroupsFields {
@@ -92,16 +91,16 @@ class GroupsApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user
      */
     fun loadMembers(
         groupId: String,
-        usernameFilter: Option<String> = None,
-        first: Option<String> = None,
-        last: Option<String> = None
+        usernameFilter: String? = null,
+        skip: Int? = null,
+        count: Int? = null
     ): HttpResponse<JsonNode> {
         val params = listOf(
-            usernameFilter.map {"username=$it"}.getOrElse {""},
-            first.map {"first=$it"}.getOrElse {""},
-            last.map {"last=$it"}.getOrElse {""}
+            usernameFilter?.let {"username=$it"},
+            skip?.let {"skip=$it"},
+            count?.let {"count=$it"}
         )
-            .filterNot {it.isEmpty()}
+            .filterNotNull()
             .joinToString(prefix = "?", separator = "&")
 
         return get("/$groupId/members/$params")

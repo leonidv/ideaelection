@@ -182,7 +182,7 @@ class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user,
  */
 fun ideaHasGroup(groupId: String) = BodyFieldValueChecker.forField("idea.groupId", groupId)
 fun ideaAssigneeIs(user: User) = BodyFieldValueChecker.forField("idea.assignee", user.id)
-fun ideaNotAssigned() = BodyFieldValueChecker("idea is not assigned", "$.data.idea.assignee", "")
+fun ideaNotAssigned() = BodyFieldNullChecker("idea is not assigned", "$.data.idea", "assignee")
 val ideaIsImplemented = BodyFieldValueChecker("idea is implemented", "$.data.idea.implemented", "true")
 val ideaIsNotImplemented = BodyFieldValueChecker("idea is not implemented", "$.data.idea.implemented", "false")
 fun ideaHasSummary(summary: String) = BodyFieldValueChecker.forField("idea.summary", summary)

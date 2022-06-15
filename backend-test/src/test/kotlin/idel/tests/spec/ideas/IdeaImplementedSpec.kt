@@ -20,7 +20,7 @@ class IdeaImplementedSpec : DescribeSpec({
         lateinit var ideaId: String
 
         describe("init") {
-            registryUsers(userA, userB, userC, userD, userE)
+            registerUsers(userA, userB, userC, userD, userE)
 
             groupId = createGroup(userA, setOf(userB, userC, userE)).groupId
 

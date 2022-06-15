@@ -29,27 +29,8 @@ global_job_config:
     always:
       commands:
         - sudo podman images
-        - podman images
-        - df -h
 
 blocks:
-  - name: Couchbase building
-    run:
-      when: "change_in('/deploy/couchbase/')"
-#    skip:
-#      when: true
-    task:
-      jobs:
-        - name: Build Couchbase container
-          commands:
-            - cd deploy/couchbase
-            - sudo ./couchbase-run-original.sh
-            - sleep 10
-            - initialization/init.sh
-            - cd ../
-            - sudo ./build-couchbase.sh
-            - sudo podman push docker.io/leonidv/idel-couchbase docker.io/leonidv/idel-couchbase:$PROCESS_TAG
-
   - name: Backend building
 #    run:
 #      when: "change_in(['/backend/', '/backend-test/'])"
@@ -62,35 +43,41 @@ blocks:
         - name: LOG_DIR
           value:  /home/semaphore/ideaelection/logs
 
-      prologue:
-        commands:
-          - checkout
-
       epilogue:
-        on_fail:
+        always:
           commands:
-            - cp -r $BUILD_DIR/backend-test/build/reports $LOG_DIR
-            - tar -zcvf log-and-reports.tar.gz $LOG_DIR
-            - artifact push job log-and-reports.tar.gz
+#            - >-
+#              [[ -d $BUILD_DIR/backend/build/test-results/test ]] &&
+#                test-results --verbose -p generic -N backend publish $BUILD_DIR/backend/build/test-results/test ||
+#                echo "unit tests report not found"
+
+            - >-
+              [[ -d $BUILD_DIR/backend-test/build/test-results/test ]] && 
+                test-results --verbose -p generic -N backend-test publish $BUILD_DIR/backend-test/build/test-results/test || 
+                echo "api tests not found"
+
+            - test-results gen-pipeline-report
       jobs:
         - name: Build backend application
           commands:
-            - >-
-              sudo python scripts/containers/run-container-alternative-tags.py
-              docker.io/leonidv/idel-couchbase
-              --run-options "-d --quiet --name idel-couchbase -p 8091-8094:8091-8094 -p 11210:11210 -p 8080:8080"
-              --tag $PROCESS_TAG --tag-backup test
-
-            - cd $BUILD_DIR/backend
             - export GIT_COMMIT
             - export GIT_BRANCH
-            - ./gradlew --console=plain build bootJar
+
+            - cd $BUILD_DIR/backend
+            - gradle --console=plain build bootJar
             - cd $BUILD_DIR/deploy
             - sudo ./build-backend.sh dev
+
             - cd $BUILD_DIR/scripts
+            - sudo ./postgresql-run.sh
+            - sleep 10
+            - sudo podman logs saedi-postgresql
             - sudo ./backend-run.sh
+            - sleep 10
+            - sudo podman logs idel-backend
             - cd ../backend-test
-            - ./gradlew --console=plain test allureReport
+
+            - gradle --console=plain test
             - sudo podman push docker.io/leonidv/idel-backend docker.io/leonidv/idel-backend:$PROCESS_TAG
 
   - name: webui building
@@ -131,10 +118,6 @@ blocks:
         - name: Apply deployment
           commands:
             - cd scripts/containers
-#            - >-
-#              python rollup-up-deployment.py  docker.io/leonidv/idel-couchbase
-#              --process-tag $PROCESS_TAG --label test
-#              --deployment deployment/saedi --container-name couchbase
             - >-
               python rollup-up-deployment.py  docker.io/leonidv/idel-backend
               --process-tag $PROCESS_TAG --label test

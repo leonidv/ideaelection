@@ -1,12 +1,11 @@
 package idel.tests.infrastructure
 
 import idel.tests.apiobject.*
-import io.kotest.core.spec.style.scopes.DescribeScope
 import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
 import java.time.LocalDateTime
 
 
-suspend fun DescribeSpecContainerContext.registryUsers(vararg users: User) {
+suspend fun DescribeSpecContainerContext.registerUsers(vararg users: User) {
     describe("register users") {
         users.forEach {user ->
             it("register user [${user.name}]") {

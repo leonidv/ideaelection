@@ -13,12 +13,16 @@ class InvitesStatuses {
     val DECLINED: String = "DECLINED"
 }
 
-class InvitesField
+class EmailStatus  {
+    val WAIT_TO_SENT: String = "WAIT_TO_SENT"
+    val SENT: String = "SENT"
+}
 
 class InvitesApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "invites") {
 
     companion object {
         val Status = InvitesStatuses()
+        val EmailStatus = EmailStatus()
     }
 
     fun create(
@@ -74,14 +78,13 @@ class InvitesApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(use
     }
 }
 
-fun extractInviteId(user: User, groupId: String, response : HttpResponse<JsonNode>) : String {
+fun extractInviteId(user: User, groupId: String, response: HttpResponse<JsonNode>): String {
     val query = "$.data.invites[?(@.userId=='${user.id}' && @.groupId=='$groupId')].id"
     return response.body()!!.queryString(query).getOrElse {ValueNotExists.throwForQuery(query)}
 }
 
 
-
-fun hasInvitesCount(count : Int) = BodyArraySize("invites count", "$.data.invites", count)
+fun hasInvitesCount(count: Int) = BodyArraySize("invites count", "$.data.invites", count)
 
 fun hasInvitesToGroups(groupsIds: Array<String>) = BodyArrayContainsObjects(
     testName = "include invites to groups [$groupsIds]",
@@ -90,12 +93,11 @@ fun hasInvitesToGroups(groupsIds: Array<String>) = BodyArrayContainsObjects(
     values = groupsIds.toSet()
 )
 
-fun inviteUserSelectorFields(groupId: String, userId: String) =
+fun inviteUserSelectorFields(groupId: String, user: User) : Array<Pair<String, String?>> =
     arrayOf(
         Pair("groupId", groupId),
-        Pair("userId", userId),
-        Pair("userEmail", null),
-        Pair("emailWasSent", null)
+        Pair("userId", user.id),
+        Pair("userEmail", user.email.toLowerCase())
     )
 
 fun invitePersonSelectorFields(groupId: String, email: String) =
@@ -108,22 +110,22 @@ fun invitePersonSelectorFields(groupId: String, email: String) =
 fun includeInvite(inviteId: String) = BodyContainsObject(
     testName = "include invite id = $inviteId",
     objectPath = "$.data.invites",
-    fields = arrayOf(Pair("id",inviteId))
+    fields = arrayOf(Pair("id", inviteId))
 )
 
 fun hasInviteForUser(groupId: String, user: User) = BodyContainsObject(
     testName = "include invite for user $user",
     objectPath = "$.data.invites",
-    fields = inviteUserSelectorFields(groupId, user.id)
+    fields = inviteUserSelectorFields(groupId, user)
 )
 
 fun hasNotInviteForUser(groupId: String, user: User) = NotBodyContainsObject(
     testName = "doesn't`t include invite for user",
     objectPath = "$.data.invites",
-    fields = inviteUserSelectorFields(groupId, user.id)
+    fields = inviteUserSelectorFields(groupId, user)
 )
 
-fun hasInviteForPerson(groupId: String, email : String) = BodyContainsObject(
+fun hasInviteForPerson(groupId: String, email: String) = BodyContainsObject(
     testName = "include invite for person, email = $email, groupId = $groupId",
     objectPath = "$.data.invites",
     fields = invitePersonSelectorFields(groupId, email)

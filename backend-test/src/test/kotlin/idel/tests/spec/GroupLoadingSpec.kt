@@ -6,7 +6,6 @@ import idel.tests.infrastructure.*
 import idel.tests.infrastructure.GroupInfo
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
-import io.kotest.matchers.reflection.beLateInit
 import java.util.*
 
 class GroupLoadingSpec : DescribeSpec({
@@ -38,7 +37,7 @@ class GroupLoadingSpec : DescribeSpec({
             }
 
 
-            registryUsers(userA, userB, userC)
+            registerUsers(userA, userB, userC)
 
 
             allGroups.forEach {groupName ->
@@ -170,7 +169,7 @@ class GroupLoadingSpec : DescribeSpec({
                         it("OK") {}
                     }
 
-                    registryUsers(userA, userB_mail, userC_email, userE_post)
+                    registerUsers(userA, userB_mail, userC_email, userE_post)
 
                     val groupsInfo = mutableMapOf<GroupParams, GroupInfo>()
 
@@ -288,7 +287,7 @@ class GroupLoadingSpec : DescribeSpec({
                     }
 
                     describe("init users") {
-                        registryUsers(userA, userB_mail, userC_email, userE_post)
+                        registerUsers(userA, userB_mail, userC_email, userE_post)
                     }
 
                     describe("create groups") {
@@ -388,7 +387,7 @@ class GroupLoadingSpec : DescribeSpec({
                 EntityStorage().clearAll()
             }
 
-            registryUsers(userA, userB, userC)
+            registerUsers(userA, userB, userC)
 
             var r = createGroup(userA, members = emptySet(), name = "group 1", entryMode = GroupsApi.CLOSED)
             g1_id = r.groupId

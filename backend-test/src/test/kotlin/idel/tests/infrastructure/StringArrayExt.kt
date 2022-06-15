@@ -7,3 +7,4 @@ fun Array<String>.toJsonArray() : String {
 fun Collection<String>.toJsonArray() : String {
     return this.joinToString(prefix = "[", postfix = "]") {""" "$it" """}
 }
+

@@ -16,7 +16,7 @@ class InviteRegisteredUserScenario : DescribeSpec({
     }
 
     describe("initialization") {
-        registryUsers(userA, userB, userC)
+        registerUsers(userA, userB, userC)
     }
 
 

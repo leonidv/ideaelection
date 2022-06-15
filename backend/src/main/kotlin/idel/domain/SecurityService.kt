@@ -1,7 +1,9 @@
-package idel.domain
+package idel.domain.security
 
 import arrow.core.Either
 import arrow.core.computations.either
+import arrow.core.flatMap
+import idel.domain.*
 import mu.KotlinLogging
 
 
@@ -113,51 +115,60 @@ class SecurityService(
         return user.roles.contains(Roles.SUPER_USER)
     }
 
+    class GroupWithLevels(
+        val group: Group,
+        val levels: Set<GroupAccessLevel>
+    ) {
+        operator fun component1() = group
+        operator fun component2() = levels
+    }
+
     /**
      * Calculate group access level.
+     *
+     * Should be executed in the outer transaction.
      */
-    fun groupAccessLevel(groupId: String, user: User): Either<Exception, Set<GroupAccessLevel>> {
-        val eGroupExists = groupRepository.exists(groupId)
-
-        // check that the group is not logically deleted. By design, for logical deleted group member is exists.
-        return if (eGroupExists is Either.Right && eGroupExists.value) {
+    fun groupAccessLevel(groupId: GroupId, user: User): Either<DomainError, GroupWithLevels> {
+        return groupRepository.load(groupId).flatMap {group ->
             if (user.roles.contains(Roles.SUPER_USER)) {
-                return Either.Right(GROUP_LEVELS_ADMIN)
+                Either.Right(GroupWithLevels(group, GROUP_LEVELS_ADMIN))
+            } else {
+                val eGroupMember = groupMemberRepository.load(groupId, user.id)
+
+                val levels = when (eGroupMember) {
+                    is Either.Left ->
+                        if (eGroupMember.value is EntityNotFound) {
+                            log.info {"SECURITY ${user.id} try to get access into group $groupId "}
+                            Either.Right(GROUP_LEVELS_NOT_MEMBER)
+                        } else {
+                            eGroupMember
+                        }
+
+                    is Either.Right ->
+                        when (eGroupMember.value.roleInGroup) {
+                            GroupMemberRole.GROUP_ADMIN -> Either.Right(GROUP_LEVELS_ADMIN)
+                            GroupMemberRole.MEMBER -> Either.Right(GROUP_LEVELS_MEMBER)
+                        }
+                }
+
+                levels.map {GroupWithLevels(group, it)}
             }
-
-            val eUser = groupMemberRepository.load(groupId, user.id)
-
-            when (eUser) {
-                is Either.Left ->
-                    if (eUser.value is EntityNotFound) {
-                        log.info {"SECURITY ${user.id} try to get access into group ${groupId} "}
-                        Either.Right(GROUP_LEVELS_NOT_MEMBER)
-                    } else {
-                        eUser
-                    }
-
-                is Either.Right ->
-                    when (eUser.value.roleInGroup) {
-                        GroupMemberRole.GROUP_ADMIN -> Either.Right(GROUP_LEVELS_ADMIN)
-                        GroupMemberRole.MEMBER -> Either.Right(GROUP_LEVELS_MEMBER)
-                    }
-            }
-        } else {
-            eGroupExists.map {GROUP_LEVELS_NOT_MEMBER}
         }
     }
 
     /**
-     * Calculate group access levels. It's may be
+     * Calculate group access levels.
+     *
+     * Should be executed in the outer transaction.
      */
-    fun ideaAccessLevels(idea: Idea, user: User): Either<Exception, Set<IdeaAccessLevel>> {
+    fun ideaAccessLevels(idea: Idea, user: User): Either<DomainError, Set<IdeaAccessLevel>> {
         return groupAccessLevel(idea.groupId, user).map {groupAccessLevels ->
             when {
-                groupAccessLevels.contains(GroupAccessLevel.NOT_MEMBER) -> IDEA_LEVELS_FOR_NOT_GROUP_MEMBER
+                groupAccessLevels.levels.contains(GroupAccessLevel.NOT_MEMBER) -> IDEA_LEVELS_FOR_NOT_GROUP_MEMBER
 
-                groupAccessLevels.contains(GroupAccessLevel.ADMIN) -> IDEA_LEVELS_FOR_GROUP_ADMIN
+                groupAccessLevels.levels.contains(GroupAccessLevel.ADMIN) -> IDEA_LEVELS_FOR_GROUP_ADMIN
 
-                groupAccessLevels.contains(GroupAccessLevel.MEMBER) -> {
+                groupAccessLevels.levels.contains(GroupAccessLevel.MEMBER) -> {
                     val levels = IDEA_LEVELS_FOR_MEMBER.toMutableSet()
                     if (idea.assignee == user.id) {
                         levels.add(IdeaAccessLevel.ASSIGNEE)
@@ -176,21 +187,23 @@ class SecurityService(
 
     }
 
-
+    /**
+     *  Should be executed in the outer transaction.
+     */
     fun groupMemberAccessLevels(
         groupMember: GroupMember,
-        groupId: String,
+        groupId: GroupId,
         user: User
-    ): Either<Exception, Set<GroupMemberAccessLevel>> {
+    ): Either<DomainError, Set<GroupMemberAccessLevel>> {
         return if (groupMember.userId == user.id) {
             Either.Right(GROUP_MEMBER_HIM_SELF)
         } else {
-            either.eager<Exception, Set<GroupMemberAccessLevel>> {
-                // it has a second call to a repository, but the operation is rarely so we don't optimize it
+            either.eager<DomainError, Set<GroupMemberAccessLevel>> {
+                // it has a second call to a repository, but the operation is rarely, so we don't optimize it
                 val groupAccessLevel = groupAccessLevel(groupId, user).bind()
                 when {
-                    groupAccessLevel.contains(GroupAccessLevel.ADMIN) -> GROUP_MEMBER_LEVELS_FOR_ADMIN
-                    groupAccessLevel.contains(GroupAccessLevel.MEMBER) -> GROUP_MEMBER_LEVELS_FOR_MEMBER
+                    groupAccessLevel.levels.contains(GroupAccessLevel.ADMIN) -> GROUP_MEMBER_LEVELS_FOR_ADMIN
+                    groupAccessLevel.levels.contains(GroupAccessLevel.MEMBER) -> GROUP_MEMBER_LEVELS_FOR_MEMBER
                     else -> GROUP_MEMBER_ACCESS_DENIED
                 }
             }

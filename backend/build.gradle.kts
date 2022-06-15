@@ -1,11 +1,11 @@
-val kotlinVersion = "1.5.21"
-val jacksonVersion = "2.12.2"
+val kotlinVersion = "1.6.0"
+val jacksonVersion = "2.13.0"
 
 
 plugins {
-    id("org.springframework.boot") version "2.5.2"
-    kotlin("jvm") version "1.5.21"
-    kotlin("plugin.spring") version "1.5.21"
+    id("org.springframework.boot") version "2.6.0"
+    kotlin("jvm") version "1.6.0"
+    kotlin("plugin.spring") version "1.6.0"
     id("idea")
 }
 
@@ -15,7 +15,8 @@ group = "saedi"
 version = "1.0"
 
 val kotestVersion="4.6.0"
-val springDocVersion = "1.5.8"
+val springDocVersion = "1.5.12"
+val exposedVersion = "0.36.2"
 
 repositories {
     mavenCentral()
@@ -44,25 +45,30 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-security:$springDocVersion")
     implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")
 
-
-    implementation("com.couchbase.client:java-client:3.2.1")
-    implementation("com.couchbase.client:couchbase-transactions:1.2.1")
-    // implementation("io.projectreactor:reactor-core:3.4.3") // https://github.com/Azure/azure-sdk-for-java/issues/20106
+    implementation("ch.qos.logback:logback-classic:1.2.10")
+    implementation("org.slf4j:jul-to-slf4j:1.7.32")
 
 
-    implementation("io.github.microutils:kotlin-logging-jvm:2.0.8")
+    implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    implementation("org.postgresql:postgresql:42.3.1")
+    implementation("com.zaxxer:HikariCP:5.0.0")
+
+    implementation("org.liquibase:liquibase-core:4.6.1")
+
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
 
     implementation("io.konform:konform-jvm:0.3.0")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
-    implementation("io.arrow-kt:arrow-core:0.13.2")
+    implementation("io.arrow-kt:arrow-core:1.0.1")
 
-    implementation("org.apache.commons:commons-lang3:3.10")
+    implementation("org.apache.commons:commons-lang3:3.12.0")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.21")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.21")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.0")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.0")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.21")
 

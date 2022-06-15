@@ -4,13 +4,11 @@ import arrow.core.Either
 import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
-import idel.domain.EntityNotFound
-import idel.domain.GroupMembershipService
-import idel.domain.UserRepository
-import idel.domain.UserService
+import idel.domain.*
 import mu.KotlinLogging
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.AuthenticationException
 import org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationToken
 
 class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationProvider,
@@ -92,9 +90,10 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
 
 
         val userFromRepository = when (val eUser = userRepository.load(idelUser.id)) {
-            is Either.Left -> when (val ex = eUser.value) {
+            is Either.Left -> when (val error = eUser.value) {
                 is EntityNotFound -> None
-                else -> throw ex
+                is ExceptionError -> throw error.ex
+                else -> throw RuntimeException("Can't authenticate user, cause = [${error.message}]")
             }
             is Either.Right -> Some(eUser.value)
         }

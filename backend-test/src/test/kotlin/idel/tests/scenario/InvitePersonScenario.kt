@@ -3,7 +3,7 @@ package idel.tests.scenario
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.checkIsOk
 import idel.tests.infrastructure.createGroup
-import idel.tests.infrastructure.registryUsers
+import idel.tests.infrastructure.registerUsers
 import io.kotest.core.spec.style.DescribeSpec
 
 class InvitePersonScenario : DescribeSpec({
@@ -19,7 +19,7 @@ class InvitePersonScenario : DescribeSpec({
         val userD = User("userD")
 
 
-        registryUsers(userA)
+        registerUsers(userA)
 
         val userPerGroup = mapOf(
             GroupsApi.PUBLIC to userB,
@@ -52,7 +52,7 @@ class InvitePersonScenario : DescribeSpec({
                     )
                 }
 
-                registryUsers(user)
+                registerUsers(user)
 
                 describe("$user see the invite in the his invite's list") {
                         val response = user.invites.loadForUser()

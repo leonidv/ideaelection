@@ -15,9 +15,10 @@ class JoinRequestController(
     private val groupMembershipService: GroupMembershipService,
     private val joinRequestRepository: JoinRequestRepository,
     private val groupRepository: GroupRepository,
-    private val userRepository: UserRepository
-) {
-    private val log = KotlinLogging.logger {}
+    private val userRepository: UserRepository,
+    private val security: ApiSecurity
+) : DataOrErrorHelper {
+    override val log = KotlinLogging.logger {}
 
     data class JoinRequestParams(
         val joiningKey: String,
@@ -40,7 +41,7 @@ class JoinRequestController(
         val users: Set<User>
     )
 
-    private fun enrichJoinRequests(joinRequests: List<JoinRequest>) : Either<Exception, JoinRequestsPayload> {
+    private fun enrichJoinRequests(joinRequests: List<JoinRequest>): Either<DomainError, JoinRequestsPayload> {
         return either.eager {
             val groups = joinRequests.map {it.groupId}.toSet()
                 .map {groupId -> groupRepository.load(groupId).bind()}
@@ -54,13 +55,14 @@ class JoinRequestController(
     fun create(
         @AuthenticationPrincipal user: User,
         @RequestBody joinRequestParams: JoinRequestParams
-    ): EntityOrError<JoinRequestPayload> {
-        val eJoinRequest = groupMembershipService.requestMembership(
+    ): ResponseDataOrError<JoinRequestPayload> {
+        return groupMembershipService.requestMembership(
             joiningKey = joinRequestParams.joiningKey,
             userId = user.id,
             message = joinRequestParams.message
-        ).map(JoinRequestPayload::onlyJoinRequest)
-        return DataOrError.fromEither(eJoinRequest, log)
+        )
+            .map(JoinRequestPayload::onlyJoinRequest)
+            .asHttpResponse()
     }
 
 
@@ -68,36 +70,40 @@ class JoinRequestController(
     fun loadByUser(
         @AuthenticationPrincipal user: User,
         @RequestParam(required = false, defaultValue = "") order: GroupMembershipRequestOrdering,
-        @RequestParam userId: String,
+        @RequestParam userId: UUID,
         pagination: Repository.Pagination
-    ): EntityOrError<JoinRequestsPayload> {
+    ): ResponseDataOrError<JoinRequestsPayload> {
         if (user.id != userId) {
-            return DataOrError.forbidden("you can't get join requests another users")
+            return DataOrError.forbidden("you can't get join requests from another users")
         }
 
-        val result = either.eager<Exception, JoinRequestsPayload> {
-           val joinRequests = joinRequestRepository.loadByUser(userId, order, pagination).bind()
-           enrichJoinRequests(joinRequests).bind()
-        }
+        val defaultStatuses = setOf(AcceptStatus.UNRESOLVED, AcceptStatus.DECLINED)
 
-        return DataOrError.fromEither(result, log)
+        return fTransaction {
+            either.eager {
+                val joinRequests =
+                    joinRequestRepository.loadByUser(userId, defaultStatuses, order, pagination).bind()
+                enrichJoinRequests(joinRequests).bind()
+            }
+        }.asHttpResponse()
+
+
     }
 
     @GetMapping(params = ["groupId"])
     fun loadByGroup(
         @AuthenticationPrincipal user: User,
         @RequestParam(required = false, defaultValue = "") order: GroupMembershipRequestOrdering,
-        @RequestParam groupId: String,
+        @RequestParam groupId: GroupId,
         pagination: Repository.Pagination
-    ): EntityOrError<JoinRequestsPayload> {
-
-
-        val result = either.eager<Exception, JoinRequestsPayload> {
-            val joinRequests = joinRequestRepository.loadByGroup(groupId, order, pagination).bind()
-            enrichJoinRequests(joinRequests).bind()
-        }
-
-        return DataOrError.fromEither(result, log)
+    ): ResponseDataOrError<JoinRequestsPayload> {
+        return security.group.asAdmin(groupId, user) {_ ->
+            either.eager {
+                val joinRequests =
+                    joinRequestRepository.loadByGroup(groupId, setOf(AcceptStatus.UNRESOLVED), order, pagination).bind()
+                enrichJoinRequests(joinRequests).bind()
+            }
+        }.asHttpResponse()
     }
 
     data class Resolution(val status: AcceptStatus)
@@ -105,9 +111,9 @@ class JoinRequestController(
     @PatchMapping("{joinRequestId}/status")
     fun resolve(
         @AuthenticationPrincipal user: User,
-        @PathVariable joinRequestId: String,
+        @PathVariable joinRequestId: UUID,
         @RequestBody resolution: Resolution
-    ): EntityOrError<JoinRequestPayload> {
+    ): ResponseDataOrError<JoinRequestPayload> {
         val result = groupMembershipService.resolveRequest(joinRequestId, resolution.status)
             .map(JoinRequestPayload::onlyJoinRequest)
         return DataOrError.fromEither(result, log)
@@ -116,9 +122,9 @@ class JoinRequestController(
     @DeleteMapping("{joinRequestId}")
     fun delete(
         @AuthenticationPrincipal user: User,
-        @PathVariable joinRequestId: String
-    ): EntityOrError<String> {
-        val result = joinRequestRepository.delete(joinRequestId).map {"OK"}
+        @PathVariable joinRequestId: UUID
+    ): ResponseDataOrError<JoinRequest> {
+        val result = groupMembershipService.resolveRequest(joinRequestId, AcceptStatus.REVOKED)
         return DataOrError.fromEither(result, log)
     }
 }

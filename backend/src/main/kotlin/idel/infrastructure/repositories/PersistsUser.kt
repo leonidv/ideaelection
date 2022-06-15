@@ -1,17 +1,11 @@
 package idel.infrastructure.repositories
 
-import arrow.core.Either
-import arrow.core.Option
-import arrow.core.Some
-import com.couchbase.client.java.Cluster
-import com.couchbase.client.java.Collection
-import com.couchbase.client.java.json.JsonObject
 import idel.domain.*
-import mu.KotlinLogging
-import kotlin.math.min
+import java.util.*
 
 data class PersistsUser(
-    override val id: String,
+    override val id: UUID,
+    override val externalId: String,
     override val email: String,
     override val displayName: String,
     override val avatar: String,
@@ -24,7 +18,8 @@ data class PersistsUser(
         fun of(user: User): PersistsUser {
             return PersistsUser(
                 id = user.id,
-                email = user.email,
+                externalId = user.externalId,
+                email = UserInfo.normalizeEmail(user.email),
                 displayName = user.displayName,
                 avatar = user.avatar,
                 roles = user.roles,
@@ -34,6 +29,7 @@ data class PersistsUser(
     }
 }
 
+/*
 class UserCouchbaseRepository(
     cluster: Cluster,
     collection: Collection
@@ -52,17 +48,17 @@ class UserCouchbaseRepository(
 
     override val log = KotlinLogging.logger {}
 
+    override fun load(id: UUID): Either<Exception, User> {
+        TODO("Only in PG Repository")
+    }
+
     override fun add(user: User): Either<Exception, User> {
-        val persistsUser = PersistsUser.of(user)
-        return safelyKeyOperation(user.id) {
-            collection.insert(persistsUser.id, persistsUser, insertOptions())
-            user
-        }
+       TODO("migrated to PG")
     }
 
 
     override fun update(user: User): Either<Exception, User> {
-        return mutate(user.id) {PersistsUser.of(user)}
+        return mutate(user.id.toString()) {PersistsUser.of(user)}
     }
 
     override fun load(usernameFilter: Option<String>, pagination: Repository.Pagination): Either<Exception, List<User>> {
@@ -92,14 +88,14 @@ class UserCouchbaseRepository(
             val votersCount = min(idea.voters.size, maxVoters)
             setOf(idea.assignee, idea.author) + idea.voters.subList(0, votersCount)
         }
-            .filterNot {it.isEmpty()}
+            .filterNotNull()
             .toSet()
 
         val users = mutableSetOf<User>()
         for (userId in usersIds) {
             when (val eUser = load(userId)) {
                 is Either.Left -> when (val ex = eUser.value) {
-                    is EntityNotFound -> {
+                    is EntityNotFoundExp -> {
                         log.debug {ex.message}
                     } // ignore users which are not found
                     else -> return eUser
@@ -113,3 +109,4 @@ class UserCouchbaseRepository(
         return Either.Right(users)
     }
 }
+*/

@@ -1,11 +1,11 @@
 package idel.api
 
-import arrow.core.Either
 import arrow.core.computations.either
+import idel.domain.DomainError
 import idel.domain.User
 import idel.domain.UserRepository
+import idel.domain.fTransaction
 import idel.infrastructure.security.JwtIssuerService
-import mu.KLogger
 import mu.KotlinLogging
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -22,10 +22,12 @@ class JwtTokenController(
     private val log = KotlinLogging.logger {}
 
     @GetMapping("")
-    fun issueToken(@AuthenticationPrincipal user: User): EntityOrError<String> {
-        val result = either.eager<Exception, String> {
-            val currentUser = userRepository.load(user.id).bind()
-            jwtIssuer.issueToken(currentUser)
+    fun issueToken(@AuthenticationPrincipal user: User): ResponseDataOrError<String> {
+        val result = fTransaction {
+            either.eager<DomainError, String> {
+                val currentUser = userRepository.load(user.id).bind()
+                jwtIssuer.issueToken(currentUser)
+            }
         }
 
         return DataOrError.fromEither(result, log)

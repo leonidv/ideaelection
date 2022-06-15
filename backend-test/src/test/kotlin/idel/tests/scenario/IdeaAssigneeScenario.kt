@@ -1,6 +1,5 @@
 package idel.tests.scenario
 
-import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
@@ -22,7 +21,7 @@ class IdeaAssigneeScenario : DescribeSpec({
         lateinit var ideaId: String
 
         describe("init") {
-            registryUsers(userA, userB, userC, userD)
+            registerUsers(userA, userB, userC, userD)
 
             groupId = createGroup(groupAdmin = userA, members = setOf(userB, userC)).groupId
 

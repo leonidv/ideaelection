@@ -36,6 +36,16 @@ class BodyFieldValueChecker(
     }
 }
 
+class BodyFieldNullChecker(
+    override val testName: String,
+    private val objectPath: String,
+    private val field: String
+) : ResponseChecker {
+    override fun check(jsonNode: JsonNode) {
+        jsonNode.shouldHasNull(objectPath, field)
+    }
+}
+
 class BodyArrayElementExists(
     override val testName: String,
     private val arrayPath: String,

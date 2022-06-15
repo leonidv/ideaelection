@@ -21,7 +21,7 @@ class JoinRequestsSpec : DescribeSpec({
     val userB = User("userB")
 
     describe("register users [userA, userB]") {
-        registryUsers(userA, userB)
+        registerUsers(userA, userB)
     }
 
     describe("negative scenarios") {

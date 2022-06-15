@@ -1,12 +1,7 @@
 package idel.api
 
-import arrow.core.None
-import arrow.core.Option
 import arrow.core.computations.either
-import idel.domain.Repository
-import idel.domain.Roles
-import idel.domain.User
-import idel.domain.UserRepository
+import idel.domain.*
 import idel.infrastructure.repositories.PersistsUser
 import mu.KotlinLogging
 import org.springframework.http.MediaType
@@ -34,38 +29,39 @@ class FirstSetupController(val userRepository: UserRepository) {
 
     @GetMapping("", produces = [MediaType.TEXT_HTML_VALUE])
     @ResponseBody
-    fun init(@AuthenticationPrincipal user: User): EntityOrError<String> {
+    fun init(@AuthenticationPrincipal user: User): ResponseDataOrError<String> {
 
-        val result = either.eager<Exception, String> {
-            val users = userRepository.load(None, Repository.Pagination(0, 10)).bind()
-            val isInitialized =
-                when {
-                    user.roles.contains(Roles.SUPER_USER) -> {
-                        true
-                    }
-                    users.size > 1 -> {
-                        true
-                    }
+        val result = fTransaction {
+            either.eager<DomainError, String> {
+                val users = userRepository.list(null, Repository.Pagination(0, 10)).bind()
+                val isInitialized =
+                    when {
+                        user.roles.contains(Roles.SUPER_USER) -> {
+                            true
+                        }
+                        users.size > 1 -> {
+                            true
+                        }
 
-                    else -> {
-                        false
+                        else -> {
+                            false
+                        }
                     }
+                isInitialized
+                if (isInitialized) {
+                    HTML_ALREADY_INITIALIZED_CONTENT
+                } else {
+                    val persistsUser = PersistsUser.of(user).copy(roles = setOf(Roles.USER, Roles.SUPER_USER))
+                    userRepository.update(persistsUser)
+
+                    val responseContent = HTML_OK_CONTENT
+                        .replace("#{name}", user.displayName)
+                        .replace("#{id}", user.id.toString())
+
+                    HTML_TEMPLATE.replace("#{content}", responseContent)
                 }
-            isInitialized
-            if (isInitialized) {
-                HTML_ALREADY_INITIALIZED_CONTENT
-            } else {
-                val persistsUser = PersistsUser.of(user).copy(roles = setOf(Roles.USER, Roles.SUPER_USER))
-                userRepository.update(persistsUser)
-
-                val responseContent = HTML_OK_CONTENT
-                    .replace("#{name}", user.displayName)
-                    .replace("#{id}", user.id)
-
-                HTML_TEMPLATE.replace("#{content}", responseContent)
             }
         }
-
 
         return DataOrError.fromEither(result, log)
     }

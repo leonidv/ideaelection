@@ -19,7 +19,7 @@ class JoinAndLeaveToClosedAndPrivateGroupScenarios : DescribeSpec({
 
     context("$userA creates $entryMode group, userB and userC try to join") {
         describe("register users") {
-            registryUsers(userA, userB, userC)
+            registerUsers(userA, userB, userC)
         }
 
 

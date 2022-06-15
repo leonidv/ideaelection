@@ -106,6 +106,18 @@ object ResponseMatchers {
         }
     }
 
+    fun hasObjectWithNull(objectPath: String, field: String) = object : Matcher<JsonNode> {
+        override fun test(value: JsonNode): MatcherResult {
+            val hasObject = value.hasObjectWithFields(objectPath, Pair(field, null))
+            val msg = """$objectPath.$field == null"""
+            return MatcherResult(
+                passed = hasObject,
+                failureMessage = "Json should has $msg",
+                negatedFailureMessage = "Json should not has $msg"
+            )
+        }
+    }
+
     fun hasObjectWithFields(objectPath: String, vararg fields: Pair<String, String?>) = object : Matcher<JsonNode> {
         override fun test(value: JsonNode): MatcherResult {
             val hasObject = value.hasObjectWithFields(objectPath, *fields)
@@ -179,6 +191,11 @@ fun HttpResponse<JsonNode>.shouldBeError(code: Int) = this should ResponseMatche
  * Check that json contains specific value.
  */
 fun JsonNode.shouldHasPath(jsonPath: String) = this should ResponseMatchers.hasJsonPath(jsonPath)
+
+/**
+ * Contains object with field null.
+ */
+fun JsonNode.shouldHasNull(objectPath: String, field: String) = this should ResponseMatchers.hasObjectWithNull(objectPath, field)
 
 /**
  * Check that json contains path.
