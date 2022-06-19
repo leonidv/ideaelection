@@ -89,7 +89,7 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
         )
 
 
-        val userFromRepository = when (val eUser = userRepository.load(idelUser.id)) {
+        val userFromRepository = when (val eUser = fTransaction { userRepository.load(idelUser.id) }) {
             is Either.Left -> when (val error = eUser.value) {
                 is EntityNotFound -> None
                 is ExceptionError -> throw error.ex
@@ -104,7 +104,7 @@ class OAuth2AuthorityLoaderProxyProvider(private val provider: AuthenticationPro
                 val userRoles = userFromRepository.value.roles
                 val authorities = IdelAuthorities.from(userRoles).toMutableList()
                 // update user info from actual provider information. For example, change avatar.
-                userRepository.update(idelUser.copy(authorities))
+                fTransaction { userRepository.update(idelUser.copy(authorities)) }
                 authorities
             }
 
