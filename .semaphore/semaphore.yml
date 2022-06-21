@@ -33,7 +33,7 @@ global_job_config:
 blocks:
   - name: Backend building
     run:
-      when: "change_in("['/backend/','/backend-test/','/.semaphore/'])"
+      when: "change_in(['/backend/','/backend-test/','/.semaphore/'])"
 
     task:
       env_vars:
