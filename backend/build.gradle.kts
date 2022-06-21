@@ -1,11 +1,11 @@
-val kotlinVersion = "1.6.0"
+val kotlinVersion = "1.7.0"
 val jacksonVersion = "2.13.0"
 
 
 plugins {
     id("org.springframework.boot") version "2.6.0"
-    kotlin("jvm") version "1.6.0"
-    kotlin("plugin.spring") version "1.6.0"
+    kotlin("jvm") version "1.7.0"
+    kotlin("plugin.spring") version "1.7.0"
     id("idea")
 }
 
