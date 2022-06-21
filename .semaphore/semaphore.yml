@@ -32,10 +32,9 @@ global_job_config:
 
 blocks:
   - name: Backend building
-#    run:
-#      when: "change_in(['/backend/', '/backend-test/'])"
-#    skip:
-#      when: true
+    run:
+      when: change_in("['/backend/','/backend-test/','/.semaphore/']")
+
     task:
       env_vars:
         - name:  BUILD_DIR
@@ -81,6 +80,8 @@ blocks:
             - sudo podman push docker.io/leonidv/idel-backend docker.io/leonidv/idel-backend:$PROCESS_TAG
 
   - name: webui building
+    run:
+      when: change_in("['/webui/','/.semaphore/']")
     task:
       env_vars:
         - name: BUILD_DIR
