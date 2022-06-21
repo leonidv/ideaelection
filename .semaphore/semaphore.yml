@@ -18,7 +18,7 @@ global_job_config:
       - sudo .semaphore/semaphoreci-cleandisk.sh
       - .semaphore/gradle-no-daemon.sh
       - sudo podman info
-      - sem-version java 11
+      - sem-version java 17
       - sem-version python 3.9
       - echo $DOCKERHUB_PASSWORD | sudo podman login --username "$DOCKERHUB_USERNAME" --password-stdin
       - sudo podman login --get-login docker.io

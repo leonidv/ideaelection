@@ -88,12 +88,12 @@ tasks {
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = "18"
+        kotlinOptions.jvmTarget = "17"
         kotlinOptions.freeCompilerArgs = listOf("-Xjsr305=strict", "-version")
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "18"
+        kotlinOptions.jvmTarget = "17"
     }
 
     bootJar {
