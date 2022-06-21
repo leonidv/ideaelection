@@ -3,7 +3,7 @@ val jacksonVersion = "2.13.0"
 
 
 plugins {
-    id("org.springframework.boot") version "2.6.0"
+    id("org.springframework.boot") version "2.7.0"
     kotlin("jvm") version "1.7.0"
     kotlin("plugin.spring") version "1.7.0"
     id("idea")
@@ -67,8 +67,8 @@ dependencies {
 
     implementation("org.apache.commons:commons-lang3:3.12.0")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.0")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.21")
 
