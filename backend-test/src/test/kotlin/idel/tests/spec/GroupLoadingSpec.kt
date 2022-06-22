@@ -3,7 +3,6 @@ package idel.tests.spec
 import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
-import idel.tests.infrastructure.GroupInfo
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
 import java.util.*
@@ -94,7 +93,7 @@ class GroupLoadingSpec : DescribeSpec({
                 }
             }
 
-            val randomName = UUID.randomUUID().toString();
+            val randomName = UUID.randomUUID().toString()
             describe("$userB random name (uuid) should return nothing") {
                 val loadGroupsResponse = userB.groups.loadForUser(name = Some(randomName))
                 checkIsOk(loadGroupsResponse, noGroups())
@@ -516,7 +515,7 @@ data class GroupParams(val entryMode: String, val domainsRestriction: Array<Stri
 
 fun formatRestrictions(domainRestrictions: Array<out Array<String>>): String {
     return domainRestrictions.joinToString(prefix = "[", postfix = "]") {restriction ->
-        restriction.joinToString(prefix = "[", postfix = "]");
+        restriction.joinToString(prefix = "[", postfix = "]")
     }
 }
 

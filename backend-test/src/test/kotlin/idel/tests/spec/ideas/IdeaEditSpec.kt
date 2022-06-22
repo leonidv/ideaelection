@@ -1,9 +1,9 @@
 package idel.tests.spec.ideas
 
 import com.fasterxml.jackson.databind.JsonNode
-import io.kotest.core.spec.style.DescribeSpec
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
+import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
 import java.net.http.HttpResponse
 import java.util.*
@@ -81,7 +81,7 @@ class IdeaEditSpec : DescribeSpec({
                 }
 
                 describe("$userAdmin can edit") {
-                    val version = newVersion();
+                    val version = newVersion()
                     val response = userAdmin.ideas.quickEdit(ideaId, version)
                     checkUpdateToVersion(response, version)
                 }

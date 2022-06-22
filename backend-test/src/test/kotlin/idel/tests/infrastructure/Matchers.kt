@@ -4,11 +4,11 @@ import arrow.core.None
 import arrow.core.Some
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
+import idel.tests.infrastructure.JsonNodeExtensions.containsObjects
 import idel.tests.infrastructure.JsonNodeExtensions.hasArrayElement
 import idel.tests.infrastructure.JsonNodeExtensions.hasArrayObjectsOrder
 import idel.tests.infrastructure.JsonNodeExtensions.hasObjectWithFields
 import idel.tests.infrastructure.JsonNodeExtensions.hasPath
-import idel.tests.infrastructure.JsonNodeExtensions.containsObjects
 import idel.tests.infrastructure.JsonNodeExtensions.queryInt
 import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import io.kotest.matchers.Matcher

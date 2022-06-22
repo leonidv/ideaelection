@@ -3,7 +3,6 @@ package idel.scriptformanual
 import idel.tests.apiobject.GroupsApi
 import idel.tests.apiobject.User
 import idel.tests.infrastructure.extractField
-import idel.tests.infrastructure.extractId
 
 fun main() {
     val userB = User("userB", idelUrl = "https://api.test.saedi.io")
