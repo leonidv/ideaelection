@@ -14,7 +14,7 @@ apply(plugin = "io.spring.dependency-management")
 group = "saedi"
 version = "1.0"
 
-val kotestVersion="4.6.0"
+val kotestVersion= "5.3.1"
 val springDocVersion = "1.5.12"
 val exposedVersion = "0.36.2"
 
@@ -74,9 +74,9 @@ dependencies {
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion") // for kotest framework
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion") // for kotest core jvm assertions
-    testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.0.2")
+    testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.2.5")
     testImplementation("io.kotest:kotest-assertions-konform-jvm:4.4.3")
-    testImplementation("io.mockk:mockk:1.10.2")
+    testImplementation("io.mockk:mockk:1.12.4")
 
 }
 
