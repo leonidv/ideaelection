@@ -4,7 +4,7 @@ import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
-import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
+import io.kotest.core.spec.style.scopes.DescribeSpecContainerScope
 import java.util.*
 
 class GroupLoadingSpec : DescribeSpec({
@@ -519,7 +519,7 @@ fun formatRestrictions(domainRestrictions: Array<out Array<String>>): String {
     }
 }
 
-suspend fun DescribeSpecContainerContext.testAvailableGroup(
+suspend fun DescribeSpecContainerScope.testAvailableGroup(
     user: User,
     groupsInfo: Map<GroupParams, GroupInfo>,
     entryModes: Array<String>,
@@ -557,7 +557,7 @@ suspend fun DescribeSpecContainerContext.testAvailableGroup(
 /**
  * Private group's is not available by id. Method check it.
  */
-suspend fun DescribeSpecContainerContext.testLoadGroup(
+suspend fun DescribeSpecContainerScope.testLoadGroup(
     user: User,
     canLoad: Boolean,
     isCreator : Boolean = false,
@@ -600,7 +600,7 @@ suspend fun DescribeSpecContainerContext.testLoadGroup(
 
 }
 
-suspend fun DescribeSpecContainerContext.addUserToGroup(
+suspend fun DescribeSpecContainerScope.addUserToGroup(
     groupsInfo: Map<GroupParams, GroupInfo>,
     groupParams: GroupParams,
     admin: User,

@@ -21,9 +21,9 @@ object ResponseMatchers {
     fun <T> hasStatus(code: Int) = object : Matcher<HttpResponse<T>> {
         override fun test(value: HttpResponse<T>): MatcherResult =
             MatcherResult(
-                value.statusCode() == code,
-                "Status should be $code instead of ${value.statusCode()}",
-                "Status should not be $code"
+                passed = value.statusCode() == code,
+                failureMessageFn = {"Status should be $code instead of ${value.statusCode()}"},
+                negatedFailureMessageFn = {"Status should not be $code"}
             )
     }
 
@@ -31,8 +31,10 @@ object ResponseMatchers {
         override fun test(value: HttpResponse<JsonNode>): MatcherResult =
             MatcherResult(
                 passed = value.hasDataPayload(),
-                failureMessage = "Payload should be data",
-                negatedFailureMessage = "Payload should be error"
+                failureMessageFn = {"Payload should be data"},
+                negatedFailureMessageFn = {
+                    "Payload should be error"
+                }
             )
 
     }
@@ -44,8 +46,10 @@ object ResponseMatchers {
 
             return MatcherResult(
                 passed = codeIsCorrect,
-                failureMessage = "Should be error with code $code, actualCode = $oCode",
-                negatedFailureMessage = "Should not be error with code $code, actualCode = $oCode"
+                failureMessageFn = {"Should be error with code $code, actualCode = $oCode"},
+                negatedFailureMessageFn = {
+                    "Should not be error with code $code, actualCode = $oCode"
+                }
             )
         }
     }
@@ -56,13 +60,17 @@ object ResponseMatchers {
             return when (oValue) {
                 is Some -> MatcherResult(
                     passed = oValue.value == expected,
-                    failureMessage = "Should has [$expected] at [$jsonPath], actual value = [${oValue.value}]",
-                    negatedFailureMessage = "Should not has [$expected] at [$jsonPath], actual value = [${oValue.value}]"
+                    failureMessageFn = {"Should has [$expected] at [$jsonPath], actual value = [${oValue.value}]"},
+                    negatedFailureMessageFn = {
+                        "Should not has [$expected] at [$jsonPath], actual value = [${oValue.value}]"
+                    }
                 )
                 is None -> MatcherResult(
                     passed = false,
-                    failureMessage = "Should has [$expected] at [$jsonPath], but path is not found",
-                    negatedFailureMessage = "Should has not [$expected] at [$jsonPath], but path is not found"
+                    failureMessageFn = {"Should has [$expected] at [$jsonPath], but path is not found"},
+                    negatedFailureMessageFn = {
+                        "Should has not [$expected] at [$jsonPath], but path is not found"
+                    }
                 )
             }
         }
@@ -75,8 +83,10 @@ object ResponseMatchers {
 
             return MatcherResult(
                 passed = codeIsCorrect,
-                failureMessage = "Should has $expected at $jsonPath, actual value = $oValue",
-                negatedFailureMessage = "Should not has $expected at $jsonPath, actual value = $oValue"
+                failureMessageFn = {"Should has $expected at $jsonPath, actual value = $oValue"},
+                negatedFailureMessageFn = {
+                    "Should not has $expected at $jsonPath, actual value = $oValue"
+                }
             )
         }
 
@@ -86,8 +96,10 @@ object ResponseMatchers {
         override fun test(value: JsonNode): MatcherResult {
             return MatcherResult(
                 passed = value.hasPath(jsonPath),
-                failureMessage = "Json should contain a property with a path $jsonPath",
-                negatedFailureMessage = "Json should not contains a property with a path $jsonPath"
+                failureMessageFn = {"Json should contain a property with a path $jsonPath"},
+                negatedFailureMessageFn = {
+                    "Json should not contains a property with a path $jsonPath"
+                }
             )
 
         }
@@ -99,9 +111,10 @@ object ResponseMatchers {
             val msg = """contains element of array at path $arrayPath with value [$expectedElement]"""
             return MatcherResult(
                 passed = hasElement,
-                failureMessage = "Json should $msg",
-                negatedFailureMessage = "Json should not $msg"
-
+                failureMessageFn = {"Json should $msg"},
+                negatedFailureMessageFn = {
+                    "Json should not $msg"
+                }
             )
         }
     }
@@ -112,8 +125,10 @@ object ResponseMatchers {
             val msg = """$objectPath.$field == null"""
             return MatcherResult(
                 passed = hasObject,
-                failureMessage = "Json should has $msg",
-                negatedFailureMessage = "Json should not has $msg"
+                failureMessageFn = {"Json should has $msg"},
+                negatedFailureMessageFn = {
+                    "Json should not has $msg"
+                }
             )
         }
     }
@@ -124,8 +139,10 @@ object ResponseMatchers {
             val msg = """contains object of array at path $objectPath with fields ${fields.joinToString()}"""
             return MatcherResult(
                 passed = hasObject,
-                failureMessage = "Json should $msg",
-                negatedFailureMessage = "Json should not $msg"
+                failureMessageFn = {"Json should $msg"},
+                negatedFailureMessageFn = {
+                    "Json should not $msg"
+                }
             )
         }
     }
@@ -143,8 +160,10 @@ object ResponseMatchers {
 
                 return MatcherResult(
                     passed = incorrectIndex == -1,
-                    failureMessage = failureMsg,
-                    negatedFailureMessage = "order is same as given, but should not"
+                    failureMessageFn = {failureMsg},
+                    negatedFailureMessageFn = {
+                        "order is same as given, but should not"
+                    }
                 )
             }
         }
@@ -160,8 +179,10 @@ object ResponseMatchers {
 
             return MatcherResult(
                 passed = nonExists.isEmpty(),
-                failureMessage = failureMsg,
-                negatedFailureMessage = "all elements are contained"
+                failureMessageFn = {failureMsg},
+                negatedFailureMessageFn = {
+                    "all elements are contained"
+                }
             )
         }
     }

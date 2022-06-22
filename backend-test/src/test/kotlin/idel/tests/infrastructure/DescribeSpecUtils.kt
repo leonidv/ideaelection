@@ -1,11 +1,11 @@
 package idel.tests.infrastructure
 
 import idel.tests.apiobject.*
-import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
+import io.kotest.core.spec.style.scopes.DescribeSpecContainerScope
 import java.time.LocalDateTime
 
 
-suspend fun DescribeSpecContainerContext.registerUsers(vararg users: User) {
+suspend fun DescribeSpecContainerScope.registerUsers(vararg users: User) {
     describe("register users") {
         users.forEach {user ->
             it("register user [${user.name}]") {
@@ -20,7 +20,7 @@ data class GroupInfo(
     val joiningKey: String
 )
 
-suspend fun DescribeSpecContainerContext.createGroup(
+suspend fun DescribeSpecContainerScope.createGroup(
     groupAdmin: User,
     members: Set<User>,
     entryMode: String = GroupsApi.PUBLIC,

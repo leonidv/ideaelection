@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
-import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
+import io.kotest.core.spec.style.scopes.DescribeSpecContainerScope
 import java.net.http.HttpResponse
 import java.util.*
 
@@ -173,7 +173,7 @@ class IdeaEditSpec : DescribeSpec({
 /**
  * Check idea is update. See [IdeasApi.quickEdit] for details.
  */
-suspend fun DescribeSpecContainerContext.checkUpdateToVersion(response: HttpResponse<JsonNode>, version: CharSequence) {
+suspend fun DescribeSpecContainerScope.checkUpdateToVersion(response: HttpResponse<JsonNode>, version: CharSequence) {
     checkIsOk(
         response,
         ideaHasSummary("summary $version"),
@@ -186,7 +186,7 @@ suspend fun DescribeSpecContainerContext.checkUpdateToVersion(response: HttpResp
 /**
  * Check that users can't update idea.
  */
-suspend fun DescribeSpecContainerContext.checkCanNotEdit(ideaId: String, vararg users: User) {
+suspend fun DescribeSpecContainerScope.checkCanNotEdit(ideaId: String, vararg users: User) {
     users.forEach {user ->
         describe("$user can't edit") {
             checkIsForbidden(user.ideas.quickEdit(ideaId, newVersion()))

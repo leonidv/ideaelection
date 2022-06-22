@@ -4,9 +4,11 @@ import idel.tests.apiobject.*
 import idel.tests.infrastructure.checkIsOk
 import idel.tests.infrastructure.registerUsers
 import idel.tests.infrastructure.shouldBeOk
+import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.DescribeSpec
 import java.util.*
 
+@OptIn(ExperimentalKotest::class)
 class UsersSpec : DescribeSpec({
     val entityStorage = EntityStorage()
 

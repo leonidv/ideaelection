@@ -12,6 +12,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.*
 
 interface NotificationFrequencyValues {
     val INSTANTLY: String
@@ -129,7 +130,7 @@ object UsersResponseChecks {
 
     fun hasId(userId: String) = BodyFieldValueChecker.forField("id", userId)
 
-    fun hasEmail(value: String) = BodyFieldValueChecker.forField("email", value.toLowerCase())
+    fun hasEmail(value: String) = BodyFieldValueChecker.forField("email", value.lowercase(Locale.getDefault()))
 
     fun hasDisplayName(value: String) = BodyFieldValueChecker.forField("displayName", value)
 
