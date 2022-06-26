@@ -1,9 +1,6 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
-// the translations
-// (tip move them in a JSON file and import them,
-// or even better, manage them separated from your code: https://react.i18next.com/guides/multiple-translation-files)
 const resources = {
   en: {
     translation: {
@@ -112,7 +109,9 @@ const resources = {
       'Administrator of the group wants':
         'Administrator of the group wants to know some information about you. Please answer the question',
       'Thanks for readiness to pay!':
-        'Thanks for readiness to pay! For end of 2022 year you can user service for free'
+        'Thanks for readiness to pay! For end of 2022 year you can user service for free',
+      'This site is protected': 'This site is protected by reCAPTCHA and the Google',
+      'The best place': 'The best place to share ideas with friends'
     }
   },
   ru: {
@@ -317,7 +316,15 @@ const resources = {
       'Archive': 'Архивировать',
       'Move to group...': 'Переместить в группу...',
       'Delete': 'Удалить',
-      'Something went wrong! Please try login again!': 'Что-то пошло не так! Выполните вход снова, пожалуйста!'
+      'Something went wrong! Please try login again!': 'Что-то пошло не так! Выполните вход снова, пожалуйста!',
+      'Continue with': 'Продолжить с',
+      'This site is protected': 'Этот сайт защищен reCAPTCHA и Google',
+      'The best place': 'Лучшее место для обмена идеями с друзьями',
+      'apply': 'применяются',
+      'Privacy Policy': 'Политика конфиденциальности',
+      'Terms of Service': 'Условия предоставления услуг',
+      'and': 'и',
+      'Welcome to': 'Добро пожаловать в',
     }
   }
 }
