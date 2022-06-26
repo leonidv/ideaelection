@@ -4,17 +4,32 @@ import { useRecoilValue } from 'recoil'
 import { meInfoState } from './../../state'
 
 import { Me } from '../../types/Me'
+import { LoginButtonProps } from './LoginButtonInterfaces'
 
 import { useTranslation } from 'react-i18next'
+
+import logoGoogle from '../../images/google.svg'
+import logoFacebook from '../../images/fb.svg'
 
 import './LoginButton.scss'
 
 const BACKEND_API_URL = process.env.BACKEND_API_URL;
 
-export const LoginButton: React.FC = () => {
-  try {
+export const LoginButton = (props: LoginButtonProps) => {
+  // try {
     const me: Me = useRecoilValue(meInfoState) || null
+    const { param } = props
     const { t } = useTranslation()
+
+    let logoImg = logoGoogle
+    let linkSrc =  `${BACKEND_API_URL}/oauth2/authorization/google`
+
+    switch (param) {
+      case 'Facebook': {
+        logoImg = logoFacebook
+        linkSrc = '/'
+      }
+    }
 
     useEffect(() => {
       const key = localStorage.getItem('inviteKey')
@@ -32,33 +47,30 @@ export const LoginButton: React.FC = () => {
     }, [me])
 
     const handleClick = () => {
-      window.location.href =
-        `${BACKEND_API_URL}/oauth2/authorization/google`
+      window.location.href = linkSrc
     }
 
     return (
-      <button onClick={handleClick} className='loginButton'>
-        <div
-          className='loginButton__img'
-        ></div>
-        {t('Login with Google')}
+      <button onClick={handleClick} className={`loginButton loginButton--${param}`}>
+        <img src={logoImg} className="loginButton__img" />
+        <p className='loginButton__text'>{t('Continue with')} {param}</p>
       </button>
     )
-  } catch {
-    const { t } = useTranslation()
+  // } catch {
+  //   const { t } = useTranslation()
 
-    const handleClick = () => {
-      window.location.href =
-        `${BACKEND_API_URL}/oauth2/authorization/google`
-    }
+  //   const handleClick = () => {
+  //     window.location.href =
+  //       `${BACKEND_API_URL}/oauth2/authorization/google`
+  //   }
 
-    return (
-      <button onClick={handleClick} className='loginButton'>
-        <div
-          className='loginButton__img'
-        ></div>
-        {t('Login with Google')}
-      </button>
-    )
-  }
+  //   return (
+  //     <button onClick={handleClick} className='loginButton'>
+  //       <div
+  //         className='loginButton__img'
+  //       ></div>
+  //       {t('Login with Google')}
+  //     </button>
+  //   )
+  // }
 }

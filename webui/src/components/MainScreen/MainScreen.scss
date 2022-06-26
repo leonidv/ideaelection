@@ -1,18 +1,30 @@
+@font-face {
+  font-family: 'Days One';
+  src: url('../../fonts/DaysOne-Regular.ttf') format('ttf'), url('../../fonts/DaysOne-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 .mainScreen {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  align-items: initial;
 
-  background-image: url('../../images/main.png');
-  background-size: cover;
-  background-repeat: no-repeat;
+  background-color: white;
 
   &__title {
-    font-size: 96px;
-    color: #002a6f;
-    font-weight: bold;
+    font-family: 'Days One';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 41px;
+    text-align: center;
+
+    color: #464646;
+
+    margin-top: 0;
+    margin-bottom: 16px;
   }
 
   &__row {
@@ -23,8 +35,130 @@
     margin-bottom: 100px;
   }
 
+  &__logo {
+    position: absolute;
+    top: 120px;
+    left: 13.7%;
+
+    &--mobile {
+      display: none;
+    }
+  }
+
+  &__questions {
+    position: absolute;
+    bottom: 128px;
+    left: 13.7%;
+  }
+
+  &__question {
+    font-family: 'Days One';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 51px;
+    text-transform: uppercase;
+
+    color: #FFFFFF;
+    margin: 0;
+    max-width: 505px;
+  }
+
+  &__descr {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 150%;
+
+    text-align: center;
+
+    color: #464646;
+    margin-top: 0;
+    margin-bottom: 128px;
+  }
+
+  &__col {
+    &--left {
+      position: relative;
+      width: 51%;
+      background: linear-gradient(315.01deg, #000000 25.53%, rgba(0, 0, 0, 0) 100%), #5595F4;
+
+      &::after {
+        content: url('../../images/bg_shapes.svg');
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        top: 0;
+        height: 100%;
+      }
+    }
+
+    &--right {
+      width: 49%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
   &__copyright {
     opacity: 70%;
     font-weight: bold;
+  }
+
+  &__privacy {
+    font-size: 12px;
+    line-height: 120%;
+    text-align: center;
+    color: #464646;
+    max-width: 400px;
+
+    a {
+      color: #5494F2 !important;
+      text-decoration: none;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .mainScreen {
+    &__title {
+      font-size: 28px;
+      line-height: 36px;
+    }
+
+    &__privacy {
+      max-width: 319px;
+    }
+
+    &__descr {
+      margin-bottom: 64px;
+    }
+
+    &__logo {
+      &--mobile {
+        display: block;
+        top: 64px;
+      }
+    }
+
+    &__col {
+      &--left {
+        display: none;
+      }
+      &--right {
+        position: relative;
+        width: 100%;
+
+        &::after {
+          content: url('../../images/bg_mobile.svg');
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          top: 0;
+          height: 100%;
+        }
+      }
+    }
   }
 }
