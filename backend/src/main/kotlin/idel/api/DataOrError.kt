@@ -20,7 +20,7 @@ data class ExceptionDescription(
     companion object {
         fun of(exception: Throwable): ExceptionDescription {
             val cause = if (exception.cause != null) {
-                ExceptionDescription.of(exception.cause!!)
+                of(exception.cause!!)
             } else {
                 null
             }
@@ -30,7 +30,7 @@ data class ExceptionDescription(
                 type = exception.javaClass.name,
                 stackTrace = emptyArray(), // ExceptionUtils.getStackFrames(exception),
                 cause = cause,
-                suppressed = exception.suppressed.map {ExceptionDescription.of(it)}
+                suppressed = exception.suppressed.map {of(it)}
             )
         }
     }
@@ -133,7 +133,7 @@ typealias ResponseDataOrError<T> = ResponseEntity<DataOrError<T>>
 interface DataOrErrorHelper {
     val log : KLogger
 
-    fun <T> Either<DomainError, T>.asHttpResponse() : ResponseDataOrError<T> {
+    fun <T : Any> Either<DomainError, T>.asHttpResponse() : ResponseDataOrError<T> {
         return DataOrError.fromEither(this, this@DataOrErrorHelper.log)
     }
 }
@@ -141,19 +141,18 @@ interface DataOrErrorHelper {
 @Suppress("unused")
 data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescription>) {
     companion object {
-        fun <T> error(description: ErrorDescription): DataOrError<T> {
+        fun <T : Any> error(description: ErrorDescription): DataOrError<T> {
             return DataOrError(Optional.empty(), Optional.of(description))
         }
 
-        fun <T> response(body: T): DataOrError<T> {
-            requireNotNull(body)
+        fun <T : Any> response(body: T): DataOrError<T> {
             return DataOrError(Optional.of(body), Optional.empty())
         }
 
         /**
          * Make [ResponseEntity] with [HttpStatus.BAD_REQUEST]
          */
-        fun <T> errorResponse(
+        fun <T :Any> errorResponse(
             description: ErrorDescription,
             code: HttpStatus = HttpStatus.BAD_REQUEST
         ): ResponseEntity<DataOrError<T>> {
@@ -161,23 +160,23 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
             return ResponseEntity(x, code)
         }
 
-        fun <T> badRequest(ex: Exception): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> badRequest(ex: Exception): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.badRequestFormat(ex))
         }
 
-        fun <T> internal(ex: Exception, log: KLogger): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> internal(ex: Exception, log: KLogger): ResponseEntity<DataOrError<T>> {
 
             return internal("can't process operation", ex, log)
         }
 
-        fun <T> internal(msg: String): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> internal(msg: String): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.internal(msg), HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
         /**
          * Make [ResponseEntity] with [ErrorDescription.internal]
          */
-        fun <T> internal(msg: String, ex: Exception, log: KLogger): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> internal(msg: String, ex: Exception, log: KLogger): ResponseEntity<DataOrError<T>> {
             log.warn(ex) {"Operation is failed, msg = $msg"}
             return errorResponse(ErrorDescription.internal(msg, ex), HttpStatus.INTERNAL_SERVER_ERROR)
         }
@@ -185,25 +184,25 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
         /**
          * Make [errorResponse] with collection of [ValidationError].
          */
-        fun <T> invalid(errors: ValidationErrors): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> invalid(errors: ValidationErrors): ResponseEntity<DataOrError<T>> {
             return errorResponse(
                 ErrorDescription.validationFailed("request has validation errors", errors),
                 HttpStatus.BAD_REQUEST
             )
         }
 
-        fun <T> invalid(errors: Collection<ValidationError>): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> invalid(errors: Collection<ValidationError>): ResponseEntity<DataOrError<T>> {
             return errorResponse(
                 ErrorDescription.validationFailed("request has validation errors", errors),
                 HttpStatus.BAD_REQUEST
             )
         }
 
-        fun <T> invalidOperation(description: String): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> invalidOperation(description: String): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.invalidOperation(description), HttpStatus.BAD_REQUEST)
         }
 
-        fun <T> conflict(message: String): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> conflict(message: String): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.conflict(message), HttpStatus.CONFLICT)
         }
 
@@ -213,7 +212,7 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
          * * isRight then return ok
          * * isLeft - then select error result based on exception type.
          */
-        fun <T> fromEitherExp(operationResult: Either<Exception, T>, log: KLogger): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> fromEitherExp(operationResult: Either<Exception, T>, log: KLogger): ResponseEntity<DataOrError<T>> {
             return when (operationResult) {
                 is Either.Right -> ok(operationResult.value)
                 is Either.Left -> when (val ex = operationResult.value) {
@@ -232,7 +231,7 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
             }
         }
 
-        fun <T> fromEither(operationResult: Either<DomainError, T>, log: KLogger): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> fromEither(operationResult: Either<DomainError, T>, log: KLogger): ResponseEntity<DataOrError<T>> {
             return when (operationResult) {
                 is Either.Right -> ok(operationResult.value)
                 // Parent classes should be after child classes!!!
@@ -252,25 +251,25 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
         /**
          * Make [ResponseEntity] with [ErrorDescription.notAllowed] and code [HttpStatus.FORBIDDEN]
          */
-        fun <T> forbidden(reason: String): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> forbidden(reason: String): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.notAllowed(reason), HttpStatus.FORBIDDEN)
         }
 
         /**
          * Make [ResponseEntity] with [ErrorDescription.versionIsOutdated] and code [HttpStatus.CONFLICT]
          */
-        fun <T> versionIsOutdated(): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> versionIsOutdated(): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.versionIsOutdated(), HttpStatus.CONFLICT)
         }
 
         /**
          * Make [ResponseEntity] with [ErrorDescription.ideaNotFound] and code [HttpStatus.NOT_FOUND]
          */
-        fun <T> ideaNotFound(id: String): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> ideaNotFound(id: String): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.ideaNotFound(id), HttpStatus.NOT_FOUND)
         }
 
-        fun <T> notFound(msg: String): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> notFound(msg: String): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.entityNotFound(msg), HttpStatus.NOT_FOUND)
         }
 
@@ -278,26 +277,26 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
          * Return [internal] error with message "not implemented". Use as [TODO] for MVC controllers.
          */
         @Suppress("unused")
-        fun <T> notImplemented(): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> notImplemented(): ResponseEntity<DataOrError<T>> {
             return internal("not implemented yet")
         }
 
         /**
          * Make [ResponseEntity] with [ErrorDescription.incorrectArgument] and code [HttpStatus.BAD_REQUEST]
          */
-        fun <T> incorrectArgument(argument: String, reason: String): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> incorrectArgument(argument: String, reason: String): ResponseEntity<DataOrError<T>> {
             return errorResponse(ErrorDescription.incorrectArgument(argument, reason), HttpStatus.BAD_REQUEST)
         }
 
 
-        fun <T> data(body: T, code: HttpStatus = HttpStatus.OK): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> data(body: T, code: HttpStatus = HttpStatus.OK): ResponseEntity<DataOrError<T>> {
             return ResponseEntity.status(code).body(response(body))
         }
 
         /**
          * Return data as entity with [HttpStatus.OK]
          */
-        fun <T> ok(data: T): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> ok(data: T): ResponseEntity<DataOrError<T>> {
             return data(data)
         }
     }

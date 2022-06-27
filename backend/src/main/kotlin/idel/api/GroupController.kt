@@ -145,7 +145,7 @@ class GroupController(
         }.asHttpResponse()
     }
 
-    private fun <T> ifNameValid(name: String?, actionIfValid: () -> ResponseDataOrError<T>): ResponseDataOrError<T> {
+    private fun <T : Any> ifNameValid(name: String?, actionIfValid: () -> ResponseDataOrError<T>): ResponseDataOrError<T> {
         return if (!name.isNullOrBlank() && name.length < NAME_FILTER_MIN_SYMBOLS) {
             DataOrError.incorrectArgument("name", "name should contains minimum $NAME_FILTER_MIN_SYMBOLS symbols")
         } else {
