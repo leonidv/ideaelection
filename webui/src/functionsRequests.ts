@@ -82,12 +82,12 @@ export const fetchRequests = async (
   token,
   userId,
   urlParams = null,
-  first = 0,
-  limit = 10
+  skip = 0,
+  count = 10
 ) => {
   const url = `${BACKEND_API_URL}/joinrequests?userId=${userId}&${
     urlParams ? urlParams : ''
-  }first=${first}&limit=${limit}&last=${limit + first}`
+  }skip=${skip}&count=${count}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
@@ -96,9 +96,8 @@ export const fetchRequests = async (
   }
 }
 
-export const fetchAllGroups = async (token, userId, first = 0, limit = 10) => {
-  const url = `${BACKEND_API_URL}/groups?userId=${userId}&first=${first}&limit=${limit}&last=${limit +
-    first}`
+export const fetchAllGroups = async (token, userId, skip = 0, count = 10) => {
+  const url = `${BACKEND_API_URL}/groups?userId=${userId}&skip=${skip}&count=${count}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
@@ -427,11 +426,10 @@ export const fetchIdeas = async (
   token,
   groupId,
   urlParams = null,
-  first = 0,
-  limit = 10
+  skip = 0,
+  count = 10
 ) => {
-  const url = `${BACKEND_API_URL}/ideas?groupId=${groupId}&first=${first}&limit=${limit}&last=${limit +
-    first}&${urlParams}`
+  const url = `${BACKEND_API_URL}/ideas?groupId=${groupId}&skip=${skip}&count=${count}&${urlParams}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return request
@@ -454,12 +452,12 @@ export const fetchInvites = async (
   token,
   userId,
   urlParams = null,
-  first = 0,
-  limit = 10
+  skip = 0,
+  count = 10
 ) => {
   const url = `${BACKEND_API_URL}/invites?userId=${userId}&${
     urlParams ? urlParams : ''
-  }first=${first}&limit=${limit}&last=${limit + first}`
+  }skip=${skip}&count=${count}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return request
@@ -471,12 +469,12 @@ export const fetchInvites = async (
 export const fetchAvailibaleGroups = async (
   token: string,
   urlParams = null,
-  first = 0,
-  limit = 10
+  skip = 0,
+  count = 10
 ) => {
   const url = `${BACKEND_API_URL}/groups?onlyAvailable=true&${
     urlParams ? urlParams : ''
-  }first=${first}&limit=${limit}&last=${limit + first}`
+  }skip=${skip}&count=${count}`
   const request = await fetchRequest(token, url, 'GET', null)
   if (await request) {
     return await request
