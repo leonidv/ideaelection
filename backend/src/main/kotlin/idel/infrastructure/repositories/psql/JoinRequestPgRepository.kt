@@ -3,7 +3,7 @@
 package idel.infrastructure.repositories.psql
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import idel.domain.*
 import idel.infrastructure.repositories.psql.exposed.firstOrNotFound
 import idel.infrastructure.repositories.psql.exposed.limit

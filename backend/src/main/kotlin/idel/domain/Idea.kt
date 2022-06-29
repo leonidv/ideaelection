@@ -1,7 +1,7 @@
 package idel.domain
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import arrow.core.flatten
 import idel.api.DataOrError
 import idel.domain.security.IdeaAccessLevel
@@ -191,12 +191,7 @@ class Idea(
             !hasAssignee() && isMember(changerLevels) -> true
             else -> false
         }
-
-        return if (newAssignee != null && canAssign) {
-            this.clone(assignee = newAssignee)
-        } else {
-            Either.Left(OperationNotPermitted())
-        }
+        return this.clone(assignee = newAssignee)
     }
 
     fun removeAssign(changerLevels: Set<IdeaAccessLevel>): Either<DomainError, Idea> {
@@ -376,8 +371,8 @@ class IdeaValidation {
 
 class IdeaFactory {
     fun createIdea(properties: IIdeaEditableProperties, groupId: GroupId, userId: UserId):
-            Either<ValidationException, Idea> {
-        return IdeaValidation.ifValidExp(properties) {
+            Either<ValidationError, Idea> {
+        return IdeaValidation.ifValid(properties) {
             Idea(
                 id = UUID.randomUUID(),
                 groupId = groupId,

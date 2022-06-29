@@ -1,6 +1,6 @@
 package idel.api
 
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import idel.domain.*
 import idel.infrastructure.repositories.PersistsUser
 import mu.KotlinLogging
@@ -32,7 +32,7 @@ class FirstSetupController(val userRepository: UserRepository) {
     fun init(@AuthenticationPrincipal user: User): ResponseDataOrError<String> {
 
         val result = fTransaction {
-            either.eager<DomainError, String> {
+            either.eager {
                 val users = userRepository.list(null, Repository.Pagination(0, 10)).bind()
                 val isInitialized =
                     when {

@@ -1,7 +1,7 @@
 package idel.api
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import idel.domain.*
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter

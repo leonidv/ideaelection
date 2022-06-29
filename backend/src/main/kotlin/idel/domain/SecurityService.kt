@@ -1,7 +1,7 @@
 package idel.domain.security
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import arrow.core.flatMap
 import idel.domain.*
 import mu.KotlinLogging

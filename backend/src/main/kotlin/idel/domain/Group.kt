@@ -2,7 +2,7 @@ package idel.domain
 
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import arrow.core.flatten
 import idel.api.DataOrError
 import idel.domain.security.GroupAccessLevel
