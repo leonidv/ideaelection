@@ -18,6 +18,10 @@ spec:
         - name: webui
           image: docker.io/leonidv/saedi-webui:test
           imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 128Mi
           ports:
             - containerPort: 80
 

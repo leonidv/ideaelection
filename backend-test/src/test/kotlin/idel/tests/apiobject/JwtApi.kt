@@ -30,7 +30,11 @@ object JwtChecks {
     fun hasUserIdAsSub(userId: String) = BodyFieldValueChecker.forField("sub", userId, inData = false)
     fun hasDisplayName(value: String) = BodyFieldValueChecker.forField("displayName", value, inData = false)
     fun hasSubscriptionPlan(value: String) = BodyFieldValueChecker.forField("subscriptionPlan", value, inData = false)
-    fun hasEmail(value: String) = BodyFieldValueChecker.forField("email", value.toLowerCase(), inData = false)
+    fun hasEmail(value: String) = BodyFieldValueChecker.forField(
+        "email",
+        value.lowercase(Locale.getDefault()),
+        inData = false
+    )
     val hasIssuerSaedi = BodyFieldValueChecker.forField("iss", "saedi", inData = false)
 
 }

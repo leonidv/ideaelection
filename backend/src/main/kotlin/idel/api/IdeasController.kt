@@ -1,8 +1,7 @@
 package idel.api
 
 import arrow.core.Either
-import arrow.core.computations.ResultEffect.bind
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import arrow.core.flatten
 import idel.domain.*
 import idel.infrastructure.repositories.PersistsUser
@@ -146,10 +145,12 @@ class IdeasController(
                 val nextIdea = if (removeAssignee) {
                     idea.removeAssign(levels)
                 } else {
+                    require(assignee.userId != null) // really double check, should be checked in val removeAssignee =
+                    val nextAssigneeId = UUID.fromString(assignee.userId);
                     val assigneeIsMember =
                         secure.group.isMember(idea.groupId, UUID.fromString(assignee.userId)).bind()
                     if (assigneeIsMember) {
-                        idea.assign(UUID.fromString(assignee.userId), levels)
+                        idea.assign(nextAssigneeId, levels)
                     } else {
                         Either.Left(OperationNotPermitted())
                     }

@@ -1,6 +1,6 @@
 package idel.api
 
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import arrow.core.Either
 import idel.domain.*
 import mu.KotlinLogging

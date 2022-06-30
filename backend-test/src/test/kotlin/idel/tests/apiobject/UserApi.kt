@@ -2,13 +2,17 @@ package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
-import idel.tests.infrastructure.*
+import idel.tests.infrastructure.BodyArrayOrder
+import idel.tests.infrastructure.BodyArraySize
+import idel.tests.infrastructure.BodyFieldValueChecker
+import idel.tests.infrastructure.ResponseChecker
 import mu.KotlinLogging
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.*
 
 interface NotificationFrequencyValues {
     val INSTANTLY: String
@@ -126,7 +130,7 @@ object UsersResponseChecks {
 
     fun hasId(userId: String) = BodyFieldValueChecker.forField("id", userId)
 
-    fun hasEmail(value: String) = BodyFieldValueChecker.forField("email", value.toLowerCase())
+    fun hasEmail(value: String) = BodyFieldValueChecker.forField("email", value.lowercase(Locale.getDefault()))
 
     fun hasDisplayName(value: String) = BodyFieldValueChecker.forField("displayName", value)
 

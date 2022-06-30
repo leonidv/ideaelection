@@ -1,9 +1,7 @@
 package idel.tests.spec
 
-import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
-
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.data.forAll
 import io.kotest.data.headers

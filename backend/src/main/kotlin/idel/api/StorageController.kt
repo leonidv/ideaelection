@@ -2,7 +2,7 @@ package idel.api
 
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import idel.domain.EntityNotFound
 import idel.domain.fTransaction
 import idel.infrastructure.repositories.psql.*

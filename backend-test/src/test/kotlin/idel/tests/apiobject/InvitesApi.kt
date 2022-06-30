@@ -7,6 +7,7 @@ import idel.tests.infrastructure.*
 import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import java.net.http.HttpResponse
 import java.time.LocalDateTime
+import java.util.*
 
 class InvitesStatuses {
     val APPROVED: String = "APPROVED"
@@ -97,14 +98,14 @@ fun inviteUserSelectorFields(groupId: String, user: User) : Array<Pair<String, S
     arrayOf(
         Pair("groupId", groupId),
         Pair("userId", user.id),
-        Pair("userEmail", user.email.toLowerCase())
+        Pair("userEmail", user.email.lowercase(Locale.getDefault()))
     )
 
 fun invitePersonSelectorFields(groupId: String, email: String) =
     arrayOf(
         Pair("groupId", groupId),
         Pair("userId", null),
-        Pair("userEmail", email.toLowerCase())
+        Pair("userEmail", email.lowercase(Locale.getDefault()))
     )
 
 fun includeInvite(inviteId: String) = BodyContainsObject(

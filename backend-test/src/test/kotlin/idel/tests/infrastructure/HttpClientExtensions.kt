@@ -10,7 +10,7 @@ import java.util.*
 val log = KotlinLogging.logger {"idel.tests.http-debug"}
 
 fun asJSON(ri : HttpResponse.ResponseInfo): HttpResponse.BodySubscriber<JsonNode> {
-    val upstream = HttpResponse.BodySubscribers.ofByteArray();
+    val upstream = HttpResponse.BodySubscribers.ofByteArray()
     return HttpResponse.BodySubscribers.mapping(upstream) {
         try {
             val jsonNode = jacksonObjectMapper().readValue(it) as JsonNode
@@ -22,7 +22,7 @@ fun asJSON(ri : HttpResponse.ResponseInfo): HttpResponse.BodySubscriber<JsonNode
             log.warn {"$errorId statusCode = ${ri.statusCode()} "}
             log.warn {"$errorId headers = ${ri.headers()!!.map()}"}
 
-           throw ex;
+           throw ex
         }
     }
 }

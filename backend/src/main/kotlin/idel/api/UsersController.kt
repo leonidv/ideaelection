@@ -1,7 +1,7 @@
 package idel.api
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import arrow.core.flatMap
 import idel.domain.*
 import idel.infrastructure.repositories.PersistsUser
@@ -68,7 +68,7 @@ class UsersController(
      * @param roles - roles which should be checked
      * @param actionIfCorrect - function which will be called if roles are correct
      */
-    private fun <T> rolesAreNotMisspelled(
+    private fun <T : Any> rolesAreNotMisspelled(
         roles: Set<String>,
         actionIfCorrect: () -> ResponseEntity<DataOrError<T>>
     ): ResponseEntity<DataOrError<T>> {

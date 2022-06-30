@@ -1,7 +1,7 @@
 package idel.domain
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import idel.api.DataOrError
 import mu.KLogger
 import mu.KotlinLogging

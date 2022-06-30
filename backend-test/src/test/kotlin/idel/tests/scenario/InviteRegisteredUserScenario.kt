@@ -1,7 +1,10 @@
 package idel.tests.scenario
 
 import idel.tests.apiobject.*
-import idel.tests.infrastructure.*
+import idel.tests.infrastructure.checkIsForbidden
+import idel.tests.infrastructure.checkIsOk
+import idel.tests.infrastructure.createGroup
+import idel.tests.infrastructure.registerUsers
 import io.kotest.core.spec.style.DescribeSpec
 
 class InviteRegisteredUserScenario : DescribeSpec({

@@ -7,7 +7,6 @@ import idel.tests.infrastructure.ValueNotExists
 import idel.tests.infrastructure.checkIsOk
 import idel.tests.infrastructure.shouldBeOk
 import io.kotest.core.spec.style.DescribeSpec
-import java.util.*
 
 class JwtAuthentication : DescribeSpec({
     val entityStorage = EntityStorage()

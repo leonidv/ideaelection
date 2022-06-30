@@ -1,6 +1,6 @@
 package idel.api
 
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import idel.domain.DomainError
 import idel.domain.User
 import idel.domain.UserRepository

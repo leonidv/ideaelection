@@ -3,14 +3,12 @@ package idel.tests.infrastructure
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.infrastructure.JsonNodeExtensions.queryString
-
 import io.kotest.assertions.asClue
-import java.lang.IllegalArgumentException
 import java.net.http.HttpResponse
 
 fun extractData(response: HttpResponse<JsonNode>): JsonNode {
 
-    val body = response.body();
+    val body = response.body()
 
     body.toPrettyString().asClue {
         "basic checks failed, tests are skipped".asClue {

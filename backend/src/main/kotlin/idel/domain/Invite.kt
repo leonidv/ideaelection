@@ -1,7 +1,7 @@
 package idel.domain
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import arrow.core.flatten
 import java.time.LocalDateTime
 import java.util.*

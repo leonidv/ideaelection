@@ -3,9 +3,8 @@ package idel.tests.spec
 import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
-import idel.tests.infrastructure.GroupInfo
 import io.kotest.core.spec.style.DescribeSpec
-import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
+import io.kotest.core.spec.style.scopes.DescribeSpecContainerScope
 import java.util.*
 
 class GroupLoadingSpec : DescribeSpec({
@@ -94,7 +93,7 @@ class GroupLoadingSpec : DescribeSpec({
                 }
             }
 
-            val randomName = UUID.randomUUID().toString();
+            val randomName = UUID.randomUUID().toString()
             describe("$userB random name (uuid) should return nothing") {
                 val loadGroupsResponse = userB.groups.loadForUser(name = Some(randomName))
                 checkIsOk(loadGroupsResponse, noGroups())
@@ -516,11 +515,11 @@ data class GroupParams(val entryMode: String, val domainsRestriction: Array<Stri
 
 fun formatRestrictions(domainRestrictions: Array<out Array<String>>): String {
     return domainRestrictions.joinToString(prefix = "[", postfix = "]") {restriction ->
-        restriction.joinToString(prefix = "[", postfix = "]");
+        restriction.joinToString(prefix = "[", postfix = "]")
     }
 }
 
-suspend fun DescribeSpecContainerContext.testAvailableGroup(
+suspend fun DescribeSpecContainerScope.testAvailableGroup(
     user: User,
     groupsInfo: Map<GroupParams, GroupInfo>,
     entryModes: Array<String>,
@@ -558,7 +557,7 @@ suspend fun DescribeSpecContainerContext.testAvailableGroup(
 /**
  * Private group's is not available by id. Method check it.
  */
-suspend fun DescribeSpecContainerContext.testLoadGroup(
+suspend fun DescribeSpecContainerScope.testLoadGroup(
     user: User,
     canLoad: Boolean,
     isCreator : Boolean = false,
@@ -601,7 +600,7 @@ suspend fun DescribeSpecContainerContext.testLoadGroup(
 
 }
 
-suspend fun DescribeSpecContainerContext.addUserToGroup(
+suspend fun DescribeSpecContainerScope.addUserToGroup(
     groupsInfo: Map<GroupParams, GroupInfo>,
     groupParams: GroupParams,
     admin: User,
