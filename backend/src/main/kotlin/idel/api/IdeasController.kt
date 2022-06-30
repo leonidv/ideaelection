@@ -145,10 +145,12 @@ class IdeasController(
                 val nextIdea = if (removeAssignee) {
                     idea.removeAssign(levels)
                 } else {
+                    require(assignee.userId != null) // really double check, should be checked in val removeAssignee =
+                    val nextAssigneeId = UUID.fromString(assignee.userId);
                     val assigneeIsMember =
                         secure.group.isMember(idea.groupId, UUID.fromString(assignee.userId)).bind()
                     if (assigneeIsMember) {
-                        idea.assign(UUID.fromString(assignee.userId), levels)
+                        idea.assign(nextAssigneeId, levels)
                     } else {
                         Either.Left(OperationNotPermitted())
                     }

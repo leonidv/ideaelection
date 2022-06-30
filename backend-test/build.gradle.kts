@@ -36,10 +36,17 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion") // for kotest core jvm assertions
     testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.2.5")
 }
-
-
+//
+//java {
+//    toolchain {
+//        languageVersion.set(JavaLanguageVersion.of(17))
+//        vendor.set(JvmVendorSpec.BELLSOFT)
+//    }
+//}
 
 tasks {
+
+
     compileKotlin {
         kotlinOptions.jvmTarget = "17"
     }

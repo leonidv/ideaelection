@@ -191,7 +191,12 @@ class Idea(
             !hasAssignee() && isMember(changerLevels) -> true
             else -> false
         }
-        return this.clone(assignee = newAssignee)
+
+        return if (canAssign) {
+            this.clone(assignee = newAssignee)
+        } else {
+            Either.Left(OperationNotPermitted())
+        }
     }
 
     fun removeAssign(changerLevels: Set<IdeaAccessLevel>): Either<DomainError, Idea> {
