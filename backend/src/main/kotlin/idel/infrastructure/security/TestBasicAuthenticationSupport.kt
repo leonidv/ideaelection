@@ -70,21 +70,7 @@ class TestUsersDetailsService(val userRepository: UserRepository) : UserDetailsS
 
         return when (eUser) {
             is Either.Right -> {
-                val user = eUser.value
-                val attributes = mutableMapOf<String, Any>(
-                    TestUser.ATTRIBUTES_NAMES.externalIdKey to username,
-                    TestUser.ATTRIBUTES_NAMES.displayNameKey to user.displayName,
-                    TestUser.ATTRIBUTES_NAMES.emailKey to user.email,
-                    TestUser.ATTRIBUTES_NAMES.avatarKey to user.avatar
-                )
-
-                TestUser(
-                    id = eUser.value.id,
-                    authorities = IdelAuthorities.from(user.roles).toMutableList(),
-                    attributes = attributes,
-                    username = username,
-                    password = username
-                )
+                convertPersistsUser(eUser.value, username)
             }
 
             is Either.Left -> {
@@ -98,26 +84,50 @@ class TestUsersDetailsService(val userRepository: UserRepository) : UserDetailsS
 
                 }
 
-                val authorities = when (role.lowercase(Locale.getDefault())) {
-                    "super_user" -> mutableSetOf(IdelAuthorities.SUPER_USER_AUTHORITY)
-                    else -> mutableSetOf(IdelAuthorities.USER_AUTHORITY)
-                }
-
-                val attributes = mutableMapOf<String, Any>(
-                    TestUser.ATTRIBUTES_NAMES.externalIdKey to username,
-                    TestUser.ATTRIBUTES_NAMES.displayNameKey to "${username} ${username}",
-                    TestUser.ATTRIBUTES_NAMES.emailKey to "${username}@mail".lowercase(),
-                    TestUser.ATTRIBUTES_NAMES.avatarKey to ""
-                )
-
-                return TestUser(
-                    id = UUID.randomUUID(),
-                    authorities = authorities,
-                    attributes = attributes,
-                    username = username,
-                    password = username,
-                )
+                return makeTemporaryUser(role, username)
             }
         }
+    }
+
+    private fun makeTemporaryUser(role: String, username: String): TestUser {
+        val authorities = when (role.lowercase(Locale.getDefault())) {
+            "super_user" -> mutableSetOf(IdelAuthorities.SUPER_USER_AUTHORITY)
+            else -> mutableSetOf(IdelAuthorities.USER_AUTHORITY)
+        }
+
+        val attributes = mutableMapOf<String, Any>(
+            TestUser.ATTRIBUTES_NAMES.externalIdKey to username,
+            TestUser.ATTRIBUTES_NAMES.displayNameKey to "${username} ${username}",
+            TestUser.ATTRIBUTES_NAMES.emailKey to "${username}@mail".lowercase(),
+            TestUser.ATTRIBUTES_NAMES.avatarKey to ""
+        )
+
+        return TestUser(
+            id = UUID.randomUUID(),
+            authorities = authorities,
+            attributes = attributes,
+            username = username,
+            password = username,
+        )
+    }
+
+    private fun convertPersistsUser(
+        user: User,
+        username: String
+    ): TestUser {
+        val attributes = mutableMapOf<String, Any>(
+            TestUser.ATTRIBUTES_NAMES.externalIdKey to username,
+            TestUser.ATTRIBUTES_NAMES.displayNameKey to user.displayName,
+            TestUser.ATTRIBUTES_NAMES.emailKey to user.email,
+            TestUser.ATTRIBUTES_NAMES.avatarKey to user.avatar
+        )
+
+        return TestUser(
+            id =user.id,
+            authorities = IdelAuthorities.from(user.roles).toMutableList(),
+            attributes = attributes,
+            username = username,
+            password = username
+        )
     }
 }
