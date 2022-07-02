@@ -2,7 +2,6 @@ package idel.infrastructure.security
 
 import arrow.core.Either
 import idel.domain.*
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -16,19 +15,21 @@ class TestUser(
     private val username: String
 ) :
     IdelOAuth2User(
+        id = UUID.randomUUID(),
         authorities = authorities,
         attributes = attributes,
         provider = PROVIDER,
-        attributesNames = ATTRIBUTES_NAMES
+        providerAttributeKeys = ATTRIBUTES_NAMES
     ), UserDetails {
     companion object {
         const val PROVIDER = "httpbasic"
 
-        val ATTRIBUTES_NAMES = IdelOAuth2User.AttributesNames(
-            externalId = "providerId",
-            displayName = "displayName",
-            email = "email",
-            avatar = "avatar"
+        val ATTRIBUTES_NAMES = ProviderAttributeKeys(
+            provider = PROVIDER,
+            externalIdKey = "providerId",
+            displayNameKey = "displayName",
+            emailKey = "email",
+            avatarKey = "avatar"
         )
 
     }
@@ -71,10 +72,10 @@ class TestUsersDetailsService(val userRepository: UserRepository) : UserDetailsS
             is Either.Right -> {
                 val user = eUser.value
                 val attributes = mutableMapOf<String, Any>(
-                    TestUser.ATTRIBUTES_NAMES.externalId to username,
-                    TestUser.ATTRIBUTES_NAMES.displayName to user.displayName,
-                    TestUser.ATTRIBUTES_NAMES.email to user.email,
-                    TestUser.ATTRIBUTES_NAMES.avatar to user.avatar
+                    TestUser.ATTRIBUTES_NAMES.externalIdKey to username,
+                    TestUser.ATTRIBUTES_NAMES.displayNameKey to user.displayName,
+                    TestUser.ATTRIBUTES_NAMES.emailKey to user.email,
+                    TestUser.ATTRIBUTES_NAMES.avatarKey to user.avatar
                 )
 
                 TestUser(
@@ -103,10 +104,10 @@ class TestUsersDetailsService(val userRepository: UserRepository) : UserDetailsS
                 }
 
                 val attributes = mutableMapOf<String, Any>(
-                    TestUser.ATTRIBUTES_NAMES.externalId to username,
-                    TestUser.ATTRIBUTES_NAMES.displayName to "${username} ${username}",
-                    TestUser.ATTRIBUTES_NAMES.email to "${username}@mail".lowercase(),
-                    TestUser.ATTRIBUTES_NAMES.avatar to ""
+                    TestUser.ATTRIBUTES_NAMES.externalIdKey to username,
+                    TestUser.ATTRIBUTES_NAMES.displayNameKey to "${username} ${username}",
+                    TestUser.ATTRIBUTES_NAMES.emailKey to "${username}@mail".lowercase(),
+                    TestUser.ATTRIBUTES_NAMES.avatarKey to ""
                 )
 
                 return TestUser(

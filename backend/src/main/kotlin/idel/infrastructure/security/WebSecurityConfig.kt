@@ -146,7 +146,7 @@ class WebSecurityConfig(private val userRepository: UserRepository, private val 
 class BuildInfo : org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http.requestMatchers()
-            .antMatchers("/m/info")
+            .antMatchers("/m/info","/init/login")
             .and()
             .anonymous()
     }

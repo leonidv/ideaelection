@@ -38,7 +38,7 @@ management:
 jwt:
   private.key: classpath:jwt_private_key
   public.key: classpath:jwt_public_key.crt
-  frontend.url: https://saedi.zap-it.ru
+  frontend.url: http://localhost:8080/users/me
   
 server:
   forward-headers-strategy: framework

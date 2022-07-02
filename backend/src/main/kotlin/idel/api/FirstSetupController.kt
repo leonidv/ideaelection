@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.view.RedirectView
 
 @RestController
 @RequestMapping("/init")
@@ -26,6 +27,11 @@ class FirstSetupController(val userRepository: UserRepository) {
     }
 
     private val log = KotlinLogging.logger {}
+
+    @GetMapping("/login")
+    fun initOAuth() : RedirectView {
+        return RedirectView("/oauth2/authorization/google")
+    }
 
     @GetMapping("", produces = [MediaType.TEXT_HTML_VALUE])
     @ResponseBody
