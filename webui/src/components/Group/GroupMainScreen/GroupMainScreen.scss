@@ -51,6 +51,7 @@
 
   &__invites {
     display: flex;
+    flex-wrap: wrap;
 
     .infinite-scroll-component__outerdiv {
       width: 100%;
