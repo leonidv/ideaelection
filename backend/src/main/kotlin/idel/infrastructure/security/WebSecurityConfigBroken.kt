@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-//@Configuration
+@Configuration
 class WebSecurityConfigBroken (
     private val userRepository: UserRepository,
     private val userService: UserService

@@ -37,9 +37,9 @@ import java.util.concurrent.TimeUnit
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-@Configuration
-@EnableWebSecurity
-@Order(2)
+//@Configuration
+//@EnableWebSecurity
+//@Order(2)
 class WebSecurityConfig(private val userRepository: UserRepository, private val userService: UserService) : WebSecurityConfigurerAdapter() {
     val log = KotlinLogging.logger {}
 
@@ -134,8 +134,8 @@ class WebSecurityConfig(private val userRepository: UserRepository, private val 
     }
 }
 
-@Configuration
-@Order(1)
+//@Configuration
+//@Order(1)
 class BuildInfo : org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http.requestMatchers()
