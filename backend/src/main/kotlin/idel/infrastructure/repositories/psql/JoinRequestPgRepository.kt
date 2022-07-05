@@ -112,6 +112,7 @@ class JoinRequestPgRepository : JoinRequestRepository, HasUnimplemented {
         return wrappedSQLStatement {
             JoinRequestsTable
                 .select {JoinRequestsTable.groupId eq groupId}
+                .withStatuses(statuses)
                 .orderBy(ordering)
                 .limit(pagination)
                 .map(JoinRequestsTable::mapResult)

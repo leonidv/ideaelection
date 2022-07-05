@@ -87,14 +87,22 @@ class JoinAndLeaveToClosedAndPrivateGroupScenarios : DescribeSpec({
                 )
             }
 
-            describe("$userA approve join request") {
+            describe("$userA approves join request") {
                 val response = userA.joinRequests.changeStatus(joinRequestId, JoinRequestsApi.APPROVED)
                 checkIsOk(response, joinRequestIsApproved)
             }
 
-            describe("$userA see in the group info that the group's has 2 members") {
+            describe("$userA sees in the group info that the group's has 2 members") {
                 val loadGroupResponse = userA.groups.load(groupId)
                 checkIsOk(loadGroupResponse, groupHasMembersCount(2))
+            }
+
+            describe("$userA doesn't see approved join request in the group") {
+                val response = userA.joinRequests.loadForGroup(groupId)
+                checkIsOk(
+                    response,
+                    notIncludeJoinRequest(joinRequestId)
+                )
             }
 
             describe("$userB see the group in the list of his groups") {

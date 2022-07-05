@@ -32,6 +32,22 @@ class JoinRequestsSpec : DescribeSpec({
                 response.shouldBeError(102)
             }
         }
+
+        describe("can't create second join request") {
+            val joiningKey = createGroup(userA, entryMode = GroupsApi.PRIVATE, members = emptySet()).joiningKey
+
+            describe("$userB creates a first join request") {
+                val firstResponse = userB.joinRequests.create(joiningKey)
+                checkIsOk(firstResponse)
+            }
+
+            describe("$userB try to create a second join request") {
+                val secondResponse = userB.joinRequests.create(joiningKey)
+                checkIsEntityAlreadyExists(secondResponse);
+            }
+
+
+        }
     }
 
 

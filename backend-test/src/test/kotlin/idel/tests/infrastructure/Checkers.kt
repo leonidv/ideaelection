@@ -186,6 +186,16 @@ suspend fun DescribeSpecContainerScope.checkIsBadRequest(response: HttpResponse<
     }
 }
 
+suspend fun DescribeSpecContainerScope.checkIsEntityAlreadyExists(response: HttpResponse<JsonNode>) {
+    val body = response.body()
+    body.toPrettyString().asClue {
+        it("response is 409 with error.code = [108]") {
+            response.shouldHasStatus(HttpURLConnection.HTTP_CONFLICT)
+            response.shouldBeError(108)
+        }
+    }
+}
+
 object CustomErrors {
     const val ENTITY_IS_ARCHIVED = 111
 }
