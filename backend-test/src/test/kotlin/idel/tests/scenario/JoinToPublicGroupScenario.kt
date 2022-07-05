@@ -43,10 +43,7 @@ class JoinToPublicGroupScenario : DescribeSpec({
         describe("$userB can't add an idea to the group") {
             val ideaResponse = userB.ideas.add(groupId)
 
-            it("can't do it 403 and error [OperationNotPermitted]") {
-                ideaResponse.shouldHasStatus(HttpURLConnection.HTTP_FORBIDDEN)
-                ideaResponse.shouldBeError(103)
-            }
+            checkIsForbidden(ideaResponse)
         }
 
         describe("$userB joins to the group") {
@@ -55,6 +52,13 @@ class JoinToPublicGroupScenario : DescribeSpec({
             checkIsOk(
                 joinRequestResponse,
                 joinRequestIsApproved
+            )
+        }
+
+        describe("$userB doesn't see group in the list of available") {
+            val response = userB.groups.loadAvailable()
+            checkIsOk(response,
+                notIncludeGroup(groupId)
             )
         }
 

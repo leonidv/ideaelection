@@ -51,7 +51,7 @@ abstract class AbstractObjectApi(
         } else {
             "body is too big for log"
         }
-        log.trace {"\n${user.id} ${user.domain} ${request.method()} ${request.uri()} \n$bodyMsg"}
+        log.trace {"\n ${user.name} ${user.domain} ${user.id} ${request.method()} ${request.uri()} \n$bodyMsg"}
         return client.send(request, ofJson())!!
     }
 
