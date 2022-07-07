@@ -90,13 +90,10 @@ interface JoinRequestRepository {
     fun load(id: UUID): Either<DomainError, JoinRequest>
     fun add(entity: JoinRequest): Either<DomainError, JoinRequest>
 
+    fun update(joinRequest: JoinRequest) : Either<DomainError, JoinRequest>
+
 //    fun mutate(
 //        id: UUID,
-//        mutation: (entity: JoinRequest) -> JoinRequest
+//        mutation: (entity: JoinRequest) -> Either<DomainError, JoinRequest>
 //    ): Either<DomainError, JoinRequest>
-
-    fun possibleMutate(
-        id: UUID,
-        mutation: (entity: JoinRequest) -> Either<DomainError, JoinRequest>
-    ): Either<DomainError, JoinRequest>
 }

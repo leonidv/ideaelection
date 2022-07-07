@@ -16,6 +16,7 @@ enum class GroupMemberRole {
     GROUP_ADMIN, MEMBER
 }
 
+// TODO Really need inheritance from User??
 class GroupMember(
     val userId: UserId,
     val groupId : GroupId,

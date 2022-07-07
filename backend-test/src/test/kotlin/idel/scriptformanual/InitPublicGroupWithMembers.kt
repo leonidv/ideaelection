@@ -18,7 +18,7 @@ fun main() {
     lateinit var joiningKey : String
 
 
-    val response = userAdmin.groups.create(name = "architecture reports", entryMode = GroupsApi.PUBLIC)
+    val response = userAdmin.groups.create(name = "architecture reports", entryMode = GroupsApi.EntryMode.PUBLIC)
     joiningKey = response.extractField(GroupsApi.Fields.JOINING_KEY)
 
     users.subList(0,3).forEach {it.joinRequests.create(joiningKey)}

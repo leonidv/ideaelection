@@ -9,6 +9,7 @@ import idel.infrastructure.repositories.psql.exposed.firstOrNotFound
 import idel.infrastructure.repositories.psql.exposed.limit
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import java.time.LocalDateTime
@@ -129,21 +130,33 @@ class JoinRequestPgRepository : JoinRequestRepository, HasUnimplemented {
         }
     }
 
-    override fun possibleMutate(
-        id: UUID,
-        mutation: (entity: JoinRequest) -> Either<DomainError, JoinRequest>
-    ): Either<DomainError, JoinRequest> {
+    override fun update(joinRequest: JoinRequest): Either<DomainError, JoinRequest> {
         return wrappedSQLStatementFlatten {
-            either.eager {
-                val joinRequest = load(id).bind()
-                val nextJoinRequest = mutation(joinRequest).bind()
-                JoinRequestsTable.update(
-                    where = {JoinRequestsTable.id eq id},
-                    limit = null,
-                    body = {mapEntity(it, nextJoinRequest)}
-                )
-                nextJoinRequest
-            }
+            val updated = JoinRequestsTable.update(
+                where = {JoinRequestsTable.id eq joinRequest.id},
+                limit = null,
+                body = {JoinRequestsTable.mapEntity(it, joinRequest)}
+            )
+
+            zeroAsNotFound(updated, joinRequest, "JoinRequest", joinRequest.id)
         }
     }
+
+//    override fun mutate(
+//        id: UUID,
+//        mutation: (entity: JoinRequest) -> Either<DomainError, JoinRequest>
+//    ): Either<DomainError, JoinRequest> {
+//        return wrappedSQLStatementFlatten {
+//            either.eager {
+//                val joinRequest = load(id).bind()
+//                val nextJoinRequest = mutation(joinRequest).bind()
+//                JoinRequestsTable.update(
+//                    where = {JoinRequestsTable.id eq id},
+//                    limit = null,
+//                    body = {mapEntity(it, nextJoinRequest)}
+//                )
+//                nextJoinRequest
+//            }
+//        }
+//    }
 }

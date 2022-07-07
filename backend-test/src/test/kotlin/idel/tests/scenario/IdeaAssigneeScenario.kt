@@ -5,9 +5,9 @@ import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
 
 class IdeaAssigneeScenario : DescribeSpec({
-    val couchbase = EntityStorage()
+    val entityStorage = EntityStorage()
     beforeSpec {
-        couchbase.clearAll()
+        entityStorage.clearAll()
     }
 
     context("userA is admin, userB is author, userC is member, userD is not member") {

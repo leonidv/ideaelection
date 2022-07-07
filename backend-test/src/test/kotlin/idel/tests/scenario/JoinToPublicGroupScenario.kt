@@ -25,7 +25,7 @@ class JoinToPublicGroupScenario : DescribeSpec({
         lateinit var joiningKey: String
 
         describe("$userA adds new PUBLIC group without admins") {
-            val groupInfo = createGroup(groupAdmin = userA, entryMode = GroupsApi.PUBLIC, members = setOf())
+            val groupInfo = createGroup(groupAdmin = userA, entryMode = GroupsApi.EntryMode.PUBLIC, members = setOf())
             groupId = groupInfo.groupId
             joiningKey = groupInfo.joiningKey
         }

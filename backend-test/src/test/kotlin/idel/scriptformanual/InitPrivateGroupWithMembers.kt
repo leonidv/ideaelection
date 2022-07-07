@@ -19,7 +19,7 @@ fun main() {
     userAdmin.users.register(userB)
     userAdmin.users.register(userC)
 
-    val response = userAdmin.groups.create(name = "architecture internal process", entryMode = GroupsApi.PRIVATE)
+    val response = userAdmin.groups.create(name = "architecture internal process", entryMode = GroupsApi.EntryMode.PRIVATE)
     val joiningKey = response.extractField(GroupsApi.Fields.JOINING_KEY)
 
     val joinRequestResponse = userB.joinRequests.create(joiningKey)

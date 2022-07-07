@@ -23,7 +23,7 @@ data class GroupInfo(
 suspend fun DescribeSpecContainerScope.createGroup(
     groupAdmin: User,
     members: Set<User>,
-    entryMode: String = GroupsApi.PUBLIC,
+    entryMode: String = GroupsApi.EntryMode.PUBLIC,
     domainRestrictions: Array<String> = emptyArray(),
     name: String? = null
 ): GroupInfo {
@@ -56,7 +56,7 @@ suspend fun DescribeSpecContainerScope.createGroup(
         describe("$user join to group") {
             val joinRequestResponse = user.joinRequests.create(joiningKey)
 
-            if (entryMode == GroupsApi.PRIVATE || entryMode == GroupsApi.CLOSED) {
+            if (entryMode == GroupsApi.EntryMode.PRIVATE || entryMode == GroupsApi.EntryMode.CLOSED) {
                 describe("join request is unresolved") {
                     checkIsOk(joinRequestResponse, joinRequestIsUnresolved)
                 }

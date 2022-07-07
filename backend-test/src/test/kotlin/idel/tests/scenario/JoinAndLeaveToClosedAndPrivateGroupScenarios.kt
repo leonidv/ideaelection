@@ -15,7 +15,7 @@ class JoinAndLeaveToClosedAndPrivateGroupScenarios : DescribeSpec({
     val userB = User("userB", "not member")
     val userC = User("userC", "not member")
 
-    val entryMode = GroupsApi.CLOSED
+    val entryMode = GroupsApi.EntryMode.CLOSED
 
     context("$userA creates $entryMode group, userB and userC try to join") {
         describe("register users") {
