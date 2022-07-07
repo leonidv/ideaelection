@@ -12,14 +12,16 @@ interface GroupsFields {
     val JOINING_KEY : String
 }
 
+class GroupsEntryMode {
+    val PUBLIC = "PUBLIC"
+    val CLOSED = "CLOSED"
+    val PRIVATE = "PRIVATE"
+}
+
 class GroupsApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "groups") {
 
     companion object {
-        const val PUBLIC = "PUBLIC"
-        const val CLOSED = "CLOSED"
-        const val PRIVATE = "PRIVATE"
-
-        val ENTRY_MODES = listOf(PUBLIC, CLOSED, PRIVATE)
+        val EntryMode = GroupsEntryMode()
 
         const val MEMBER = "MEMBER"
         const val ADMIN = "GROUP_ADMIN"

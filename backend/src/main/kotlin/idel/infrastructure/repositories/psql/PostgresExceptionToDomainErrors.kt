@@ -19,6 +19,7 @@ fun parseUniqueViolation(message: String): Sequence<UniqueViolationDetails> {
 }
 
 
+
 fun ExposedSQLException.asPersistenceError(): PersistenceError {
     val cause = this.cause
     return if (cause !is PSQLException) {

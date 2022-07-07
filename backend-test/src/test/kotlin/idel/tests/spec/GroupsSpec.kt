@@ -32,9 +32,9 @@ class GroupsSpec : DescribeSpec({
     describe("create a new group") {
         table(
             headers("entry mode"),
-            row(GroupsApi.PUBLIC),
-            row(GroupsApi.CLOSED),
-            row(GroupsApi.PRIVATE)
+            row(GroupsApi.EntryMode.PUBLIC),
+            row(GroupsApi.EntryMode.CLOSED),
+            row(GroupsApi.EntryMode.PRIVATE)
         ).forAll {entryMode ->
             describe("group with entry mode $entryMode") {
                 val name = "test $entryMode"
@@ -305,7 +305,7 @@ class GroupsSpec : DescribeSpec({
                     groupId = groupId,
                     name = nextName,
                     description = nextDescription,
-                    entryMode = GroupsApi.PRIVATE,
+                    entryMode = GroupsApi.EntryMode.PRIVATE,
                     entryQuestion = nextEntryQuestion,
                     domainRestrictions = nextDomainRestrictions
                 )
@@ -314,7 +314,7 @@ class GroupsSpec : DescribeSpec({
                     response,
                     groupHasName(nextName),
                     groupHasDescription(nextDescription),
-                    groupHasEntryMode(GroupsApi.PRIVATE),
+                    groupHasEntryMode(GroupsApi.EntryMode.PRIVATE),
                     groupHasEntryQuestion(nextEntryQuestion),
                     groupHasDomainRestrictionsCount(nextDomainRestrictions.size),
                     groupHasDomainRestriction(nextDomainRestrictions[0]),
@@ -329,7 +329,7 @@ class GroupsSpec : DescribeSpec({
                     response,
                     groupHasName(nextName),
                     groupHasDescription(nextDescription),
-                    groupHasEntryMode(GroupsApi.PRIVATE)
+                    groupHasEntryMode(GroupsApi.EntryMode.PRIVATE)
                 )
 
             }
@@ -342,7 +342,7 @@ class GroupsSpec : DescribeSpec({
                         name = "1",
                         description = "",
                         logo = "http://image.io",
-                        entryMode = GroupsApi.PUBLIC,
+                        entryMode = GroupsApi.EntryMode.PUBLIC,
                         domainRestrictions = arrayOf(),
                         entryQuestion = "ok"
                     )
@@ -363,7 +363,7 @@ class GroupsSpec : DescribeSpec({
                         name = "n".repeat(256),
                         description = "d".repeat(301),
                         logo = "data:image/png;base64,$logoPattern",
-                        entryMode = GroupsApi.PUBLIC,
+                        entryMode = GroupsApi.EntryMode.PUBLIC,
                         domainRestrictions = arrayOf(),
                         entryQuestion = "q".repeat(201)
                     )
@@ -505,7 +505,7 @@ class GroupsSpec : DescribeSpec({
                         groupId,
                         name = "next name",
                         description = "next description",
-                        entryMode = GroupsApi.PUBLIC,
+                        entryMode = GroupsApi.EntryMode.PUBLIC,
                         entryQuestion = "some new question",
                         domainRestrictions = arrayOf()
                     )

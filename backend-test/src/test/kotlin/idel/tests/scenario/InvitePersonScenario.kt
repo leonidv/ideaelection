@@ -22,12 +22,12 @@ class InvitePersonScenario : DescribeSpec({
         registerUsers(userA)
 
         val userPerGroup = mapOf(
-            GroupsApi.PUBLIC to userB,
-            GroupsApi.CLOSED to userC,
-            GroupsApi.PRIVATE to userD
+            GroupsApi.EntryMode.PUBLIC to userB,
+            GroupsApi.EntryMode.CLOSED to userC,
+            GroupsApi.EntryMode.PRIVATE to userD
         )
 
-        listOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE).forEach {entryMode ->
+        listOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE).forEach {entryMode ->
             describe("invite persons (not yet registered) to $entryMode group") {
                 val groupId = createGroup(groupAdmin = userA, members = emptySet(), entryMode = entryMode).groupId
 

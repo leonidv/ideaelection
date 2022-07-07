@@ -9,7 +9,7 @@ fun main() {
 
     val createGroupResponse = userB.groups.create(
         name = "Group with 1000 idea",
-        entryMode = GroupsApi.PUBLIC,
+        entryMode = GroupsApi.EntryMode.PUBLIC,
         description = "group for testing huge count of ideas"
     )
 

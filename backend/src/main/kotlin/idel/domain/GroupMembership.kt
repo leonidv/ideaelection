@@ -112,6 +112,10 @@ class GroupMembershipService(
         return usersResult and personsResult
     }
 
+    /**
+     * Create a new invite for user. If user already created a join request to same group, the join request is resolved
+     * and invite is auto approved.
+     */
     private fun createInviteForUsers(
         author: User,
         group: Group,
@@ -122,10 +126,28 @@ class GroupMembershipService(
             fTransaction {
                 either.eager {
                     val user = userRepository.load(userId).bind()
-                    val invite = Invite.createForRegisteredUser(group.id, user, message, author.id)
-                    inviteRepository.add(invite).bind()
-                    invite
 
+                    val possibleJoinRequest = joinRequestRepository.loadUnresolved(user, group)
+
+                    if (possibleJoinRequest.isNotEntityOrNotFound()) {
+                        possibleJoinRequest.bind() // ugly exit with error
+                    }
+
+                    var invite = Invite.createForRegisteredUser(group.id, user, message, author.id)
+                    invite = when (possibleJoinRequest) {
+                        // join request is not found, create new Invite
+                        is Either.Left -> {
+                            require(possibleJoinRequest.value is EntityNotFound) // double check of developer
+                            inviteRepository.add(invite).bind()
+                        }
+
+                        // join request is found, resolve it and return approved invite
+                        is Either.Right -> {
+                            resolveRequest(possibleJoinRequest.value, AcceptStatus.APPROVED).bind()
+                            invite.accept().bind()
+                        }
+                    }
+                    invite
                 }
             }.mapLeft {domainError ->
                 InviteCreationError.forUser(userId, domainError.toString())
@@ -155,59 +177,97 @@ class GroupMembershipService(
 
     fun requestMembership(joiningKey: String, userId: UserId, message: String): Either<DomainError, JoinRequest> {
         return fTransaction {
-            try {
-                loadEntitiesByJoiningKey(
-                    groupJoiningKey = joiningKey,
-                    userId = userId
-                ).flatMap {(group: Group, user: User) ->
-                    val groupId = group.id
-                    val domainRestrictions = group.domainRestrictions
-                    val domainAllowed = domainRestrictions.isEmpty() || domainRestrictions.contains(user.domain)
-                    if (domainAllowed) {
-                        when (group.entryMode) {
-                            GroupEntryMode.PUBLIC -> {
+            loadEntitiesByJoiningKey(
+                groupJoiningKey = joiningKey,
+                userId = userId
+            ).flatMap {(group: Group, user: User) ->
+                either.eager {
+                    val possibleInvite = inviteRepository.loadUnresolved(user, group)
 
-                                val request = JoinRequest.createApproved(groupId, userId, message)
-                                val newMember = GroupMember.of(groupId, user, GroupMemberRole.MEMBER)
-                                groupMemberRepository.add(newMember).map {request}
-                            }
-                            GroupEntryMode.CLOSED,
-                            GroupEntryMode.PRIVATE -> {
-                                val request = JoinRequest.createUnresolved(groupId, userId, message)
-                                joinRequestRepository.add(request)
-                            }
-                        }
-                    } else {
-                        Either.Left(EntityNotFound("group", "joiningKey = $joiningKey"))
+                    if (possibleInvite.isNotEntityOrNotFound()) {
+                        possibleInvite.bind()
+                    }
+
+                    when (possibleInvite) {
+                        is Either.Right -> approveInviteByJoinRequest(group, user, possibleInvite.value, message).bind()
+                        is Either.Left -> createJoinRequest(group, user, message).bind()
                     }
                 }
-            } catch (ex: Exception) {
-                Either.Left(ex.asError())
             }
         }
     }
+
+    private fun approveInviteByJoinRequest(group: Group, user: User, invite: Invite, message: String): Either<DomainError, JoinRequest> {
+        return either.eager {
+            resolveInviteByUser(invite, user, AcceptStatus.APPROVED).bind()
+            JoinRequest.createApproved(group.id, user.id, message)
+        }
+    }
+
+
+    /**
+     * Base flow of creation join request.
+     * Creates a join request for non-public groups or creates a membership, if group is public.
+     */
+    private fun createJoinRequest(
+        group: Group,
+        user: User,
+        message: String
+    ): Either<DomainError, JoinRequest> {
+        val groupId = group.id
+        val userId = user.id
+
+        val domainRestrictions = group.domainRestrictions
+        val domainAllowed = domainRestrictions.isEmpty() || domainRestrictions.contains(user.domain)
+
+        return if (domainAllowed) {
+            when (group.entryMode) {
+                GroupEntryMode.PUBLIC -> {
+
+                    val request = JoinRequest.createApproved(groupId, userId, message)
+                    val newMember = GroupMember.of(groupId, user, GroupMemberRole.MEMBER)
+                    groupMemberRepository.add(newMember).map {request}
+                }
+                GroupEntryMode.CLOSED,
+                GroupEntryMode.PRIVATE -> {
+                    val request = JoinRequest.createUnresolved(groupId, userId, message)
+                    joinRequestRepository.add(request)
+                }
+            }
+        } else {
+            Either.Left(EntityNotFound("group", "joiningKey = ${group.joiningKey}"))
+        }
+    }
+
 
     fun resolveRequest(requestId: UUID, status: AcceptStatus): Either<DomainError, JoinRequest> {
         return fTransaction {
-            joinRequestRepository.possibleMutate(requestId) {joinRequest ->
-                when (status) {
-                    AcceptStatus.APPROVED -> {
-                        either.eager {
-                            val nextJoinRequest = joinRequest.resolve(AcceptStatus.APPROVED).bind()
-                            val user = userRepository.load(joinRequest.userId).bind()
-                            val groupMember = GroupMember.of(joinRequest.groupId, user, GroupMemberRole.MEMBER)
-                            groupMemberRepository.add(groupMember).bind()
-                            nextJoinRequest
-                        }
-                    }
-                    else -> {
-                        joinRequest.resolve(status)
-                    }
-                }
+            either.eager {
+                val joinRequest = joinRequestRepository.load(requestId).bind()
+                resolveRequest(joinRequest, status).bind()
             }
         }
     }
 
+    private fun resolveRequest(joinRequest: JoinRequest, status: AcceptStatus): Either<DomainError, JoinRequest> {
+        return fTransaction {
+            either.eager {
+                val nextJoinRequest = when (status) {
+                    AcceptStatus.APPROVED -> {
+                        val nextJoinRequest = joinRequest.resolve(AcceptStatus.APPROVED).bind()
+                        val user = userRepository.load(joinRequest.userId).bind()
+                        val groupMember = GroupMember.of(joinRequest.groupId, user, GroupMemberRole.MEMBER)
+                        groupMemberRepository.add(groupMember).bind()
+                        nextJoinRequest
+                    }
+                    else -> {
+                        joinRequest.resolve(status).bind()
+                    }
+                }
+                joinRequestRepository.update(nextJoinRequest).bind()
+            }
+        }
+    }
 
     /**
      * User can accept or decline invite. This function check resolution status for these values.
@@ -258,9 +318,14 @@ class GroupMembershipService(
         }
     }
 
-    fun resolveInvite(resolver : User,  invite: Invite, status: AcceptStatus, accessLevel: InviteAccessLevel): Either<DomainError, Invite> {
-        return when(accessLevel) {
-            InviteAccessLevel.GROUP_ADMIN -> resolveInviteByAdmin(invite,status)
+    fun resolveInvite(
+        resolver: User,
+        invite: Invite,
+        status: AcceptStatus,
+        accessLevel: InviteAccessLevel
+    ): Either<DomainError, Invite> {
+        return when (accessLevel) {
+            InviteAccessLevel.GROUP_ADMIN -> resolveInviteByAdmin(invite, status)
             InviteAccessLevel.OWNER -> resolveInviteByUser(invite, resolver, status)
         }
     }
@@ -274,7 +339,7 @@ class GroupMembershipService(
             either.eager {
                 do {
                     val invites = inviteRepository.loadByEmail(
-                       user.email,
+                        user.email,
                         Repository.Pagination(skip = nextOffset, count = count)
                     ).bind()
 
