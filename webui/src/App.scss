@@ -8,6 +8,10 @@ body {
   scrollbar-width: thin !important;
 }
 
+h1, h2, h3, h4, h5, p, span:not(button span):not(a span) {
+  cursor: default;
+}
+
 .avatar {
   color: transparent;
 
@@ -93,6 +97,10 @@ header {
     max-width: 1920px;
     margin: 0 auto;
     position: relative;
+
+    &--full {
+      max-width: none;
+    }
   }
 }
 

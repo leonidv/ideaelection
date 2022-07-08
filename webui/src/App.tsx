@@ -129,7 +129,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className='app'>
+    <div className={`app ${document.location.pathname == '/' ? 'app--full' : ''}`}>
       {!isInfoValue && isError && (
         <ShowAlert
           open={true}

@@ -1,6 +1,7 @@
 @font-face {
   font-family: 'Days One';
-  src: url('../../fonts/DaysOne-Regular.ttf') format('ttf'), url('../../fonts/DaysOne-Regular.woff2') format('woff2');
+  src: url('../../fonts/DaysOne-Regular.ttf') format('ttf'),
+    url('../../fonts/DaysOne-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -8,10 +9,28 @@
 
 .mainScreen {
   min-height: 100vh;
-  display: flex;
-  align-items: initial;
 
-  background-color: white;
+  position: relative;
+  background: linear-gradient(315.01deg, #000000 25.53%, rgba(0, 0, 0, 0) 100%),
+    #5595f4;
+
+  &::after {
+    content: url('../../images/bg_shapes.svg');
+    position: absolute;
+    height: fit-content;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  &__col {
+    position: relative;
+    width: 616px;
+    height: 824px;
+    max-height: 95vh;
+    background-color: #fff;
+    z-index: 9;
+  }
 
   &__title {
     font-family: 'Days One';
@@ -37,31 +56,31 @@
 
   &__logo {
     position: absolute;
-    top: 120px;
-    left: 13.7%;
+    top: 57px;
+    left: 64px;
 
     &--mobile {
       display: none;
     }
   }
 
-  &__questions {
-    position: absolute;
-    bottom: 128px;
-    left: 13.7%;
-  }
-
   &__question {
+    position: absolute;
+    bottom: 10.4%;
+    left: 128px;
+    width: 360px;
     font-family: 'Days One';
     font-style: normal;
     font-weight: 400;
-    font-size: 40px;
-    line-height: 51px;
+    font-size: 24px;
+    line-height: 31px;
+    text-align: center;
     text-transform: uppercase;
-
-    color: #FFFFFF;
     margin: 0;
-    max-width: 505px;
+
+    color: #5595f4;
+
+    opacity: 0.5;
   }
 
   &__descr {
@@ -73,32 +92,14 @@
 
     color: #464646;
     margin-top: 0;
-    margin-bottom: 128px;
+    margin-bottom: 64px;
   }
 
   &__col {
-    &--left {
-      position: relative;
-      width: 51%;
-      background: linear-gradient(315.01deg, #000000 25.53%, rgba(0, 0, 0, 0) 100%), #5595F4;
-
-      &::after {
-        content: url('../../images/bg_shapes.svg');
-        position: absolute;
-        right: 0;
-        bottom: 0;
-        top: 0;
-        height: 100%;
-      }
-    }
-
-    &--right {
-      width: 49%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   &__copyright {
@@ -114,7 +115,7 @@
     max-width: 400px;
 
     a {
-      color: #5494F2 !important;
+      color: #5494f2 !important;
       text-decoration: none;
     }
   }
@@ -122,6 +123,12 @@
 
 @media (max-width: 900px) {
   .mainScreen {
+    background: #fff;
+
+    &::after {
+      content: none;
+    }
+
     &__title {
       font-size: 28px;
       line-height: 36px;
@@ -135,29 +142,35 @@
       margin-bottom: 64px;
     }
 
+    &__question {
+      display: none;
+    }
+
+    &__logo {
+      display: none;
+    }
+
     &__logo {
       &--mobile {
         display: block;
+        position: absolute;
+        left: 13.7%;
         top: 64px;
       }
     }
 
     &__col {
-      &--left {
-        display: none;
-      }
-      &--right {
-        position: relative;
-        width: 100%;
+      position: relative;
+      width: 100%;
+      height: auto;
 
-        &::after {
-          content: url('../../images/bg_mobile.svg');
-          position: absolute;
-          right: 0;
-          bottom: 0;
-          top: 0;
-          height: 100%;
-        }
+      &::after {
+        content: url('../../images/bg_mobile.svg');
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        top: 0;
+        height: 100%;
       }
     }
   }
