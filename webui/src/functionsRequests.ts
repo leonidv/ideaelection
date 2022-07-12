@@ -303,12 +303,12 @@ export const putSettings = async (
   token,
   settings,
   planSettings,
-  tariff = 'FREE'
+  tariff?:string
 ) => {
   const url = `${BACKEND_API_URL}/users/settings`
   const body = JSON.stringify({
     displayName: planSettings.name,
-    subscriptionPlan: tariff,
+    subscriptionPlan: tariff || planSettings.subscriptionPlan,
     settings: {
       notificationsFrequency: settings.notifications.toUpperCase(),
       subscribedToNews: settings.checked
