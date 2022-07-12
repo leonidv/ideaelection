@@ -1,9 +1,7 @@
 package idel.api
 
 import arrow.core.Either
-import arrow.core.None
-import arrow.core.Some
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import arrow.core.flatten
 import idel.domain.*
 import idel.infrastructure.repositories.PersistsUser
@@ -13,6 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.util.*
+import kotlin.math.min
 
 
 @RestController
@@ -20,18 +19,17 @@ import java.util.*
 class IdeasController(
     val ideaRepository: IdeaRepository,
     val userRepository: UserRepository,
-    apiSecurityFactory: ApiSecurityFactory
-) {
+    val secure: ApiSecurity
+) : DataOrErrorHelper {
 
-    private val log = KotlinLogging.logger {}
+    override val log = KotlinLogging.logger {}
 
     private val factory = IdeaFactory()
 
-    private val secure: ApiSecurity = apiSecurityFactory.create(log)
-
+    private val MAX_VOTERS = 10
 
     class InitialProperties(
-        val groupId: String,
+        val groupId: GroupId,
         override val summary: String,
         override val description: String,
         override val descriptionPlainText: String,
@@ -40,109 +38,127 @@ class IdeasController(
 
     data class IdeasPayload(
         val ideas: List<Idea>,
-        val users: Set<User>
+        val users: Iterable<User>
     )
 
     data class IdeaPayload(
         val idea: Idea,
-        val users: Set<User>?
+        val users: Iterable<User>?
     ) {
         companion object {
             fun onlyIdea(idea: Idea) = IdeaPayload(idea, null)
         }
     }
 
+    fun Idea.usersIds(maxVoters: Int): Set<UserId> {
+        val votersCount = min(this.voters.size, maxVoters)
+        // filter always return List, so use list first, then convert to set :(
+        val ids = listOf(this.assignee, this.author) + this.voters.subList(0, votersCount)
+        return ids.filterNotNull().toSet()
+    }
+
+    fun enrichIdeas(ideas: List<Idea>, maxVoters: Int): Either<DomainError, IdeasPayload> {
+        val usersIds = ideas.flatMap {it.usersIds(maxVoters)}.toSet()
+        return userRepository.listById(usersIds).map {users ->
+            IdeasPayload(ideas, users)
+        }
+    }
+
+    fun enrichIdea(idea: Idea, maxVoters: Int): Either<DomainError, IdeaPayload> {
+        return userRepository.listById(idea.usersIds(maxVoters)).map {
+            IdeaPayload(idea, it)
+        }
+    }
 
     @PostMapping
     fun create(
         @AuthenticationPrincipal user: User,
         @RequestBody properties: InitialProperties
-    ): EntityOrError<IdeaPayload> {
+    ): ResponseDataOrError<IdeaPayload> {
         return secure.group.asMember(properties.groupId, user) {
             either.eager {
                 val idea = factory.createIdea(properties, properties.groupId, user.id).bind()
-                ideaRepository.add(idea)
+                ideaRepository.add(idea).bind()
                 IdeaPayload(idea, setOf(PersistsUser.of(user)))
             }
-        }
+        }.asHttpResponse()
     }
 
 
     @GetMapping("/{ideaId}")
-    fun load(@AuthenticationPrincipal user: User, @PathVariable ideaId: String): EntityOrError<IdeaPayload> {
+    fun load(@AuthenticationPrincipal user: User, @PathVariable ideaId: IdeaId): ResponseDataOrError<IdeaPayload> {
         return secure.idea.asMember(ideaId, user) {idea ->
-            either.eager {
-                val users = userRepository.enrichIdeas(listOf(idea), 10).bind()
-                IdeaPayload(idea, users)
-            }
-        }
+            enrichIdea(idea, MAX_VOTERS)
+        }.asHttpResponse()
     }
 
     @PatchMapping("/{ideaId}")
     fun updateInfo(
         @AuthenticationPrincipal user: User,
-        @PathVariable ideaId: String,
+        @PathVariable ideaId: IdeaId,
         @RequestBody properties: IdeaEditableProperties
-    ): EntityOrError<IdeaPayload> {
-        return secure.idea.withLevels(ideaId, user) {_, levels ->
-            ideaRepository.possibleMutate(ideaId) {idea ->
-                idea.updateInformation(properties, levels)
-            }.map(IdeaPayload::onlyIdea)
-        }
+    ): ResponseDataOrError<IdeaPayload> {
+        return secure.idea.withLevels(ideaId, user) {idea, levels ->
+            val nextIdea = idea.updateInformation(properties, levels)
+            ideaRepository.update(nextIdea)
+                .map(IdeaPayload::onlyIdea)
+        }.asHttpResponse()
     }
+
 
     @PostMapping("/{ideaId}/voters")
     @ResponseStatus(HttpStatus.CREATED)
     fun vote(
         @AuthenticationPrincipal user: User,
-        @PathVariable ideaId: String
-    ): EntityOrError<IdeaPayload> {
-        return secure.idea.asMember(ideaId, user) {
-            ideaRepository.possibleMutate(ideaId) {idea ->
-                idea.addVote(user.id)
-            }.map(IdeaPayload::onlyIdea)
-        }
+        @PathVariable ideaId: IdeaId
+    ): ResponseDataOrError<IdeaPayload> {
+        return secure.idea.asMember(ideaId, user) {idea ->
+            ideaRepository.update(idea.addVote(user.id))
+                .map(IdeaPayload::onlyIdea)
+        }.asHttpResponse()
+
     }
 
     @DeleteMapping("/{ideaId}/voters")
     fun devote(
         @AuthenticationPrincipal user: User,
-        @PathVariable ideaId: String
-    ): EntityOrError<IdeaPayload> {
-        return secure.idea.asMember(ideaId, user) {
-            ideaRepository.possibleMutate(ideaId) {idea ->
-                idea.removeVote(user.id)
-            }.map(IdeaPayload::onlyIdea)
-        }
+        @PathVariable ideaId: IdeaId
+    ): ResponseDataOrError<IdeaPayload> {
+        return secure.idea.asMember(ideaId, user) {idea ->
+            ideaRepository.update(idea.removeVote(user.id))
+                .map(IdeaPayload::onlyIdea)
+        }.asHttpResponse()
     }
 
-    data class AssigneeBody(val userId: String)
+
+    data class AssigneeBody(val userId: String?)
 
     @PatchMapping("/{ideaId}/assignee")
     fun assign(
         @AuthenticationPrincipal user: User,
-        @PathVariable ideaId: String,
+        @PathVariable ideaId: IdeaId,
         @RequestBody assignee: AssigneeBody
-    ): EntityOrError<IdeaPayload> {
+    ): ResponseDataOrError<IdeaPayload> {
         return secure.idea.withLevels(ideaId, user) {idea, levels ->
-            either.eager<Exception, Either<Exception, Idea>> {
-                val removeAssignee = (assignee.userId == NOT_ASSIGNED)
-                if (removeAssignee) {
-                    ideaRepository.possibleMutate(ideaId) {idea ->
-                        idea.removeAssign(levels)
-                    }
+            either.eager<DomainError, Either<DomainError, Idea>> {
+                val removeAssignee = (assignee.userId.isNullOrBlank())
+                val nextIdea = if (removeAssignee) {
+                    idea.removeAssign(levels)
                 } else {
-                    val assigneeIsMember = secure.group.isMember(idea.groupId, assignee.userId).bind()
+                    require(assignee.userId != null) // really double check, should be checked in val removeAssignee =
+                    val nextAssigneeId = UUID.fromString(assignee.userId);
+                    val assigneeIsMember =
+                        secure.group.isMember(idea.groupId, UUID.fromString(assignee.userId)).bind()
                     if (assigneeIsMember) {
-                        ideaRepository.possibleMutate(ideaId) {idea ->
-                            idea.assign(assignee.userId, levels)
-                        }
+                        idea.assign(nextAssigneeId, levels)
                     } else {
                         Either.Left(OperationNotPermitted())
                     }
                 }
+                ideaRepository.update(nextIdea)
             }.flatten().map(IdeaPayload::onlyIdea)
-        }
+
+        }.asHttpResponse()
     }
 
     data class Implemented(val implemented: Boolean)
@@ -150,30 +166,30 @@ class IdeasController(
     @PatchMapping("/{ideaId}/implemented")
     fun implemented(
         @AuthenticationPrincipal user: User,
-        @PathVariable ideaId: String,
+        @PathVariable ideaId: IdeaId,
         @RequestBody body: Implemented
-    ): EntityOrError<IdeaPayload> {
-        return secure.idea.withLevels(ideaId, user) {_, levels ->
-            ideaRepository.possibleMutate(ideaId) {idea ->
-                if (body.implemented) {
-                    idea.implement(levels)
-                } else {
-                    idea.notImplement(levels)
-                }
-            }.map(IdeaPayload::onlyIdea)
-        }
+    ): ResponseDataOrError<IdeaPayload> {
+        return secure.idea.withLevels(ideaId, user) {idea, levels ->
+            val nextIdea = if (body.implemented) {
+                idea.implement(levels)
+            } else {
+                idea.notImplement(levels)
+            }
+            ideaRepository.update(nextIdea)
+                .map(IdeaPayload::onlyIdea)
+        }.asHttpResponse()
     }
 
     @DeleteMapping("/{ideaId}")
     fun delete(
         @AuthenticationPrincipal user: User,
-        @PathVariable ideaId: String
-    ): EntityOrError<IdeaPayload> {
-        return secure.idea.withLevels(ideaId, user) {_, levels ->
-            ideaRepository.possibleMutate(ideaId) {idea ->
-                idea.delete(levels)
-            }.map(IdeaPayload::onlyIdea)
-        }
+        @PathVariable ideaId: IdeaId
+    ): ResponseDataOrError<IdeaPayload> {
+        return secure.idea.withLevels(ideaId, user) {idea, levels ->
+            val nextIdea = idea.delete(levels)
+            ideaRepository.update(nextIdea)
+                .map(IdeaPayload::onlyIdea)
+        }.asHttpResponse()
     }
 
     data class Archived(val archived: Boolean)
@@ -181,80 +197,68 @@ class IdeasController(
     @PatchMapping("/{ideaId}/archived")
     fun changeArchived(
         @AuthenticationPrincipal user: User,
-        @PathVariable ideaId: String,
+        @PathVariable ideaId: IdeaId,
         @RequestBody value: Archived
-    ): EntityOrError<IdeaPayload> {
-        return secure.idea.withLevels(ideaId, user) {_, levels ->
-            ideaRepository.possibleMutate(ideaId) {idea ->
-                if (value.archived) {
-                    idea.archive(levels)
-                } else {
-                    idea.unArchive(levels)
-                }
-            }.map(IdeaPayload::onlyIdea)
-        }
+    ): ResponseDataOrError<IdeaPayload> {
+        return secure.idea.withLevels(ideaId, user) {idea, levels ->
+            val nextIdea = if (value.archived) {
+                idea.archive(levels)
+            } else {
+                idea.unArchive(levels)
+            }
+            ideaRepository.update(nextIdea).map(IdeaPayload::onlyIdea)
+        }.asHttpResponse()
     }
 
-    data class ChangeGroup(val groupId: String)
+    data class ChangeGroup(val groupId: GroupId)
 
     @PatchMapping("/{ideaId}/group")
     fun changeGroup(
         @AuthenticationPrincipal user: User,
-        @PathVariable ideaId: String,
+        @PathVariable ideaId: IdeaId,
         @RequestBody value: ChangeGroup
-    ): EntityOrError<IdeaPayload> {
+    ): ResponseDataOrError<IdeaPayload> {
         return secure.group.asMember(groupId = value.groupId, user) {
-            either.eager<Exception, Idea> {
-                val userIdeaLevels = secure.idea.calculateLevels(ideaId, user).bind()
-                ideaRepository.possibleMutate(ideaId) {idea ->
-                    idea.changeGroup(value.groupId, userIdeaLevels)
-                }.bind()
+            either.eager<DomainError, Idea> {
+                val (idea, levels) = secure.idea.calculateLevels(ideaId, user).bind()
+                val nextIdea = idea.changeGroup(value.groupId, levels).bind()
+                ideaRepository.update(nextIdea).bind()
             }.map(IdeaPayload::onlyIdea)
-        }
+        }.asHttpResponse()
     }
 
     @GetMapping
     @ResponseBody
     fun load(
         @AuthenticationPrincipal user: User,
-        @RequestParam(required = true) groupId: String,
+        @RequestParam(required = true) groupId: GroupId,
         @RequestParam(required = false, defaultValue = "") ordering: IdeaOrdering,
-        @RequestParam("author") author: Optional<String>,
-        @RequestParam("assignee") assignee: Optional<String>,
-        @RequestParam("implemented") implemented: Optional<Boolean>,
-        @RequestParam("text") text: Optional<String>,
+        @RequestParam("author") author: UserId?,
+        @RequestParam("assignee") assignee: UserId?,
+        @RequestParam("implemented") implemented: Boolean?,
+        @RequestParam("text") text: String?,
         @RequestParam("archived", defaultValue = "false") archived: Boolean,
-        @RequestParam("voted-by-me") votedByMy: Optional<Boolean>,
+        @RequestParam("voted-by-me") votedByMy: Boolean?,
         pagination: Repository.Pagination
-    )
-            : EntityOrError<IdeasPayload> {
-
+    ): ResponseDataOrError<IdeasPayload> {
         return secure.group.asMember(groupId, user) {
-            val votedBy = votedByMy.asOption().flatMap {
-                if (it) {
-                    Some(user.id)
-                } else {
-                    None
-                }
-            }
-
             val filtering = IdeaFiltering(
-                author = author.asOption(),
-                implemented = implemented.asOption(),
-                assignee = assignee.asOption(),
-                text = text.asOption(),
-                archived = archived,
-                deleted = false,
-                votedBy = votedBy
+                author = author,
+                implemented = implemented,
+                assignee = assignee,
+                text = text,
+                listArchived = archived,
+                listDeleted = false,
+                votedBy = votedByMy?.let {user.id}
             )
             either.eager {
-                val ideas = ideaRepository.load(groupId, ordering, filtering, pagination).bind()
-                val users = userRepository.enrichIdeas(ideas, maxVoters = 10).bind()
-                IdeasPayload(ideas, users)
+                val ideas = ideaRepository.list(groupId, ordering, filtering, pagination).bind()
+                enrichIdeas(ideas, MAX_VOTERS).bind()
             }
-        }
+        }.asHttpResponse()
     }
 }
+
 
 /**
  * Convert string to IdeaSorting. If string is empty, return [IdeaOrdering.CTIME_DESC] as default value.

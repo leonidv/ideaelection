@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
 import idel.tests.infrastructure.ofJson
 import mu.KotlinLogging
-import java.io.IOException
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -15,11 +14,10 @@ import java.util.*
 abstract class AbstractObjectApi(
     val user: User,
     val idelUrl: String = Idel.URL,
-
     /**
      * Without trailing slash
      */
-    val resource: String) {
+    resource: String) {
     private val log = KotlinLogging.logger {}
 
     protected val resourceUri: URI = URI.create("$idelUrl/$resource")
@@ -53,7 +51,7 @@ abstract class AbstractObjectApi(
         } else {
             "body is too big for log"
         }
-        log.trace {"\n${user.id} ${user.domain} ${request.method()} ${request.uri()} \n$bodyMsg"}
+        log.trace {"\n ${user.name} ${user.domain} ${user.id} ${request.method()} ${request.uri()} \n$bodyMsg"}
         return client.send(request, ofJson())!!
     }
 

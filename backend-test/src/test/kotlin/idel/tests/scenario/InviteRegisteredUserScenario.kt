@@ -1,7 +1,10 @@
 package idel.tests.scenario
 
 import idel.tests.apiobject.*
-import idel.tests.infrastructure.*
+import idel.tests.infrastructure.checkIsForbidden
+import idel.tests.infrastructure.checkIsOk
+import idel.tests.infrastructure.createGroup
+import idel.tests.infrastructure.registerUsers
 import io.kotest.core.spec.style.DescribeSpec
 
 class InviteRegisteredUserScenario : DescribeSpec({
@@ -16,11 +19,11 @@ class InviteRegisteredUserScenario : DescribeSpec({
     }
 
     describe("initialization") {
-        registryUsers(userA, userB, userC)
+        registerUsers(userA, userB, userC)
     }
 
 
-    listOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE).forEach {entryMode ->
+    listOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE).forEach {entryMode ->
         describe("group's entryMode = $entryMode") {
             val groupId = createGroup(groupAdmin = userA, members = emptySet(), entryMode = entryMode).groupId
 

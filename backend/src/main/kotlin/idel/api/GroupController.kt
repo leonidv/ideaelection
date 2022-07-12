@@ -1,12 +1,11 @@
 package idel.api
 
 import arrow.core.Either
-import arrow.core.None
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import arrow.core.flatMap
 import arrow.core.flatten
 import idel.domain.*
-import idel.infrastructure.repositories.CouchbaseTransactions
+
 import mu.KotlinLogging
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -16,29 +15,26 @@ import java.util.*
 @RestController
 @RequestMapping("/groups")
 class GroupController(
-    private val couchbaseTransactions: CouchbaseTransactions,
     private val groupRepository: GroupRepository,
     private val groupMemberRepository: GroupMemberRepository,
     private val groupService: GroupService,
     private val joinRequestRepository: JoinRequestRepository,
     private val inviteRepository: InviteRepository,
-    apiSecurityFactory: ApiSecurityFactory
-) {
+    private val security: ApiSecurity
+) : DataOrErrorHelper {
     companion object {
         const val NAME_FILTER_MIN_SYMBOLS = 3
         private val notificationNameRegexp = "!!!N(\\d+)$".toRegex()
     }
 
-    val log = KotlinLogging.logger {}
+    override val log = KotlinLogging.logger {}
 
     val factory = GroupFactory()
-
-    val security = apiSecurityFactory.create(log)
 
     // simple hack to debug notifications without notifications
     val notificationsFromGroupName = "!!!N(\\d+)$".toRegex()
 
-    data class GroupsNotification(val groupId: String, val count: Int)
+    data class GroupsNotification(val groupId: GroupId, val count: Int)
 
     data class GroupsPayload(
         val groups: List<Group>,
@@ -52,7 +48,7 @@ class GroupController(
     }
 
 
-    private fun enrichAvailableGroups(user: User, groups: List<Group>): Either<Exception, GroupsPayload> {
+    private fun enrichAvailableGroups(user: User, groups: List<Group>): Either<DomainError, GroupsPayload> {
         return either.eager {
             val joinRequests = groups
                 .filter {
@@ -60,12 +56,12 @@ class GroupController(
                     it.entryMode != GroupEntryMode.PUBLIC
                 }
                 .mapNotNull {group ->
-                    val eJoinRequest = joinRequestRepository.load(user, group)
+                    val eJoinRequest = joinRequestRepository.loadUnresolved(user, group)
                     notFoundToNull(eJoinRequest).bind()
                 }
 
             val invites = groups.mapNotNull {group ->
-                val eInvite = inviteRepository.load(user, group)
+                val eInvite = inviteRepository.loadUnresolved(user, group)
                 notFoundToNull(eInvite).bind()
             }
 
@@ -73,7 +69,7 @@ class GroupController(
         }
     }
 
-    private fun enrichUsersGroups(user: User, groups: List<Group>): Either<Exception, GroupsPayload> {
+    private fun enrichUsersGroups(user: User, groups: List<Group>): Either<DomainError, GroupsPayload> {
         val notifications = groups.map {group ->
             notificationsFromGroupName.find(group.name)?.let {it.groupValues[1].toIntOrNull()}
         }.zip(groups).mapNotNull {(count, group) ->
@@ -96,45 +92,43 @@ class GroupController(
     fun create(
         @RequestBody properties: GroupEditableProperties,
         @AuthenticationPrincipal user: User
-    ): EntityOrError<Group> {
-        val x = either.eager<Exception, Group> {
-            val group = factory.createGroup(UserInfo.ofUser(user), properties).bind()
-
-            val creatorAsAdmin = GroupMember.of(group.id, user, GroupMemberRole.GROUP_ADMIN)
-            couchbaseTransactions.transaction {ctx ->
-                groupRepository.add(group, ctx)
-                groupMemberRepository.add(creatorAsAdmin, ctx)
-            }.bind()
-
-            group
-        }
-
-        return DataOrError.fromEither(x, log)
+    ): ResponseDataOrError<Group> {
+        return fTransaction {
+            either.eager<DomainError, Group> {
+                val group = factory.createGroup(UserInfo.ofUser(user), properties).bind()
+                val creatorAsAdmin = GroupMember.of(group.id, user, GroupMemberRole.GROUP_ADMIN)
+                groupRepository.add(group).bind()
+                groupMemberRepository.add(creatorAsAdmin).bind()
+                group
+            }
+        }.asHttpResponse()
     }
 
 
     @GetMapping("/{groupId}")
     fun load(
         @AuthenticationPrincipal user: User,
-        @PathVariable groupId: String
-    ): EntityOrError<Group> {
+        @PathVariable groupId: GroupId
+    ): ResponseDataOrError<Group> {
         val identity = GroupSecurity.IdGroupIdentity(groupId)
         return security.group.asDomainMemberOrCreator(identity, user) {
-            val result = either.eager<Exception, Either<Exception, Group>> {
-                val group = groupRepository.load(groupId).bind()
-                if (group.entryMode == GroupEntryMode.PRIVATE) {
-                    val isMember = groupMemberRepository.isMember(groupId, user.id).bind()
-                    if (isMember) {
-                        Either.Right(group)
+            fTransaction {
+                val result = either.eager<DomainError, Either<DomainError, Group>> {
+                    val group: Group = groupRepository.load(groupId).bind()
+                    if (group.entryMode == GroupEntryMode.PRIVATE) {
+                        val isMember = groupMemberRepository.isMember(groupId, user.id).bind()
+                        if (isMember) {
+                            Either.Right(group)
+                        } else {
+                            Either.Left(EntityNotFound("group", groupId))
+                        }
                     } else {
-                        Either.Left(EntityNotFound("group", groupId))
+                        Either.Right(group)
                     }
-                } else {
-                    Either.Right(group)
-                }
-            }.flatten()
-            result
-        }
+                }.flatten()
+                result
+            }
+        }.asHttpResponse()
     }
 
 
@@ -142,14 +136,16 @@ class GroupController(
     fun loadByJoiningKey(
         @AuthenticationPrincipal user: User,
         @RequestParam key: String
-    ): EntityOrError<Group> {
+    ): ResponseDataOrError<Group> {
         val identity = GroupSecurity.JoiningKeyGroupIdentity(key)
         return security.group.asDomainMemberOrCreator(identity, user) {
-            groupRepository.loadByJoiningKey(key)
-        }
+            fTransaction {
+                groupRepository.loadByJoiningKey(key)
+            }
+        }.asHttpResponse()
     }
 
-    private fun <T> ifNameValid(name: String?, actionIfValid: () -> EntityOrError<T>): EntityOrError<T> {
+    private fun <T : Any> ifNameValid(name: String?, actionIfValid: () -> ResponseDataOrError<T>): ResponseDataOrError<T> {
         return if (!name.isNullOrBlank() && name.length < NAME_FILTER_MIN_SYMBOLS) {
             DataOrError.incorrectArgument("name", "name should contains minimum $NAME_FILTER_MIN_SYMBOLS symbols")
         } else {
@@ -160,17 +156,17 @@ class GroupController(
     @GetMapping(params = ["userId"])
     fun listByUser(
         @AuthenticationPrincipal user: User,
-        @RequestParam userId: String,
+        @RequestParam userId: UUID,
         @RequestParam(required = false) name: String?,
         @RequestParam(required = false, defaultValue = "") order: GroupOrdering,
         pagination: Repository.Pagination
-    ): EntityOrError<GroupsPayload> {
+    ): ResponseDataOrError<GroupsPayload> {
         return ifNameValid(name) {
             security.user.asHimSelf(userId, user) {
                 groupRepository
-                    .loadByUser(userId, name, pagination, order)
+                    .listByUser(userId, name, pagination, order)
                     .flatMap {groups -> enrichUsersGroups(user, groups)}
-            }
+            }.asHttpResponse()
         }
     }
 
@@ -183,17 +179,18 @@ class GroupController(
         @RequestParam(required = false, defaultValue = "false") onlyWithInvites: Boolean,
         @RequestParam(defaultValue = "") ordering: GroupOrdering,
         pagination: Repository.Pagination
-    ): EntityOrError<GroupsPayload> {
+    ): ResponseDataOrError<GroupsPayload> {
         return ifNameValid(name) {
-            val result = groupRepository.loadOnlyAvailable(
-                userId = user.id,
-                userDomain = user.domain,
-                partOfName = name,
-                pagination = pagination,
-                ordering = ordering
-            ).flatMap {enrichAvailableGroups(user, it)}
+            fTransaction {
+                groupRepository.listOnlyAvailable(
+                    userId = user.id,
+                    userDomain = user.domain,
+                    partOfName = name,
+                    pagination = pagination,
+                    ordering = ordering
+                ).flatMap {enrichAvailableGroups(user, it)}
+            }.asHttpResponse()
 
-            DataOrError.fromEither(result, log)
         }
     }
 
@@ -201,55 +198,56 @@ class GroupController(
     @GetMapping("/{groupId}/members")
     fun listUsers(
         @AuthenticationPrincipal user: User,
-        @PathVariable groupId: String,
-        @RequestParam username: Optional<String>,
+        @PathVariable groupId: GroupId,
+        @RequestParam username: String?,
         pagination: Repository.Pagination
-    ): EntityOrError<List<GroupMember>> {
-        return security.group.asMember(groupId, user) {
-            groupMemberRepository.loadByGroup(groupId, pagination, username.asOption(), roleFilter = None)
-        }
+    ): ResponseDataOrError<List<GroupMember>> {
+        return security.group.asMember(groupId, user) {_ ->
+            groupMemberRepository.listByGroup(
+                groupId = groupId,
+                pagination = pagination,
+                usernameFilter = username,
+                roleFilter = null
+            )
+        }.asHttpResponse()
     }
 
 
     @PatchMapping("/{groupId}")
     fun updateInfo(
         @AuthenticationPrincipal user: User,
-        @PathVariable groupId: String,
+        @PathVariable groupId: GroupId,
         @RequestBody properties: GroupEditableProperties
-    ): EntityOrError<Group> {
-        return security.group.asAdmin(groupId, user) {
-            groupRepository.possibleMutate(groupId) {group ->
-                group.update(properties)
+    ): ResponseDataOrError<Group> {
+        return security.group.asAdmin(groupId, user) {group ->
+            either.eager {
+                val nextGroup = group.update(properties).bind()
+                groupRepository.update(nextGroup).bind()
+                nextGroup
             }
-        }
+        }.asHttpResponse()
     }
+
 
     @DeleteMapping("/{groupId}")
     fun archive(
         @AuthenticationPrincipal user: User,
-        @PathVariable groupId: String
-    ): EntityOrError<Group> {
-        return security.group.asAdmin(groupId, user) {
-            either.eager {
-                val group = groupRepository.load(groupId).bind()
-                val nextGroup = groupRepository.mutate(groupId) {
-                    group.delete()
-                }.bind()
-                nextGroup
-            }
-        }
+        @PathVariable groupId: GroupId
+    ): ResponseDataOrError<Group> {
+        return security.group.asAdmin(groupId, user) {group ->
+            groupRepository.update(group.delete())
+        }.asHttpResponse()
+
     }
 
     @DeleteMapping("/{groupId}/joining-key")
     fun resetJoiningKey(
         @AuthenticationPrincipal user: User,
-        @PathVariable groupId: String
-    ): EntityOrError<Group> {
-        return security.group.asAdmin(groupId, user) {
-            groupRepository.mutate(groupId) {entity: Group ->
-                entity.regenerateJoiningKey()
-            }
-        }
+        @PathVariable groupId: GroupId
+    ): ResponseDataOrError<Group> {
+        return security.group.asAdmin(groupId, user) {group ->
+            groupRepository.mutate(groupId) {it.regenerateJoiningKey()}
+        }.asHttpResponse()
     }
 
 
@@ -258,25 +256,25 @@ class GroupController(
     @PatchMapping("/{groupId}/members/{userId}/role-in-group")
     fun changeMemberRole(
         @AuthenticationPrincipal user: User,
-        @PathVariable groupId: String,
-        @PathVariable userId: String,
+        @PathVariable groupId: GroupId,
+        @PathVariable userId: UserId,
         @RequestBody rolePatch: RolePatch
-    ): EntityOrError<GroupMember> {
-        return security.group.asAdmin(groupId, user) {
+    ): ResponseDataOrError<GroupMember> {
+        return security.group.asAdmin(groupId, user) {_ ->
             groupService.changeRoleInGroup(groupId, userId, rolePatch.roleInGroup)
-        }
+        }.asHttpResponse()
     }
 
 
-    @DeleteMapping("/{groupId}/members/{removedUserId}")
+    @DeleteMapping("/{groupId}/members/{memberId}")
     fun removeMember(
         @AuthenticationPrincipal user: User,
-        @PathVariable groupId: String,
-        @PathVariable removedUserId: String
-    ): EntityOrError<String> {
-        return security.groupMember.asAdminOrHimSelf(groupId, removedUserId, user) {
-            groupService.removeUser(groupId, removedUserId).map {"OK"}
-        }
+        @PathVariable groupId: GroupId,
+        @PathVariable memberId: UserId
+    ): ResponseDataOrError<String> {
+        return security.groupMember.asAdminOrHimSelf(groupId, memberId, user) {
+            groupService.removeUser(groupId, memberId).map {"OK"}
+        }.asHttpResponse()
     }
 }
 

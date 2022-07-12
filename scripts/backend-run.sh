@@ -4,6 +4,6 @@ TAG=${1:-"latest"}
 
 podman run -d --quiet \
   --name idel-backend \
-  --network=container:idel-couchbase \
   --replace=true \
+  --network="host" \
   docker.io/leonidv/idel-backend:"${TAG}"

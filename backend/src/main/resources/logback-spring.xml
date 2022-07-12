@@ -11,16 +11,16 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="org.springframework.security" level="DEBUG"/>
-    <logger name="org.springframework.web" level="DEBUG"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
     <logger name="org.springframework" level="INFO"/>
-    <logger name="org.springframework.web.filter.CommonsRequestLoggingFilter" level="DEBUG"/>
+    <logger name="org.springframework.web.filter.CommonsRequestLoggingFilter" level="INFO"/>
     <logger name="org.springframework.boot.autoconfigure.logging" level="INFO"/>
     <logger name="org.springframework.beans.factory.support" level="INFO"/>
 
-    <logger name="com.couchbase.config" level="WARN"/>
-    <logger name="com.couchbase" level="OFF"/>
-    <logger name="com.couchbase.transactions.cleanup" level="WARN"/>
+
+    <logger name="Exposed" level="DEBUG"/>
+    <logger name="org.postgresql.core.v3.QueryExecutorImpl" level="INFO"/>
 
     <logger name="idel" level="DEBUG"/>
     <logger name="idel.infrastructure.repositories" level="TRACE"/>

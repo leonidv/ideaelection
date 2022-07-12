@@ -26,9 +26,17 @@ class JwtApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, i
 
 }
 
-fun jwtHasUserIdAsSub(userId: String) = BodyFieldValueChecker.forField("sub", userId, inData = false)
-fun jwtHasDisplayName(value: String) = BodyFieldValueChecker.forField("displayName", value, inData = false)
-fun jwtHasSubscriptionPlan(value: String) = BodyFieldValueChecker.forField("subscriptionPlan", value, inData = false)
-fun jwtHasEmail(value: String) = BodyFieldValueChecker.forField("email", value, inData = false)
-val jwtHasIssuerSaedi = BodyFieldValueChecker.forField("iss", "saedi", inData = false)
+object JwtChecks {
+    fun hasUserIdAsSub(userId: String) = BodyFieldValueChecker.forField("sub", userId, inData = false)
+    fun hasDisplayName(value: String) = BodyFieldValueChecker.forField("displayName", value, inData = false)
+    fun hasSubscriptionPlan(value: String) = BodyFieldValueChecker.forField("subscriptionPlan", value, inData = false)
+    fun hasEmail(value: String) = BodyFieldValueChecker.forField(
+        "email",
+        value.lowercase(Locale.getDefault()),
+        inData = false
+    )
+    val hasIssuerSaedi = BodyFieldValueChecker.forField("iss", "saedi", inData = false)
+
+}
+
 

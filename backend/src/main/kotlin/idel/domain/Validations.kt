@@ -1,6 +1,7 @@
 package idel.domain
 
 import arrow.core.Either
+import arrow.core.flatten
 import io.konform.validation.*
 import java.net.URL
 
@@ -40,7 +41,22 @@ fun ValidationBuilder<String>.isImageBase64(allowEmptyValue: Boolean): Constrain
 interface Validator<T> {
     val validation : Validation<T>
 
-    fun <X> ifValid(properties: T, action: () -> X): Either<ValidationException, X> {
+    fun <X> ifValid(properties: T, action: () -> X) :Either<ValidationError,X> {
+        val validationResult = validation.validate(properties)
+        return when (validationResult) {
+            is Invalid -> {
+                val errors = validationResult.errors
+                Either.Left(ValidationError("properties is invalid", errors))
+            }
+            is Valid -> Either.Right(action())
+        }
+    }
+
+    fun <X> ifValidEither(properties: T, action: () -> Either<DomainError,X>) : Either<DomainError,X> {
+        return ifValid(properties, action).flatten()
+    }
+
+    fun <X> ifValidExp(properties: T, action: () -> X): Either<ValidationException, X> {
         val validationResult = validation.validate(properties)
         return when (validationResult) {
             is Invalid -> {
@@ -51,8 +67,8 @@ interface Validator<T> {
         }
     }
 
-    fun <X> ifValidEither(properties: T, action: () -> Either<Exception,X>): Either<Exception,X> {
-        val x: Either<Exception, Either<Exception, X>> = ifValid(properties,action)
+    fun <X> ifValidEitherExp(properties: T, action: () -> Either<Exception,X>): Either<Exception,X> {
+        val x: Either<Exception, Either<Exception, X>> = ifValidExp(properties,action)
         return when (x) {
             is Either.Left -> x
             is Either.Right -> x.value

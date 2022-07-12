@@ -21,13 +21,13 @@ class AccessToPrivateGroupScenarios : DescribeSpec({
     }
 
     describe("create users") {
-        registryUsers(userA, userB, userC)
+        registerUsers(userA, userB, userC)
     }
 
 
 
     describe("create private group") {
-        val groupInfo = createGroup(groupAdmin = userA, members = setOf(userB), entryMode = GroupsApi.PRIVATE)
+        val groupInfo = createGroup(groupAdmin = userA, members = setOf(userB), entryMode = GroupsApi.EntryMode.PRIVATE)
         groupId = groupInfo.groupId
         joiningKey = groupInfo.joiningKey
     }

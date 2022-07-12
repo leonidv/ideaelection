@@ -1,95 +1,133 @@
 package idel.infrastructure
 
-import com.couchbase.client.java.Cluster
-import com.couchbase.client.java.Collection
 import idel.domain.*
-import idel.infrastructure.repositories.*
+import idel.domain.security.SecurityService
+import idel.infrastructure.repositories.psql.*
+import org.jetbrains.exposed.sql.Database
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import javax.sql.DataSource
 
 @Configuration
-class DomainConfiguration {
+class DomainConfiguration(
 
-
+) {
     @Autowired
-    private lateinit var couchbaseCollection: Collection
-
-    @Autowired
-    private lateinit var couchbaseCluster: Cluster
+    private lateinit var dataSource: DataSource
 
     @Bean
-    fun couchbaseTransactions() : CouchbaseTransactions {
-        return CouchbaseTransactions(couchbaseCluster)
+    fun exposedDatabase(): Database {
+        return Database.connect(dataSource)
     }
 
     @Bean
-    fun groupRepository() : GroupRepository {
-        return GroupCouchbaseRepository(couchbaseCluster,couchbaseCollection)
+    fun groupRepository(): GroupRepository {
+        return GroupPgRepository()
     }
 
     @Bean
-    fun userRepository() : UserRepository {
-        return UserCouchbaseRepository(couchbaseCluster, couchbaseCollection)
+    fun groupSecurity(
+        userRepository: UserRepository,
+        securityService: SecurityService,
+        groupRepository: GroupRepository
+    ): GroupSecurity {
+        return GroupSecurity(userRepository, securityService, groupRepository)
     }
 
     @Bean
-    fun userSettingRepository() : UserSettingsRepository {
-        return UserSettingsCouchbaseRepository(couchbaseCluster, couchbaseCollection)
+    fun userRepository(): UserRepository {
+        return UserPgRepository()
     }
 
     @Bean
-    fun joinRequestRepository() : JoinRequestRepository {
-        return JoinRequestCouchbaseRepository(couchbaseCluster, couchbaseCollection)
+    fun userSecurity(): UserSecurity {
+        return UserSecurity()
+    }
+
+
+    @Bean
+    fun userService(
+        userRepository: UserRepository,
+        userSettingsRepository: UserSettingsRepository,
+        groupMembershipService: GroupMembershipService
+    ): UserService {
+        return UserService(userRepository, userSettingsRepository, groupMembershipService)
+    }
+
+
+    @Bean
+    fun userSettingRepository(): UserSettingsRepository {
+        return UserSettingsPgRepository()
     }
 
     @Bean
-    fun ideaRepository() : IdeaCouchbaseRepository {
-        return IdeaCouchbaseRepository(couchbaseCluster, couchbaseCollection)
+    fun joinRequestRepository(): JoinRequestRepository {
+        return JoinRequestPgRepository()
     }
 
     @Bean
-    fun inviteRepository() : InviteRepository {
-        return InviteCouchbaseRepository(couchbaseCluster, couchbaseCollection)
+    fun ideaRepository(): IdeaPgRepository {
+        return IdeaPgRepository()
     }
 
     @Bean
-    fun groupMemberRepository() : GroupMemberRepository {
-        return GroupMemberCouchbaseRepository(couchbaseCluster, couchbaseCollection)
+    fun ideaSecurity(securityService: SecurityService, ideaRepository: IdeaRepository): IdeaSecurity {
+        return IdeaSecurity(securityService, ideaRepository)
     }
 
     @Bean
-    fun groupMembershipService(
-            groupRepository: GroupRepository,
-            userRepository: UserRepository,
-            joinRequestRepository: JoinRequestRepository,
-            inviteRepository: InviteRepository,
-            groupMemberRepository: GroupMemberRepository
-
-    ): GroupMembershipService {
-        return GroupMembershipService(
-                groupRepository = groupRepository,
-                userRepository = userRepository,
-                joinRequestRepository = joinRequestRepository,
-                inviteRepository = inviteRepository,
-                groupMemberRepository = groupMemberRepository
-        )
+    fun inviteRepository(): InviteRepository {
+        return InvitePgRepository()
     }
 
     @Bean
-    fun groupService(groupMemberRepository: GroupMemberRepository) : GroupService {
+    fun inviteSecurity(inviteRepository: InviteRepository, groupSecurity: GroupSecurity): InviteSecurity {
+        return InviteSecurity(inviteRepository,groupSecurity)
+    }
+
+    @Bean
+    fun groupMemberRepository(): GroupMemberRepository {
+        return GroupMemberPgRepository()
+    }
+
+    @Bean
+    fun groupService(groupMemberRepository: GroupMemberRepository): GroupService {
         return GroupService(groupMemberRepository)
     }
 
     @Bean
-    fun securityService(groupMemberRepository: GroupMemberRepository, groupRepository: GroupRepository) : SecurityService {
-        return SecurityService(groupMemberRepository, groupRepository)
+    fun groupMemberSecurity(
+        securityService: SecurityService,
+        groupMemberRepository: GroupMemberRepository
+    ): GroupMemberSecurity {
+        return GroupMemberSecurity(securityService, groupMemberRepository)
     }
 
     @Bean
-    fun userService(userRepository: UserRepository, userSettingsRepository: UserSettingsRepository, groupMembershipService: GroupMembershipService) : UserService {
-        return UserService(userRepository, userSettingsRepository, groupMembershipService)
+    fun groupMembershipService(
+        groupRepository: GroupRepository,
+        userRepository: UserRepository,
+        joinRequestRepository: JoinRequestRepository,
+        inviteRepository: InviteRepository,
+        groupMemberRepository: GroupMemberRepository
+
+    ): GroupMembershipService {
+        return GroupMembershipService(
+            groupRepository = groupRepository,
+            userRepository = userRepository,
+            joinRequestRepository = joinRequestRepository,
+            inviteRepository = inviteRepository,
+            groupMemberRepository = groupMemberRepository
+        )
     }
 
+    @Bean
+    fun securityService(
+        groupMemberRepository: GroupMemberRepository,
+        groupRepository: GroupRepository
+    ): SecurityService {
+        return SecurityService(groupMemberRepository, groupRepository)
+    }
 
 }

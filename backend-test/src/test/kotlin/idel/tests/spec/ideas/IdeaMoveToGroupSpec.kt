@@ -20,7 +20,7 @@ class IdeaMoveToGroupSpec : DescribeSpec({
     lateinit var g1_id: String
     lateinit var g2_id: String
     describe("initialization") {
-        registryUsers(userG1_A, userG2_A, userG2_B, userB, userC, userD)
+        registerUsers(userG1_A, userG2_A, userG2_B, userB, userC, userD)
 
         g1_id = createGroup(userG1_A, members = setOf(userB, userC, userD)).groupId
         g2_id = createGroup(userG2_A, members = setOf(userG2_B, userB, userC, userD)).groupId

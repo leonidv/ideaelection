@@ -4,13 +4,13 @@ import org.springframework.util.DigestUtils
 import java.util.*
 
 interface Identifiable {
-    val id : String
+    val id: String
 }
 
 /**
  * Generate id from UUID without dashes.
  */
-fun generateId() : String = UUID.randomUUID().toString().replace("-","")
+fun generateId() : String = UUID.randomUUID().toString()
 
 /**
  * Make id based on field values. May be used for value object or similar to them.

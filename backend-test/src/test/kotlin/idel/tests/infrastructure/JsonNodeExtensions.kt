@@ -5,7 +5,10 @@ import arrow.core.Option
 import arrow.core.Some
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.*
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.BooleanNode
+import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.jayway.jsonpath.*
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider
@@ -67,6 +70,9 @@ object JsonNodeExtensions {
             val parsed = JsonPath.parse(this, conf)
             val data = parsed.read(jsonPath, listOfAny) as List<Any>
             data.isNotEmpty()
+        } catch (e: InvalidPathException) {
+            println("${e.message} for jsonPath=[${jsonPath}]")
+            throw e
         } catch (e: PathNotFoundException) {
             false
         }
@@ -110,7 +116,7 @@ object JsonNodeExtensions {
         return try {
             val parsed = JsonPath.parse(this, conf)
             val x = parsed.read<Any>(jsonPath)
-            when(x) {
+            when (x) {
                 is TextNode -> Option.fromNullable(x.textValue())
                 is IntNode -> Option.fromNullable(x.intValue().toString()) // ugly dirty hack, only for test :)
                 is BooleanNode -> Option.fromNullable(x.booleanValue().toString())
@@ -127,7 +133,7 @@ object JsonNodeExtensions {
             None
         } catch (e: PathNotFoundException) {
             None
-        } catch (e : InvalidPathException) {
+        } catch (e: InvalidPathException) {
             throw IllegalArgumentException("invalid path [$jsonPath], syntax error = ${e.message}")
         }
 

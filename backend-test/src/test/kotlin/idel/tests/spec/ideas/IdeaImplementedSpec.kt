@@ -1,6 +1,9 @@
 package idel.tests.spec.ideas
 
-import idel.tests.apiobject.*
+import idel.tests.apiobject.EntityStorage
+import idel.tests.apiobject.User
+import idel.tests.apiobject.ideaIsImplemented
+import idel.tests.apiobject.ideaIsNotImplemented
 import idel.tests.infrastructure.*
 import io.kotest.core.spec.style.DescribeSpec
 
@@ -20,7 +23,7 @@ class IdeaImplementedSpec : DescribeSpec({
         lateinit var ideaId: String
 
         describe("init") {
-            registryUsers(userA, userB, userC, userD, userE)
+            registerUsers(userA, userB, userC, userD, userE)
 
             groupId = createGroup(userA, setOf(userB, userC, userE)).groupId
 

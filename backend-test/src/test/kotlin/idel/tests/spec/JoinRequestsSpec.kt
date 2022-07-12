@@ -21,7 +21,7 @@ class JoinRequestsSpec : DescribeSpec({
     val userB = User("userB")
 
     describe("register users [userA, userB]") {
-        registryUsers(userA, userB)
+        registerUsers(userA, userB)
     }
 
     describe("negative scenarios") {
@@ -32,6 +32,22 @@ class JoinRequestsSpec : DescribeSpec({
                 response.shouldBeError(102)
             }
         }
+
+        describe("can't create second join request") {
+            val joiningKey = createGroup(userA, entryMode = GroupsApi.EntryMode.PRIVATE, members = emptySet()).joiningKey
+
+            describe("$userB creates a first join request") {
+                val firstResponse = userB.joinRequests.create(joiningKey)
+                checkIsOk(firstResponse)
+            }
+
+            describe("$userB try to create a second join request") {
+                val secondResponse = userB.joinRequests.create(joiningKey)
+                checkIsEntityAlreadyExists(secondResponse);
+            }
+
+
+        }
     }
 
 
@@ -40,7 +56,7 @@ class JoinRequestsSpec : DescribeSpec({
             describe("basic checks") {
                 lateinit var groupId: String
                 lateinit var joiningKey: String
-                val groupInfo = createGroup(userA, entryMode = GroupsApi.PUBLIC, members = setOf())
+                val groupInfo = createGroup(userA, entryMode = GroupsApi.EntryMode.PUBLIC, members = setOf())
                 groupId = groupInfo.groupId
                 joiningKey = groupInfo.joiningKey
 
@@ -60,9 +76,9 @@ class JoinRequestsSpec : DescribeSpec({
         describe("join requests status depends on groups entry mode") {
             table(
                 headers("entryMode", "joinRequestStatus"),
-                row(GroupsApi.PUBLIC, JoinRequestsApi.APPROVED),
-                row(GroupsApi.CLOSED, JoinRequestsApi.UNRESOLVED),
-                row(GroupsApi.PRIVATE, JoinRequestsApi.UNRESOLVED)
+                row(GroupsApi.EntryMode.PUBLIC, JoinRequestsApi.APPROVED),
+                row(GroupsApi.EntryMode.CLOSED, JoinRequestsApi.UNRESOLVED),
+                row(GroupsApi.EntryMode.PRIVATE, JoinRequestsApi.UNRESOLVED)
             ).forAll {entryMode: String, status: String ->
                 describe("for $entryMode group status should be $status") {
                     lateinit var joiningKey: String
@@ -78,7 +94,7 @@ class JoinRequestsSpec : DescribeSpec({
         }
 
         describe("delete a joinRequest") {
-            listOf(GroupsApi.CLOSED, GroupsApi.PRIVATE) .forEach {entryMode ->
+            listOf(GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE) .forEach {entryMode ->
                 describe("from a $entryMode group") {
 
                     lateinit var joinRequestId: String
@@ -120,7 +136,7 @@ class JoinRequestsSpec : DescribeSpec({
 
     describe("security") {
         describe("$userB can't create join request for group with domain = [company]") {
-            arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE).forEach {entryMode ->
+            arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE).forEach {entryMode ->
                 val groupInfo = createGroup(
                     groupAdmin = userA,
                     entryMode = entryMode,
@@ -132,6 +148,7 @@ class JoinRequestsSpec : DescribeSpec({
                     val joinRequestResponse = userB.joinRequests.create(groupInfo.joiningKey)
                     checkIsNotFound(joinRequestResponse)
                 }
+
             }
         }
     }

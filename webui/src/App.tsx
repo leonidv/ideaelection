@@ -19,7 +19,7 @@ const Invites = lazy(() => import('./components/Invites/Invites'))
 const JoinRequests = lazy(() => import('./components/JoinRequests/JoinRequests'))
 const JoinRequestsModal = lazy(() => import('./components/JoinRequests/JoinRequestsModal/JoinRequestsModal'))
 import { ShowAlert } from './components/Alert/Alert'
-const NotFound = lazy(() => import('./components/NotFound'))
+const NotFound = lazy(() => import('./components/NotFound/NotFound'))
 
 const localToken = null
 //import { localToken } from '../localToken.js'

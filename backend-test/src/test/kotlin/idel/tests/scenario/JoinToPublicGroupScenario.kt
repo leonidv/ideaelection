@@ -19,13 +19,13 @@ class JoinToPublicGroupScenario : DescribeSpec({
         val userC = User("userC")
         val userD = User("userD", "not member")
 
-        registryUsers(userA, userB, userC, userD)
+        registerUsers(userA, userB, userC, userD)
 
         lateinit var groupId: String
         lateinit var joiningKey: String
 
         describe("$userA adds new PUBLIC group without admins") {
-            val groupInfo = createGroup(groupAdmin = userA, entryMode = GroupsApi.PUBLIC, members = setOf())
+            val groupInfo = createGroup(groupAdmin = userA, entryMode = GroupsApi.EntryMode.PUBLIC, members = setOf())
             groupId = groupInfo.groupId
             joiningKey = groupInfo.joiningKey
         }
@@ -43,10 +43,7 @@ class JoinToPublicGroupScenario : DescribeSpec({
         describe("$userB can't add an idea to the group") {
             val ideaResponse = userB.ideas.add(groupId)
 
-            it("can't do it 403 and error [OperationNotPermitted]") {
-                ideaResponse.shouldHasStatus(HttpURLConnection.HTTP_FORBIDDEN)
-                ideaResponse.shouldBeError(103)
-            }
+            checkIsForbidden(ideaResponse)
         }
 
         describe("$userB joins to the group") {
@@ -55,6 +52,13 @@ class JoinToPublicGroupScenario : DescribeSpec({
             checkIsOk(
                 joinRequestResponse,
                 joinRequestIsApproved
+            )
+        }
+
+        describe("$userB doesn't see group in the list of available") {
+            val response = userB.groups.loadAvailable()
+            checkIsOk(response,
+                notIncludeGroup(groupId)
             )
         }
 

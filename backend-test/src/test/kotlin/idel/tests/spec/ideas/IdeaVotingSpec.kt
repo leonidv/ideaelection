@@ -19,7 +19,7 @@ class IdeaVotingSpec : DescribeSpec({
     lateinit var ideaId : String
 
     describe("init") {
-        registryUsers(userA, userB, userC)
+        registerUsers(userA, userB, userC)
         groupId = createGroup(userA, members = setOf(userB)).groupId
 
 

@@ -2,7 +2,6 @@ package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.Idel
-import idel.tests.infrastructure.asUserId
 import java.net.http.HttpResponse
 
 class GroupMembersApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "groupmembers") {

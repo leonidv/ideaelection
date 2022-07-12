@@ -18,7 +18,7 @@ class IdeaDeleteSpec : DescribeSpec({
     lateinit var groupId : String
     lateinit var ideaId: String
     describe("initialization") {
-        registryUsers(userA, userB)
+        registerUsers(userA, userB)
 
         groupId = createGroup(userA, members = setOf(userB)).groupId
 

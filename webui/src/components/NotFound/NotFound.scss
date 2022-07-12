@@ -1,0 +1,30 @@
+.notFound {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  
+    background-image: url('../../images/main.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+  
+    &__title {
+      font-size: 96px;
+      color: #002a6f;
+      font-weight: bold;
+    }
+  
+    &__row {
+      width: 50%;
+      justify-content: space-between !important;
+      font-size: 36px;
+      opacity: 50%;
+      margin-bottom: 100px;
+    }
+  
+    &__copyright {
+      opacity: 70%;
+      font-weight: bold;
+    }
+  }

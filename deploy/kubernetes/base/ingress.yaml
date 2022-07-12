@@ -14,17 +14,6 @@ spec:
       secretName: tls-test.saedi.io
 
   rules:
-#    - host: couchbase.test.saedi.io
-#      http:
-#        paths:
-#          - path: /
-#            pathType: Prefix
-#            backend:
-#              service:
-#                name: saedi-service
-#                port:
-#                  name: couchbase-ui
-
     - host: api.test.saedi.io
       http:
         paths:

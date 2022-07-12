@@ -1,3 +1,0 @@
-CREATE INDEX `ideas` ON `ideaelection`(`_type`)
-
-CREATE INDEX `ideas-by-ctime` ON `ideaelection`(`_type`,`ctime`)

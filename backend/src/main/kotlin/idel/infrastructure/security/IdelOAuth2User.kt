@@ -5,43 +5,26 @@ import idel.domain.User
 import mu.KotlinLogging
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User
+import java.util.*
 
 
 open class IdelOAuth2User(
         authorities: MutableCollection<out GrantedAuthority>,
         attributes: MutableMap<String, Any>,
+        override val id : UUID,
         private val provider: String,
-        private val attributesNames : AttributesNames
-) : DefaultOAuth2User(authorities, attributes, attributesNames.externalId), User {
-
-    class AttributesNames(val externalId : String, val displayName : String, val email : String, val avatar : String)
+        private val providerAttributeKeys : ProviderAttributeKeys
+) : DefaultOAuth2User(authorities, attributes, providerAttributeKeys.externalIdKey), User {
 
     private val log = KotlinLogging.logger {}
-
-    private fun safeAttribute(key: String, attributeMessageName: String, required: Boolean = true): String {
-        return if (attributes.containsKey(key)) {
-            getAttribute(key)!!
-        } else {
-            if (required) {
-                throw IllegalStateException("Can't find required attribute " +
-                        "[$attributeMessageName], attributeKey = [$key], attributes = [$attributes], provider = $provider ")
-            } else {
-                log.warn {"Can't find attribute = ${attributeMessageName} by key = ${key}, provider = ${provider}. Attributes keys = [${attributes.keys}]"}
-                ""
-            }
-        }
-    }
 
     /**
      * Identifier of user in provider's system.
      */
-    val externalId = safeAttribute(attributesNames.externalId,"externalId")
-
-    override val email: String = safeAttribute(attributesNames.email, "email")
-    override val displayName: String = safeAttribute(attributesNames.displayName,"displayName")
-    override val avatar: String = safeAttribute(attributesNames.avatar, "avatar", required = false)
-
-    override val id = "${externalId}@${provider}"
+    override val externalId = providerAttributeKeys.externalId(attributes)
+    override val email: String = providerAttributeKeys.email(attributes)
+    override val displayName: String = providerAttributeKeys.displayName(attributes)
+    override val avatar: String = providerAttributeKeys.avatar(attributes)
 
     override val roles = IdelAuthorities.asRoles(this.authorities).toSet()
 
@@ -49,9 +32,10 @@ open class IdelOAuth2User(
 
     fun copy(authorities: MutableCollection<out GrantedAuthority>) : IdelOAuth2User {
         return IdelOAuth2User(
+                id = this.id,
                 authorities = authorities,
                 attributes = this.attributes,
-                attributesNames = this.attributesNames,
+                providerAttributeKeys = this.providerAttributeKeys,
                 provider = this.provider
         )
     }

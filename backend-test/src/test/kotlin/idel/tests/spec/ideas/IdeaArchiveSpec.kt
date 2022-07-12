@@ -17,7 +17,7 @@ class IdeaArchiveSpec : DescribeSpec({
     lateinit var groupId: String
 
     describe("initialization") {
-        registryUsers(userA, userB, userC, userD)
+        registerUsers(userA, userB, userC, userD)
 
         groupId = createGroup(userA, members = setOf(userB, userC, userD)).groupId
     }

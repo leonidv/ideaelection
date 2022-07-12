@@ -9,7 +9,6 @@
 
 .mainScreen {
   min-height: 100vh;
-
   position: relative;
   background: linear-gradient(315.01deg, #000000 25.53%, rgba(0, 0, 0, 0) 100%),
     #5595f4;
@@ -171,6 +170,49 @@
         bottom: 0;
         top: 0;
         height: 100%;
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .mainScreen {
+    &__title {
+      font-size: 28px;
+      line-height: 36px;
+    }
+
+    &__privacy {
+      max-width: 319px;
+    }
+
+    &__descr {
+      margin-bottom: 64px;
+    }
+
+    &__logo {
+      &--mobile {
+        display: block;
+        top: 64px;
+      }
+    }
+
+    &__col {
+      &--left {
+        display: none;
+      }
+      &--right {
+        position: relative;
+        width: 100%;
+
+        &::after {
+          content: url('../../images/bg_mobile.svg');
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          top: 0;
+          height: 100%;
+        }
       }
     }
   }

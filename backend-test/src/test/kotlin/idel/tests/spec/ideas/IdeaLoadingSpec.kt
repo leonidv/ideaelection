@@ -24,7 +24,7 @@ class IdeaLoadingSpec : DescribeSpec({
 
 
     describe("init") {
-        registryUsers(userA, userB, userC, *voters)
+        registerUsers(userA, userB, userC, *voters)
     }
 
     describe("security") {
@@ -144,7 +144,6 @@ class IdeaLoadingSpec : DescribeSpec({
             )
 
             checkIsOk(response)
-            Thread.sleep(1000) // time for couchbase to index changes
         }
 
         describe("add idea with summary [another idea] and description [all should vote for it!]") {
@@ -155,7 +154,6 @@ class IdeaLoadingSpec : DescribeSpec({
             )
 
             checkIsOk(response)
-            Thread.sleep(1000) // time for couchbase to index changes
         }
 
         val idea1Summary = "my best idea"

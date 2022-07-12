@@ -108,6 +108,24 @@ Admin and him self is supplementary access levels for a member.
 |Operation               | Access level
 | Add                    | Any, but see <<groups.adoc#_joining_to_a_group>>
 | View                   | Group admin, Group member, Him self
-| Kick member (delete)   | Group admin, Him self
+| Kick member (delete)   | Group's admin, Him self
+
+|===
+
+==== Invites members actions
+
+Invites levels:
+
+* Group admin - the user is an admin of the group
+* Invited user - the user for whom the invitation was created
+
+|===
+|Operation               | Access level
+| Create                 | Group admin
+| View group's invites   | Group admin
+| View user's invites    | Invited user
+| Approve                | Invited user
+| Decline                | Invited user
+| Revoke                 | Group admin
 
 |===

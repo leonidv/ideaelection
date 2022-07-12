@@ -2,10 +2,9 @@ package idel.tests.infrastructure
 
 import com.fasterxml.jackson.databind.JsonNode
 import idel.tests.infrastructure.JsonNodeExtensions.queryArraySize
-import io.kotest.assertions.arrow.option.shouldBeSome
+import io.kotest.assertions.arrow.core.shouldBeSome
 import io.kotest.assertions.asClue
-import io.kotest.core.spec.style.scopes.DescribeScope
-import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
+import io.kotest.core.spec.style.scopes.DescribeSpecContainerScope
 import java.net.HttpURLConnection
 import java.net.http.HttpResponse
 
@@ -33,6 +32,16 @@ class BodyFieldValueChecker(
 
     override fun check(jsonNode: JsonNode) {
         jsonNode.shouldContains(jsonPath, expectedValue)
+    }
+}
+
+class BodyFieldNullChecker(
+    override val testName: String,
+    private val objectPath: String,
+    private val field: String
+) : ResponseChecker {
+    override fun check(jsonNode: JsonNode) {
+        jsonNode.shouldHasNull(objectPath, field)
     }
 }
 
@@ -126,7 +135,7 @@ fun entityIdIs(id : String) = BodyFieldValueChecker("id is $id","$.data.id", id)
 fun dataListSize(size: Int) = BodyArraySize("data has $size elements", "$.data", size)
 
 
-suspend fun DescribeSpecContainerContext.checkIsOk(response: HttpResponse<JsonNode>, vararg fieldChecks: ResponseChecker) {
+suspend fun DescribeSpecContainerScope.checkIsOk(response: HttpResponse<JsonNode>, vararg fieldChecks: ResponseChecker) {
     val body = response.body()
 
     body.toPrettyString().asClue {
@@ -146,7 +155,7 @@ suspend fun DescribeSpecContainerContext.checkIsOk(response: HttpResponse<JsonNo
     }
 }
 
-suspend fun DescribeSpecContainerContext.checkIsForbidden(response: HttpResponse<JsonNode>) {
+suspend fun DescribeSpecContainerScope.checkIsForbidden(response: HttpResponse<JsonNode>) {
     val body = response.body()
     body.toPrettyString().asClue {
         it("response is 403 with code 103") {
@@ -156,7 +165,7 @@ suspend fun DescribeSpecContainerContext.checkIsForbidden(response: HttpResponse
     }
 }
 
-suspend fun DescribeSpecContainerContext.checkIsNotFound(response: HttpResponse<JsonNode>) {
+suspend fun DescribeSpecContainerScope.checkIsNotFound(response: HttpResponse<JsonNode>) {
     val body = response.body()
     body.toPrettyString().asClue {
         it("response is 404 with error.code 102") {
@@ -167,12 +176,22 @@ suspend fun DescribeSpecContainerContext.checkIsNotFound(response: HttpResponse<
 }
 
 
-suspend fun DescribeSpecContainerContext.checkIsBadRequest(response: HttpResponse<JsonNode>, error : Int) {
+suspend fun DescribeSpecContainerScope.checkIsBadRequest(response: HttpResponse<JsonNode>, error : Int) {
     val body = response.body()
     body.toPrettyString().asClue {
         it("response is 400 with error.code = [$error]") {
             response.shouldHasStatus(HttpURLConnection.HTTP_BAD_REQUEST)
             response.shouldBeError(error)
+        }
+    }
+}
+
+suspend fun DescribeSpecContainerScope.checkIsEntityAlreadyExists(response: HttpResponse<JsonNode>) {
+    val body = response.body()
+    body.toPrettyString().asClue {
+        it("response is 409 with error.code = [108]") {
+            response.shouldHasStatus(HttpURLConnection.HTTP_CONFLICT)
+            response.shouldBeError(108)
         }
     }
 }
@@ -212,7 +231,7 @@ class ValidationError(
     }
 }
 
-suspend fun DescribeScope.checkValidationErrors(
+suspend fun DescribeSpecContainerScope.checkValidationErrors(
     response: HttpResponse<JsonNode>,
     vararg expectedErrors: ValidationError
 ) {

@@ -1,11 +1,12 @@
 package idel.api
 
-import arrow.core.computations.either
+import arrow.core.continuations.either
 import arrow.core.Either
 import idel.domain.*
 import mu.KotlinLogging
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping("/invites")
@@ -14,87 +15,97 @@ class InvitesController(
     private val inviteRepository: InviteRepository,
     private val groupRepository: GroupRepository,
     private val userRepository: UserRepository,
-    apiSecurityFactory: ApiSecurityFactory
-) {
-    private val log = KotlinLogging.logger {}
-
-    val security = apiSecurityFactory.create(log)
+    private val security: ApiSecurity
+) : DataOrErrorHelper {
+    override val log = KotlinLogging.logger {}
 
     data class InvitesPayload(val invites: List<Invite>, val groups: List<Group>, val users: Set<User>)
 
     data class InvitePayload(val invite: Invite, val group: Group, val users: Set<User>)
 
     data class InviteCreateParams(
-        val groupId: String,
+        val groupId: GroupId,
         val message: String,
-        val registeredUsersIds: Set<String>,
+        val registeredUsersIds: Set<UserId>,
         val newUsersEmails: Set<String>
     )
 
-    data class AddInviteResult(val invites: Set<Invite>, val errorForUsers: Set<String>)
 
     @PostMapping
     fun create(
         @AuthenticationPrincipal user: User,
         @RequestBody params: InviteCreateParams
-    ): EntityOrError<AddInviteResult> {
-        return security.group.asAdmin(params.groupId, user) {
-            groupMembershipService.inviteUsersToGroup(
-                groupId = params.groupId,
+    ): ResponseDataOrError<GroupMembershipService.InviteToGroupResult> {
+        return security.group.asAdmin(params.groupId, user) {group ->
+            val result = groupMembershipService.inviteUsersToGroup(
+                group = group,
                 message = params.message,
                 author = user,
                 registeredUserIds = params.registeredUsersIds,
                 newUserEmails = params.newUsersEmails
-            ).map {result -> AddInviteResult(invites = result.createdInvites, errorForUsers = result.errorsFor)}
-        }
+            )
+            Either.Right(result)
+        }.asHttpResponse()
     }
 
 
     @GetMapping("/{inviteId}")
-    fun load(@PathVariable inviteId: String): EntityOrError<InvitePayload> {
-        val result: Either<Exception, InvitePayload> = either.eager {
-            val invite = inviteRepository.load(inviteId).bind()
-            val group = groupRepository.load(invite.groupId).bind()
-            val author = userRepository.load(invite.author).bind()
+    fun load(@AuthenticationPrincipal user: User, @PathVariable inviteId: UUID): ResponseDataOrError<InvitePayload> {
+        return security.invite.asOwnerOrGroupAdmin(user, inviteId) {invite, accessLevel ->
+            fTransaction {
+                either.eager {
+                    val group = groupRepository.load(invite.groupId).bind()
+                    val author = userRepository.load(invite.author).bind()
 
-            InvitePayload(invite, group, setOf(author))
-        }
-
-        return DataOrError.fromEither(result, log)
+                    InvitePayload(invite, group, setOf(author))
+                }
+            }
+        }.asHttpResponse()
     }
 
     @GetMapping(params = ["userId"])
     fun loadInvitesForUser(
         @AuthenticationPrincipal user: User,
-        @RequestParam userId: String,
+        @RequestParam userId: UUID,
         @RequestParam(required = false, defaultValue = "") order: GroupMembershipRequestOrdering,
         pagination: Repository.Pagination
-    ): EntityOrError<InvitesPayload> {
+    ): ResponseDataOrError<InvitesPayload> {
         return security.user.asHimSelf(user.id, user) {
             either.eager {
-                val invites = inviteRepository.loadByUser(userId, order, pagination).bind()
+                val invites =
+                    inviteRepository.loadByUser(
+                        userId = userId,
+                        statuses = setOf(AcceptStatus.UNRESOLVED),
+                        order = order,
+                        pagination = pagination
+                    ).bind()
                 enrichInvites(invites).bind()
             }
-        }
+        }.asHttpResponse()
     }
 
     @GetMapping(params = ["groupId"])
     fun loadInvitesForGroup(
         @AuthenticationPrincipal user: User,
-        @RequestParam groupId: String,
+        @RequestParam groupId: GroupId,
         @RequestParam(required = false, defaultValue = "") order: GroupMembershipRequestOrdering,
         pagination: Repository.Pagination
-    ): EntityOrError<InvitesPayload> {
+    ): ResponseDataOrError<InvitesPayload> {
         return security.group.asAdmin(groupId, user) {
             either.eager {
-                val invites = inviteRepository.loadByGroup(groupId, order, pagination).bind()
+                val invites =
+                    inviteRepository.loadByGroup(
+                        groupId = groupId,
+                        statuses = setOf(AcceptStatus.UNRESOLVED),
+                        order = order,
+                        pagination = pagination
+                    ).bind()
                 enrichInvites(invites).bind()
             }
-
-        }
+        }.asHttpResponse()
     }
 
-    private fun enrichInvites(invites: List<Invite>): Either<Exception, InvitesPayload> {
+    private fun enrichInvites(invites: List<Invite>): Either<DomainError, InvitesPayload> {
         return either.eager {
             val groups = invites.map {it.groupId}.toSet()
                 .map {groupId -> groupRepository.load(groupId).bind()}
@@ -112,16 +123,11 @@ class InvitesController(
     @PatchMapping("{inviteId}/status")
     fun resolve(
         @AuthenticationPrincipal user: User,
-        @PathVariable inviteId: String,
+        @PathVariable inviteId: UUID,
         @RequestBody resolution: Resolution
-    ): EntityOrError<Invite> {
-        val result = groupMembershipService.resolveInvite(inviteId, resolution.status)
-        return DataOrError.fromEither(result, log)
-    }
-
-    @DeleteMapping("/{inviteId}")
-    fun delete(@AuthenticationPrincipal user: User, @PathVariable inviteId: String): EntityOrError<String> {
-        val result = inviteRepository.delete(inviteId).map {"ok"}
-        return DataOrError.fromEither(result, log);
+    ): ResponseDataOrError<Invite> {
+        return security.invite.asOwnerOrGroupAdmin(user, inviteId) {invite, level ->
+            groupMembershipService.resolveInvite(user, invite, resolution.status, level)
+        }.asHttpResponse()
     }
 }

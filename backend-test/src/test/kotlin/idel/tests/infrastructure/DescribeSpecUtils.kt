@@ -1,12 +1,11 @@
 package idel.tests.infrastructure
 
 import idel.tests.apiobject.*
-import io.kotest.core.spec.style.scopes.DescribeScope
-import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
+import io.kotest.core.spec.style.scopes.DescribeSpecContainerScope
 import java.time.LocalDateTime
 
 
-suspend fun DescribeSpecContainerContext.registryUsers(vararg users: User) {
+suspend fun DescribeSpecContainerScope.registerUsers(vararg users: User) {
     describe("register users") {
         users.forEach {user ->
             it("register user [${user.name}]") {
@@ -21,10 +20,10 @@ data class GroupInfo(
     val joiningKey: String
 )
 
-suspend fun DescribeSpecContainerContext.createGroup(
+suspend fun DescribeSpecContainerScope.createGroup(
     groupAdmin: User,
     members: Set<User>,
-    entryMode: String = GroupsApi.PUBLIC,
+    entryMode: String = GroupsApi.EntryMode.PUBLIC,
     domainRestrictions: Array<String> = emptyArray(),
     name: String? = null
 ): GroupInfo {
@@ -57,7 +56,7 @@ suspend fun DescribeSpecContainerContext.createGroup(
         describe("$user join to group") {
             val joinRequestResponse = user.joinRequests.create(joiningKey)
 
-            if (entryMode == GroupsApi.PRIVATE || entryMode == GroupsApi.CLOSED) {
+            if (entryMode == GroupsApi.EntryMode.PRIVATE || entryMode == GroupsApi.EntryMode.CLOSED) {
                 describe("join request is unresolved") {
                     checkIsOk(joinRequestResponse, joinRequestIsUnresolved)
                 }

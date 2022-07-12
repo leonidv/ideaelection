@@ -1,13 +1,19 @@
 package idel.domain
 
 import arrow.core.Either
-import arrow.core.Option
-import arrow.core.Some
+import arrow.core.continuations.either
+import arrow.core.flatten
+import idel.api.DataOrError
+import idel.domain.security.IdeaAccessLevel
+import idel.domain.security.SecurityService
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minLength
+import mu.KLogger
 import java.time.LocalDateTime
 import java.util.*
+
+typealias IdeaId = UUID
 
 /**
  * Summary information about Idea
@@ -27,11 +33,6 @@ class IdeaEditableProperties(
 ) : IIdeaEditableProperties
 
 /**
- * Identifier of not assigned user.
- */
-const val NOT_ASSIGNED: String = ""
-
-/**
  *  Idea - main concept of application.
  *
  *  Don't use this constructor directly, instead call [IdeaFactory.createIdea]
@@ -40,12 +41,12 @@ class Idea(
     /**
      * Generated identifier
      */
-    override val id: String,
+    val id: UUID,
 
     /**
      * Idea's group.
      */
-    val groupId: String,
+    val groupId: GroupId,
 
     /**
      * Time of creation.
@@ -73,7 +74,7 @@ class Idea(
     /**
      * User which is assigned to implement this Idea.
      */
-    val assignee: UserId,
+    val assignee: UserId?,
 
     /**
      * Idea is done. And it is very cool!
@@ -99,12 +100,10 @@ class Idea(
      * Idea is logically deleted, don't visible for users.
      */
     val deleted: Boolean
-) : IIdeaEditableProperties, Identifiable {
+) : IIdeaEditableProperties {
 
     init {
-        require(id.isNotBlank()) {"id can't be blank"}
         require(summary.isNotBlank()) {"title can't be blank"}
-        require(!author.isBlank()) {"author can't be blank"}
     }
 
 
@@ -113,7 +112,7 @@ class Idea(
      *
      * User, which offered an idea, can't vote for it. In this case the method returns an Idea without any changes)
      */
-    fun addVote(userId: UserId): Either<EntityReadOnly, Idea> {
+    fun addVote(userId: UserId): Either<EntityCantBeChanged, Idea> {
         if (voters.contains(userId)) {
             return Either.Right(this)
         }
@@ -124,7 +123,7 @@ class Idea(
     /**
      * Remove voter's vote from this idea.
      */
-    fun removeVote(userId: UserId): Either<EntityReadOnly, Idea> {
+    fun removeVote(userId: UserId): Either<EntityCantBeChanged, Idea> {
         val newVoters = this.voters.minus(userId)
         return this.clone(voters = newVoters)
     }
@@ -141,24 +140,24 @@ class Idea(
      */
     private fun clone(
         summary: String = this.summary,
-        groupId: String = this.groupId,
+        groupId: GroupId = this.groupId,
         description: String = this.description,
         descriptionPlainText: String = this.descriptionPlainText,
         link: String = this.link,
-        assignee: String = this.assignee,
+        assignee: UserId? = this.assignee,
         implemented: Boolean = this.implemented,
-        offeredBy: String = this.author,
-        voters: List<String> = this.voters,
+        offeredBy: UserId = this.author,
+        voters: List<UserId> = this.voters,
         archived: Boolean = this.archived,
         deleted: Boolean = this.deleted
-    ): Either<EntityReadOnly, Idea> {
+    ): Either<EntityCantBeChanged, Idea> {
         val shouldRestoreFromArchive = this.archived && !archived
         val shouldRestoreFromDeleted = this.deleted && !deleted
 
         return if (this.deleted && !shouldRestoreFromDeleted) {
-            Either.Left(EntityLogicallyDeleted())
+            Either.Left(EntityLogicallyDeleted)
         } else if ((this.archived && !shouldRestoreFromArchive) && !deleted) {
-            Either.Left(EntityArchived())
+            Either.Left(EntityArchived)
         } else {
             Either.Right(
                 Idea(
@@ -185,7 +184,7 @@ class Idea(
     private fun isAuthor(changerLevels: Set<IdeaAccessLevel>) = changerLevels.contains(IdeaAccessLevel.AUTHOR)
     private fun isAssignee(changerLevels: Set<IdeaAccessLevel>) = changerLevels.contains(IdeaAccessLevel.ASSIGNEE)
 
-    fun assign(newAssignee: String, changerLevels: Set<IdeaAccessLevel>): Either<Exception, Idea> {
+    fun assign(newAssignee: UserId, changerLevels: Set<IdeaAccessLevel>): Either<DomainError, Idea> {
 
         val canAssign = when {
             hasAssignee() && isAdmin(changerLevels) -> true
@@ -193,16 +192,16 @@ class Idea(
             else -> false
         }
 
-        return if (newAssignee != NOT_ASSIGNED && canAssign) {
+        return if (canAssign) {
             this.clone(assignee = newAssignee)
         } else {
             Either.Left(OperationNotPermitted())
         }
     }
 
-    fun removeAssign(changerLevels: Set<IdeaAccessLevel>): Either<Exception, Idea> {
+    fun removeAssign(changerLevels: Set<IdeaAccessLevel>): Either<DomainError, Idea> {
         return if (isAssignee(changerLevels) || isAdmin(changerLevels)) {
-            this.clone(assignee = NOT_ASSIGNED)
+            this.clone(assignee = null)
         } else {
             Either.Left(OperationNotPermitted())
         }
@@ -210,10 +209,10 @@ class Idea(
 
 
     fun hasAssignee(): Boolean {
-        return this.assignee != NOT_ASSIGNED
+        return this.assignee != null
     }
 
-    fun implement(changerLevels: Set<IdeaAccessLevel>): Either<Exception, Idea> {
+    fun implement(changerLevels: Set<IdeaAccessLevel>): Either<DomainError, Idea> {
         return if (isAdmin(changerLevels) || isAssignee(changerLevels)) {
             this.clone(implemented = true)
         } else {
@@ -221,7 +220,7 @@ class Idea(
         }
     }
 
-    fun notImplement(changerLevels: Set<IdeaAccessLevel>): Either<Exception, Idea> {
+    fun notImplement(changerLevels: Set<IdeaAccessLevel>): Either<DomainError, Idea> {
         return if (isAdmin(changerLevels) || isAssignee(changerLevels)) {
             this.clone(implemented = false)
         } else {
@@ -232,7 +231,7 @@ class Idea(
     fun updateInformation(
         properties: IIdeaEditableProperties,
         changerLevels: Set<IdeaAccessLevel>
-    ): Either<Exception, Idea> {
+    ): Either<DomainError, Idea> {
         val canUpdate = when {
             isAdmin(changerLevels) -> true
 
@@ -256,6 +255,7 @@ class Idea(
                     link = properties.link
                 )
             }
+
         } else {
             Either.Left(OperationNotPermitted())
         }
@@ -264,7 +264,7 @@ class Idea(
     /**
      * Moves idea to another group.
      */
-    fun changeGroup(groupId: String, changerLevels: Set<IdeaAccessLevel>): Either<Exception, Idea> {
+    fun changeGroup(groupId: GroupId, changerLevels: Set<IdeaAccessLevel>): Either<DomainError, Idea> {
         return when {
             isAdmin(changerLevels) ||
                     ((hasAssignee() && isAssignee(changerLevels) || isAuthor(changerLevels))) ->
@@ -276,7 +276,7 @@ class Idea(
     /**
      * Archive idea
      */
-    fun archive(changerLevels: Set<IdeaAccessLevel>): Either<Exception, Idea> {
+    fun archive(changerLevels: Set<IdeaAccessLevel>): Either<DomainError, Idea> {
         return if (isAdmin(changerLevels) || isAssignee(changerLevels) || isAuthor(changerLevels)) {
             clone(archived = true)
         } else {
@@ -287,9 +287,9 @@ class Idea(
     /**
      * Restore idea from archive
      */
-    fun unArchive(changerLevels: Set<IdeaAccessLevel>): Either<OperationNotPermitted, Idea> {
+    fun unArchive(changerLevels: Set<IdeaAccessLevel>): Either<DomainError, Idea> {
         return if (isAdmin(changerLevels) || isAssignee(changerLevels) || isAuthor(changerLevels)) {
-            clone(archived = false).mapLeft {OperationNotPermitted()}
+            clone(archived = false)
         } else {
             Either.Left(OperationNotPermitted())
         }
@@ -298,7 +298,7 @@ class Idea(
     /**
      * Logically delete idea
      */
-    fun delete(changerLevels: Set<IdeaAccessLevel>): Either<Exception, Idea> {
+    fun delete(changerLevels: Set<IdeaAccessLevel>): Either<DomainError, Idea> {
         return when {
             votesCount() > 0 && isAdmin(changerLevels) -> {
                 clone(deleted = true)
@@ -375,18 +375,18 @@ class IdeaValidation {
 }
 
 class IdeaFactory {
-    fun createIdea(properties: IIdeaEditableProperties, groupId: String, userId: String):
-            Either<ValidationException, Idea> {
+    fun createIdea(properties: IIdeaEditableProperties, groupId: GroupId, userId: UserId):
+            Either<ValidationError, Idea> {
         return IdeaValidation.ifValid(properties) {
             Idea(
-                id = generateId(),
+                id = UUID.randomUUID(),
                 groupId = groupId,
                 summary = properties.summary,
                 description = properties.description,
                 descriptionPlainText = properties.descriptionPlainText,
                 link = properties.link,
                 implemented = false,
-                assignee = NOT_ASSIGNED,
+                assignee = null,
                 author = userId,
                 voters = emptyList(),
                 ctime = LocalDateTime.now(),
@@ -407,47 +407,119 @@ enum class IdeaOrdering {
     VOTES_DESC
 }
 
-fun requireNoneOrNotEmptyValue(opt: Option<String>, field: String) {
-    if (opt is Some) {
-        require(opt.value.isNotBlank()) {"$field is empty string, but should be Optional.empty()"}
+fun requireNullOrNotBlank(opt: String?, field: String) {
+    opt?.let {
+        require(opt.isNotBlank()) {"$field is empty string, but should be Optional.empty()"}
     }
 }
 
 data class IdeaFiltering(
-    val author: Option<String>,
-    val implemented: Option<Boolean>,
-    val assignee: Option<String>,
-    val text: Option<String>,
-    val deleted: Boolean,
-    val archived: Boolean,
-    val votedBy: Option<String>
+    val author: UserId?,
+    val implemented: Boolean?,
+    val assignee: UserId?,
+    val text: String?,
+    val votedBy: UserId?,
+    /**
+     * If true, a result list includes deleted ideas
+     */
+    val listDeleted: Boolean,
+
+    /**
+     * If true, a result list includes archived ideas
+     */
+    val listArchived: Boolean
 ) {
     init {
-        requireNoneOrNotEmptyValue(author, "offeredBy")
-        requireNoneOrNotEmptyValue(assignee, "assigned")
-        requireNoneOrNotEmptyValue(text, "text")
-        requireNoneOrNotEmptyValue(votedBy,"votedBy")
+        requireNullOrNotBlank(text, "text")
     }
 
 }
 
-/**
- * The idea with Couchbase CAS for safely updating.
- * It's not domain level.
- */
-@Deprecated("Will be removed after migration into Postgresql")
-data class IdeaWithVersion(val idea: Idea, val version: Long)
 
+interface IdeaRepository {
 
-interface IdeaRepository : BaseRepository<Idea> {
-
-    fun load(
-        groupId: String,
+    fun list(
+        groupId: GroupId,
         ordering: IdeaOrdering,
         filtering: IdeaFiltering,
         pagination: Repository.Pagination
-    ):
-            Either<Exception, List<Idea>>
+    ): Either<DomainError, List<Idea>>
 
-    fun loadWithVersion(id: String): Optional<IdeaWithVersion>
+    fun load(id: IdeaId): Either<DomainError, Idea>
+    fun add(entity: Idea): Either<DomainError, Idea>
+//
+
+    fun update(idea: Idea): Either<DomainError, Idea>
+
+    fun update(idea: Either<DomainError, Idea>): Either<DomainError, Idea>
+}
+
+
+/**
+ * All functions which are take argument with type [IdeaAction] should call ideaAction in transaction.
+ *
+ * If a function pass action as argument to another function, wrapped transaction is not required.
+ */
+typealias IdeaAction<T> = (idea: Idea) -> Either<DomainError, T>
+
+/**
+ * All functions which are take argument with type [IdeaActionWithLevels] should call ideaAction in transaction.
+ *
+ * If a function pass action as argument to another function, wrapped transaction is not required.
+ */
+
+typealias IdeaActionWithLevels<T> = (idea: Idea, levels: Set<IdeaAccessLevel>) -> Either<DomainError, T>
+
+class IdeaSecurity(
+    private val securityService: SecurityService,
+    private val ideaRepository: IdeaRepository,
+) {
+
+
+    fun <T> secure(
+        ideaId: IdeaId,
+        user: User,
+        requiredLevels: Set<IdeaAccessLevel>,
+        action: IdeaAction<T>
+    ): Either<DomainError, T> {
+        return fTransaction {
+            either.eager {
+                val (idea, levels) = calculateLevels(ideaId, user).bind()
+                if (levels.intersect(requiredLevels).isNotEmpty()) {
+                    action(idea)
+                } else {
+                    Either.Left(OperationNotPermitted())
+                }
+            }
+        }.flatten()
+    }
+
+    fun <T> withLevels(ideaId: IdeaId, user: User, action: IdeaActionWithLevels<T>): Either<DomainError, T> {
+        return fTransaction {
+            either.eager<DomainError, Either<DomainError, T>> {
+                val (idea, levels) = calculateLevels(ideaId, user).bind()
+                action(idea, levels)
+            }.flatten()
+        }
+    }
+
+
+    fun calculateLevels(ideaId: IdeaId, user: User): Either<DomainError, Pair<Idea, Set<IdeaAccessLevel>>> {
+        return fTransaction {
+            either.eager {
+                val idea = ideaRepository.load(ideaId).bind()
+                val levels = securityService.ideaAccessLevels(idea, user).bind()
+                Pair(idea, levels)
+            }
+        }
+    }
+
+    fun <T> asMember(ideaId: IdeaId, user: User, action: IdeaAction<T>): Either<DomainError, T> {
+        return secure(ideaId, user, setOf(IdeaAccessLevel.GROUP_MEMBER), action)
+    }
+
+    fun <T> asEditor(ideaId: IdeaId, user: User, action: IdeaAction<T>): Either<DomainError, T> {
+        return secure(ideaId, user, setOf(IdeaAccessLevel.ASSIGNEE, IdeaAccessLevel.AUTHOR), action)
+    }
+
 }

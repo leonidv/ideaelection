@@ -3,10 +3,8 @@ package idel.tests.spec
 import arrow.core.Some
 import idel.tests.apiobject.*
 import idel.tests.infrastructure.*
-import idel.tests.infrastructure.GroupInfo
 import io.kotest.core.spec.style.DescribeSpec
-import io.kotest.core.spec.style.scopes.DescribeSpecContainerContext
-import io.kotest.matchers.reflection.beLateInit
+import io.kotest.core.spec.style.scopes.DescribeSpecContainerScope
 import java.util.*
 
 class GroupLoadingSpec : DescribeSpec({
@@ -38,7 +36,7 @@ class GroupLoadingSpec : DescribeSpec({
             }
 
 
-            registryUsers(userA, userB, userC)
+            registerUsers(userA, userB, userC)
 
 
             allGroups.forEach {groupName ->
@@ -46,7 +44,7 @@ class GroupLoadingSpec : DescribeSpec({
                     describe("create group") {
                         val createGroupResponse = userA.groups.create(
                             name = groupName,
-                            entryMode = GroupsApi.PUBLIC,
+                            entryMode = GroupsApi.EntryMode.PUBLIC,
                         )
                         checkIsOk(createGroupResponse)
                         val groupInfo = GroupInfo(
@@ -95,7 +93,7 @@ class GroupLoadingSpec : DescribeSpec({
                 }
             }
 
-            val randomName = UUID.randomUUID().toString();
+            val randomName = UUID.randomUUID().toString()
             describe("$userB random name (uuid) should return nothing") {
                 val loadGroupsResponse = userB.groups.loadForUser(name = Some(randomName))
                 checkIsOk(loadGroupsResponse, noGroups())
@@ -170,12 +168,12 @@ class GroupLoadingSpec : DescribeSpec({
                         it("OK") {}
                     }
 
-                    registryUsers(userA, userB_mail, userC_email, userE_post)
+                    registerUsers(userA, userB_mail, userC_email, userE_post)
 
                     val groupsInfo = mutableMapOf<GroupParams, GroupInfo>()
 
                     describe("create groups") {
-                        arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE).forEach {entryMode ->
+                        arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE).forEach {entryMode ->
                             allRestrictions.forEach {domainRestrictions ->
                                 val groupParams = GroupParams(entryMode, domainRestrictions)
                                 val groupInfo = createGroup(
@@ -195,21 +193,21 @@ class GroupLoadingSpec : DescribeSpec({
                         testAvailableGroup(
                             user = userB_mail,
                             groupsInfo = groupsInfo,
-                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED),
+                            entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED),
                             domainRestrictions = arrayOf(RESTRICTION_MAIL, RESTRICTION_MAIL_EMAIL, RESTRICTION_EMPTY)
                         )
 
                         testAvailableGroup(
                             user = userC_email,
                             groupsInfo = groupsInfo,
-                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED),
+                            entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED),
                             domainRestrictions = arrayOf(RESTRICTION_EMAIL, RESTRICTION_MAIL_EMAIL, RESTRICTION_EMPTY)
                         )
 
                         testAvailableGroup(
                             user = userE_post,
                             groupsInfo = groupsInfo,
-                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED),
+                            entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED),
                             domainRestrictions = arrayOf(RESTRICTION_EMPTY)
                         )
                     }
@@ -220,7 +218,7 @@ class GroupLoadingSpec : DescribeSpec({
                             canLoad = true,
                             isCreator = true,
                             groupsInfo = groupsInfo,
-                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE),
+                            entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE),
                             domainRestrictions = allRestrictions
                         )
 
@@ -228,7 +226,7 @@ class GroupLoadingSpec : DescribeSpec({
                             user = userB_mail,
                             canLoad = true,
                             groupsInfo = groupsInfo,
-                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE),
+                            entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE),
                             domainRestrictions = arrayOf(RESTRICTION_MAIL, RESTRICTION_MAIL_EMAIL, RESTRICTION_EMPTY)
                         )
 
@@ -236,7 +234,7 @@ class GroupLoadingSpec : DescribeSpec({
                             user = userB_mail,
                             canLoad = false,
                             groupsInfo = groupsInfo,
-                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE),
+                            entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE),
                             domainRestrictions = arrayOf(RESTRICTION_EMAIL, RESTRICTION_COMPANY)
                         )
 
@@ -244,7 +242,7 @@ class GroupLoadingSpec : DescribeSpec({
                             user = userC_email,
                             canLoad = true,
                             groupsInfo = groupsInfo,
-                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE),
+                            entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE),
                             domainRestrictions = arrayOf(RESTRICTION_EMAIL, RESTRICTION_MAIL_EMAIL, RESTRICTION_EMPTY)
                         )
 
@@ -252,7 +250,7 @@ class GroupLoadingSpec : DescribeSpec({
                             user = userC_email,
                             canLoad = false,
                             groupsInfo = groupsInfo,
-                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE),
+                            entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE),
                             domainRestrictions = arrayOf(RESTRICTION_MAIL, RESTRICTION_COMPANY)
                         )
 
@@ -260,7 +258,7 @@ class GroupLoadingSpec : DescribeSpec({
                             user = userE_post,
                             canLoad = true,
                             groupsInfo = groupsInfo,
-                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE),
+                            entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE),
                             domainRestrictions = arrayOf(RESTRICTION_EMPTY)
                         )
 
@@ -268,7 +266,7 @@ class GroupLoadingSpec : DescribeSpec({
                             user = userE_post,
                             canLoad = false,
                             groupsInfo = groupsInfo,
-                            entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE),
+                            entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE),
                             domainRestrictions = arrayOf(RESTRICTION_MAIL, RESTRICTION_EMAIL, RESTRICTION_MAIL_EMAIL)
                         )
 
@@ -288,11 +286,11 @@ class GroupLoadingSpec : DescribeSpec({
                     }
 
                     describe("init users") {
-                        registryUsers(userA, userB_mail, userC_email, userE_post)
+                        registerUsers(userA, userB_mail, userC_email, userE_post)
                     }
 
                     describe("create groups") {
-                        arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE).forEach {entryMode ->
+                        arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE).forEach {entryMode ->
                             allRestrictions.forEach {domainRestrictions ->
                                 val groupParams = GroupParams(entryMode, domainRestrictions)
                                 val groupInfo = createGroup(
@@ -307,7 +305,7 @@ class GroupLoadingSpec : DescribeSpec({
                         }
                     }
 
-                    arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED, GroupsApi.PRIVATE).forEach {entryMode ->
+                    arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED, GroupsApi.EntryMode.PRIVATE).forEach {entryMode ->
                         addUserToGroup(
                             groupsInfo = groupsInfo, admin = userA,
                             user = userB_mail,
@@ -332,21 +330,21 @@ class GroupLoadingSpec : DescribeSpec({
                 testAvailableGroup(
                     user = userB_mail,
                     groupsInfo = groupsInfo,
-                    entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED),
+                    entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED),
                     domainRestrictions = arrayOf(RESTRICTION_MAIL_EMAIL, RESTRICTION_EMPTY)
                 )
 
                 testAvailableGroup(
                     user = userC_email,
                     groupsInfo = groupsInfo,
-                    entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED),
+                    entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED),
                     domainRestrictions = arrayOf(RESTRICTION_EMAIL, RESTRICTION_EMPTY)
                 )
 
                 testAvailableGroup(
                     user = userE_post,
                     groupsInfo = groupsInfo,
-                    entryModes = arrayOf(GroupsApi.PUBLIC, GroupsApi.CLOSED),
+                    entryModes = arrayOf(GroupsApi.EntryMode.PUBLIC, GroupsApi.EntryMode.CLOSED),
                     domainRestrictions = emptyArray()
                 )
             }
@@ -388,19 +386,19 @@ class GroupLoadingSpec : DescribeSpec({
                 EntityStorage().clearAll()
             }
 
-            registryUsers(userA, userB, userC)
+            registerUsers(userA, userB, userC)
 
-            var r = createGroup(userA, members = emptySet(), name = "group 1", entryMode = GroupsApi.CLOSED)
+            var r = createGroup(userA, members = emptySet(), name = "group 1", entryMode = GroupsApi.EntryMode.CLOSED)
             g1_id = r.groupId
             g1_key = r.joiningKey
 
-            r = createGroup(userA, members = emptySet(), name = "group 2", entryMode = GroupsApi.CLOSED)
+            r = createGroup(userA, members = emptySet(), name = "group 2", entryMode = GroupsApi.EntryMode.CLOSED)
             g2_id = r.groupId
 
-            r = createGroup(userA, members = emptySet(), name = "group 3", entryMode = GroupsApi.CLOSED)
+            r = createGroup(userA, members = emptySet(), name = "group 3", entryMode = GroupsApi.EntryMode.CLOSED)
             g3_id = r.groupId
 
-            r = createGroup(userA, members = emptySet(), name = "group 4", entryMode = GroupsApi.CLOSED)
+            r = createGroup(userA, members = emptySet(), name = "group 4", entryMode = GroupsApi.EntryMode.CLOSED)
             g4_id = r.groupId
             g4_key = r.joiningKey
 
@@ -517,11 +515,11 @@ data class GroupParams(val entryMode: String, val domainsRestriction: Array<Stri
 
 fun formatRestrictions(domainRestrictions: Array<out Array<String>>): String {
     return domainRestrictions.joinToString(prefix = "[", postfix = "]") {restriction ->
-        restriction.joinToString(prefix = "[", postfix = "]");
+        restriction.joinToString(prefix = "[", postfix = "]")
     }
 }
 
-suspend fun DescribeSpecContainerContext.testAvailableGroup(
+suspend fun DescribeSpecContainerScope.testAvailableGroup(
     user: User,
     groupsInfo: Map<GroupParams, GroupInfo>,
     entryModes: Array<String>,
@@ -530,7 +528,7 @@ suspend fun DescribeSpecContainerContext.testAvailableGroup(
     val fmtRestrictions = formatRestrictions(domainRestrictions)
 
     describe(
-        "$user should load available group with entryMode = [${GroupsApi.PUBLIC}, ${GroupsApi.CLOSED}], " +
+        "$user should load available group with entryMode = [${GroupsApi.EntryMode.PUBLIC}, ${GroupsApi.EntryMode.CLOSED}], " +
                 "restrictions: $fmtRestrictions} "
     ) {
         val loadGroupResponse = user.groups.loadAvailable()
@@ -559,7 +557,7 @@ suspend fun DescribeSpecContainerContext.testAvailableGroup(
 /**
  * Private group's is not available by id. Method check it.
  */
-suspend fun DescribeSpecContainerContext.testLoadGroup(
+suspend fun DescribeSpecContainerScope.testLoadGroup(
     user: User,
     canLoad: Boolean,
     isCreator : Boolean = false,
@@ -582,7 +580,7 @@ suspend fun DescribeSpecContainerContext.testLoadGroup(
 
             describe("$user $fmtAccess group by id, ${groupParams.msgString()}") {
                 val loadResponse = user.groups.load(groupInfo.groupId)
-                if ((canLoad && (entryMode != GroupsApi.PRIVATE)) || isCreator) {
+                if ((canLoad && (entryMode != GroupsApi.EntryMode.PRIVATE)) || isCreator) {
                     checkIsOk(loadResponse)
                 } else {
                     checkIsNotFound(loadResponse)
@@ -602,7 +600,7 @@ suspend fun DescribeSpecContainerContext.testLoadGroup(
 
 }
 
-suspend fun DescribeSpecContainerContext.addUserToGroup(
+suspend fun DescribeSpecContainerScope.addUserToGroup(
     groupsInfo: Map<GroupParams, GroupInfo>,
     groupParams: GroupParams,
     admin: User,
@@ -612,7 +610,7 @@ suspend fun DescribeSpecContainerContext.addUserToGroup(
         val joiningKey = groupsInfo[groupParams]!!.joiningKey
         val joinRequestResponse = user.joinRequests.create(joiningKey)
         checkIsOk(joinRequestResponse)
-        if (groupParams.entryMode != GroupsApi.PUBLIC) {
+        if (groupParams.entryMode != GroupsApi.EntryMode.PUBLIC) {
             val joinRequestId = extractJoinRequestId(joinRequestResponse)
             val changeStatusResponse = admin.joinRequests.changeStatus(joinRequestId, JoinRequestsApi.APPROVED)
             checkIsOk(changeStatusResponse, joinRequestIsApproved)
