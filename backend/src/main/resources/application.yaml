@@ -9,6 +9,11 @@ security:
     allowed-origins: https://saedi.zap-it.ru, http://saedi.zap-it.ru, https://api.zap-it.ru, http://api.zap-it.ru,
 
 spring:
+  application:
+    name: saedi
+  config:
+    import: "optional:.dev.yaml"
+
   datasource:
     url: jdbc:postgresql://localhost:5432/saedi
     username: admin
