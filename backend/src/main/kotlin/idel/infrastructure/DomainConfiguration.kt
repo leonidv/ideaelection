@@ -7,6 +7,9 @@ import org.jetbrains.exposed.sql.Database
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.mail.MailSender
+import org.springframework.mail.javamail.JavaMailSender
+import org.thymeleaf.TemplateEngine
 import javax.sql.DataSource
 
 @Configuration
@@ -130,4 +133,12 @@ class DomainConfiguration(
         return SecurityService(groupMemberRepository, groupRepository)
     }
 
+    @Bean
+    fun emailSender(
+        userRepository: UserRepository,
+        thymeleafEngine: TemplateEngine,
+        mailSender: JavaMailSender
+    ) : EmailSender {
+        return SmtpEmailSender(mailSender, thymeleafEngine)
+    }
 }

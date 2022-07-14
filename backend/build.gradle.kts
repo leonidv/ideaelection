@@ -44,6 +44,9 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-mail")
 
+    implementation("org.thymeleaf:thymeleaf:3.0.15.RELEASE")
+    implementation("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
+
     implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
     implementation("org.springdoc:springdoc-openapi-security:$springDocVersion")
     implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")

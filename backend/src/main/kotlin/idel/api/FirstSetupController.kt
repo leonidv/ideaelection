@@ -6,6 +6,7 @@ import idel.domain.*
 import idel.infrastructure.repositories.PersistsUser
 import mu.KotlinLogging
 import org.springframework.http.MediaType
+import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.JavaMailSenderImpl
@@ -21,7 +22,7 @@ import org.springframework.web.servlet.view.RedirectView
 @RequestMapping("/init")
 class FirstSetupController(
     private val userRepository: UserRepository,
-    private val mailSender: JavaMailSender
+    private val mailSender: MailSender
     ) {
     companion object {
         const val HTML_TEMPLATE =
@@ -85,8 +86,7 @@ class FirstSetupController(
     @GetMapping("/send-test-email")
     fun checkEmail(@AuthenticationPrincipal user: User,
                    @RequestParam(required = true) to : String) : ResponseDataOrError<String> {
-        val message = SimpleMailMessage()
-        with(message) {
+        val message = SimpleMailMessage().apply {
             setFrom("notifications@saedi.io")
             setTo(to)
             setSubject("Test from saedi installation")
