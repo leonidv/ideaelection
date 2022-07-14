@@ -229,7 +229,7 @@ export const GroupMainScreenIdea: React.FC<GroupMainScreenIdeaProps> = (
 
     let responseBody: any = { userId: '' }
 
-    if (!idea.assignee.length) {
+    if (!idea.assignee) {
       responseBody = { userId: userId }
     }
 

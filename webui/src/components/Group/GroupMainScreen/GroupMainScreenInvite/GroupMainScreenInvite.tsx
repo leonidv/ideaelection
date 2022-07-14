@@ -284,7 +284,7 @@ export const GroupMainScreenInvite: React.FC<GroupMainScreenInviteProps> = (
     })[0].id
     ;(async () => {
       const result = await revokeRequest(token, requestId)
-      if ((await result) == 'OK') {
+      if ((await result) && (await result).status == 'REVOKED') {
         showAlert(true, 'success', 'Join request successfully revoked')
 
         let newInvites = Object.assign({}, invites)

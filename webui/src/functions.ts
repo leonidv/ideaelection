@@ -256,9 +256,10 @@ export const createListOptions = (isAdmin, me, idea) => {
     }
 
     if (
-      isAdmin ||
-      idea.assignee == me.sub ||
-      (!idea.assignee && me.sub == idea.author)
+      isAdmin
+      // isAdmin ||
+      // idea.assignee == me.sub ||
+      // (!idea.assignee && me.sub == idea.author)
     ) {
       newOptions.push('Move to group...')
     }
