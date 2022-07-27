@@ -33,6 +33,8 @@ spec:
           envFrom:
             - secretRef:
                 name: dbcredentials
+            - secretRef:
+                name: smtpcredentials
 ---
 apiVersion: v1
 kind: Service
