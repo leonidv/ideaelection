@@ -1,20 +1,29 @@
 package idel.api
 
+import arrow.core.Either
 import arrow.core.continuations.either
 import idel.domain.*
 import idel.infrastructure.repositories.PersistsUser
 import mu.KotlinLogging
 import org.springframework.http.MediaType
+import org.springframework.mail.MailSender
+import org.springframework.mail.SimpleMailMessage
+import org.springframework.mail.javamail.JavaMailSender
+import org.springframework.mail.javamail.JavaMailSenderImpl
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.view.RedirectView
 
 @RestController
 @RequestMapping("/init")
-class FirstSetupController(val userRepository: UserRepository) {
+class FirstSetupController(
+    private val userRepository: UserRepository,
+    private val mailSender: MailSender
+    ) {
     companion object {
         const val HTML_TEMPLATE =
             "<html><title>Idea election initialization</title><html><body>#{content}</body>"
@@ -27,6 +36,8 @@ class FirstSetupController(val userRepository: UserRepository) {
     }
 
     private val log = KotlinLogging.logger {}
+
+
 
     @GetMapping("/login")
     fun initOAuth() : RedirectView {
@@ -70,5 +81,24 @@ class FirstSetupController(val userRepository: UserRepository) {
         }
 
         return DataOrError.fromEither(result, log)
+    }
+
+    @GetMapping("/send-test-email")
+    fun checkEmail(@AuthenticationPrincipal user: User,
+                   @RequestParam(required = true) to : String) : ResponseDataOrError<String> {
+        val message = SimpleMailMessage().apply {
+            setFrom("notifications@saedi.io")
+            setTo(to)
+            setSubject("Test from saedi installation")
+            setText("Email settings are correct")
+        }
+
+        val mailSenderImpl = mailSender as JavaMailSenderImpl
+
+        val result = Either.catch {
+            mailSender.send(message)
+            "Test email was send to $to from ${mailSenderImpl.username}."
+        }.mapLeft {it.asError()}
+        return DataOrError.fromEither(result,log)
     }
 }

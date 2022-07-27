@@ -4,14 +4,14 @@ import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import idel.tests.Idel
+import idel.tests.TestConfig
 import idel.tests.infrastructure.BodyFieldValueChecker
 import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import idel.tests.infrastructure.ValueNotExists
 import java.net.http.HttpResponse
 import java.util.*
 
-class JwtApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "token") {
+class JwtApi(user: User, idelUrl: String = TestConfig.backendUrl) : AbstractObjectApi(user, idelUrl, "token") {
     companion object {
         fun extractPayload(httpResponse: HttpResponse<JsonNode>): JsonNode {
             val body = httpResponse.body()!!

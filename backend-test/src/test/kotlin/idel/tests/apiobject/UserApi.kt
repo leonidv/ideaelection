@@ -1,7 +1,7 @@
 package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
-import idel.tests.Idel
+import idel.tests.TestConfig
 import idel.tests.infrastructure.BodyArrayOrder
 import idel.tests.infrastructure.BodyArraySize
 import idel.tests.infrastructure.BodyFieldValueChecker
@@ -22,7 +22,7 @@ interface NotificationFrequencyValues {
 }
 
 
-class UserApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "users") {
+class UserApi(user: User, idelUrl: String = TestConfig.backendUrl) : AbstractObjectApi(user, idelUrl, "users") {
 
     companion object {
         const val PLAN_FREE = "FREE"

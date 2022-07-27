@@ -1,8 +1,10 @@
-package idel.api
+package idel.api.tests
 
 
 import arrow.core.Either
 import arrow.core.continuations.either
+import idel.api.DataOrError
+import idel.api.ResponseDataOrError
 import idel.domain.EntityNotFound
 import idel.domain.fTransaction
 import idel.infrastructure.repositories.psql.*
@@ -88,6 +90,6 @@ class StorageController(database : Database ) {
                 tables.fold(0) {acc, table -> acc + table.deleteAll()}
             }
         }
-        return DataOrError.fromEither(result,log)
+        return DataOrError.fromEither(result, log)
     }
 }

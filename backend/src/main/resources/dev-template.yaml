@@ -1,0 +1,11 @@
+# Copy this file to .dev.yaml to set up dev environment
+spring:
+  mail:
+    host: smtp.mail.ru
+    port: 465
+    username:
+    password: # usually you should use application password from you email provider
+    properties:
+      "[mail.smtp.auth]": true
+      "[mail.smtp.ssl.enable]":true
+      "[mail.smtp.auth.mechanisms]":"PLAIN"

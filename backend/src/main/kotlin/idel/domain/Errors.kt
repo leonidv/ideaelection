@@ -28,11 +28,11 @@ class InvalidArgument(override val message: String): DomainError()
 ================
 Wrappers and convertos
 */
-data class ExceptionError(val ex : Exception) : DomainError() {
+data class ExceptionError(val ex : Throwable) : DomainError() {
     override val message: String= "${ex.javaClass::class.java.name} (${ex.message})"
 }
 
-fun Exception.asError() : ExceptionError = ExceptionError(this)
+fun Throwable.asError() : ExceptionError = ExceptionError(this)
 
 fun <T> Either<DomainError,T>.isEntityOrNotFound() : Boolean =
     (this is Either.Right) || ((this is Either.Left) && (this.value is EntityNotFound))

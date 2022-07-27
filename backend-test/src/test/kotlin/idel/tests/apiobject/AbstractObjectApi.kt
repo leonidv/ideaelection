@@ -1,7 +1,7 @@
 package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
-import idel.tests.Idel
+import idel.tests.TestConfig
 import idel.tests.infrastructure.ofJson
 import mu.KotlinLogging
 import java.net.URI
@@ -13,7 +13,7 @@ import java.util.*
 
 abstract class AbstractObjectApi(
     val user: User,
-    val idelUrl: String = Idel.URL,
+    val idelUrl: String = TestConfig.backendUrl,
     /**
      * Without trailing slash
      */
@@ -46,6 +46,7 @@ abstract class AbstractObjectApi(
     }
 
     protected fun send(request: HttpRequest, bodyForLog: String): HttpResponse<JsonNode> {
+
         val bodyMsg = if (bodyForLog.length < 2000) {
             bodyForLog
         } else {

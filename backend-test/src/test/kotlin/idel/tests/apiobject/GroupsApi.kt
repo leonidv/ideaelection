@@ -4,7 +4,7 @@ import arrow.core.None
 import arrow.core.Option
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
-import idel.tests.Idel
+import idel.tests.TestConfig
 import idel.tests.infrastructure.*
 import java.net.http.HttpResponse
 
@@ -18,7 +18,7 @@ class GroupsEntryMode {
     val PRIVATE = "PRIVATE"
 }
 
-class GroupsApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "groups") {
+class GroupsApi(user: User, idelUrl: String = TestConfig.backendUrl) : AbstractObjectApi(user, idelUrl, "groups") {
 
     companion object {
         val EntryMode = GroupsEntryMode()

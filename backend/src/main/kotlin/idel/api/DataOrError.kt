@@ -97,7 +97,7 @@ data class ErrorDescription(
             return ErrorDescription(105, msg)
         }
 
-        fun internal(msg: String, ex: Exception): ErrorDescription {
+        fun internal(msg: String, ex: Throwable): ErrorDescription {
             return ErrorDescription(105, msg, exception = Optional.of(ExceptionDescription.of(ex)))
         }
 
@@ -176,7 +176,7 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
         /**
          * Make [ResponseEntity] with [ErrorDescription.internal]
          */
-        fun <T : Any> internal(msg: String, ex: Exception, log: KLogger): ResponseEntity<DataOrError<T>> {
+        fun <T : Any> internal(msg: String, ex: Throwable, log: KLogger): ResponseEntity<DataOrError<T>> {
             log.warn(ex) {"Operation is failed, msg = $msg"}
             return errorResponse(ErrorDescription.internal(msg, ex), HttpStatus.INTERNAL_SERVER_ERROR)
         }

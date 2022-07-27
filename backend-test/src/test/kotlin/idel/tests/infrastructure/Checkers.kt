@@ -139,19 +139,22 @@ suspend fun DescribeSpecContainerScope.checkIsOk(response: HttpResponse<JsonNode
     val body = response.body()
 
     body.toPrettyString().asClue {
-        it("response is 200 OK with data") {
-            response.shouldBeOk()
-            response.shouldBeData()
-        }
+        val request = response.request()
+        context("response for ${request.method()} ${request.uri()}") {
+            it("200 OK with data") {
+                response.shouldBeOk()
+                response.shouldBeData()
+            }
 
-       if (response.hasDataPayload()) {
-           fieldChecks.forEach {checker ->
-               it(checker.testName) {
-                   //body.shouldContains(it.jsonPath, it.expectedValue)
-                   checker.check(body)
-               }
-           }
-       }
+            if (response.hasDataPayload()) {
+                fieldChecks.forEach {checker ->
+                    it(checker.testName) {
+                        //body.shouldContains(it.jsonPath, it.expectedValue)
+                        checker.check(body)
+                    }
+                }
+            }
+        }
     }
 }
 

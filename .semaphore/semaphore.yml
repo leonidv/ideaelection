@@ -69,8 +69,11 @@ blocks:
 
             - cd $BUILD_DIR/scripts
             - sudo ./postgresql-run.sh
+            - sudo ./smtp-fake-run.sh
             - sleep 10
             - sudo podman logs saedi-postgresql
+            - sudo podman logs saedi-smtp-fake
+
             - sudo ./backend-run.sh
             - sleep 10
             - sudo podman logs idel-backend
