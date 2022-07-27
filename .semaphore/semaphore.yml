@@ -72,7 +72,7 @@ blocks:
             - sudo ./smtp-fake-run.sh
             - sleep 10
             - sudo podman logs saedi-postgresql
-            - suod podman logs saedi-smtp-fake
+            - sudo podman logs saedi-smtp-fake
 
             - sudo ./backend-run.sh
             - sleep 10
