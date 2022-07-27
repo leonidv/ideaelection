@@ -113,7 +113,8 @@ class DomainConfiguration(
         userRepository: UserRepository,
         joinRequestRepository: JoinRequestRepository,
         inviteRepository: InviteRepository,
-        groupMemberRepository: GroupMemberRepository
+        groupMemberRepository: GroupMemberRepository,
+        emailSender: EmailSender
 
     ): GroupMembershipService {
         return GroupMembershipService(
@@ -121,7 +122,8 @@ class DomainConfiguration(
             userRepository = userRepository,
             joinRequestRepository = joinRequestRepository,
             inviteRepository = inviteRepository,
-            groupMemberRepository = groupMemberRepository
+            groupMemberRepository = groupMemberRepository,
+            emailSender = emailSender
         )
     }
 

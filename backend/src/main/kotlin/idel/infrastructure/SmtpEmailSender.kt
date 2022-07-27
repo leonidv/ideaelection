@@ -26,26 +26,32 @@ class SmtpEmailSender(
 
     private val mailSenderImpl = mailSender as JavaMailSenderImpl;
 
-    override fun sendInvite(personEmail: String, author: User, group: Group, inviteMessage : String): Either<DomainError, Unit> {
-        log.trace {"Send invite: personEmail = [$personEmail]"}
-        val context = Context(Locale.ENGLISH,
-            mapOf(
-                "author" to author,
-                "group" to group,
-                "message" to inviteMessage
-            )
-        )
-
-        val emailText = thymeleafEngine.process("email-invite.html", context)
-
-        val message = mailSender.createMimeMessage().apply {
-            setFrom(InternetAddress(mailSenderImpl.username))
-            setSubject("Invite to Saedi from ${author.displayName}")
-            setRecipients(Message.RecipientType.TO, personEmail)
-            setContent(emailText, MimeTypeUtils.TEXT_HTML_VALUE)
-        }
-
+    override fun sendInvite(
+        personEmail: String,
+        author: User,
+        group: Group,
+        inviteMessage: String
+    ): Either<DomainError, Unit> {
         return Either.catch {
+            log.trace {"Send invite: personEmail = [$personEmail]"}
+            val context = Context(
+                Locale.ENGLISH,
+                mapOf(
+                    "author" to author,
+                    "group" to group,
+                    "message" to inviteMessage
+                )
+            )
+
+            val emailText = thymeleafEngine.process("email-invite.html", context)
+
+            val message = mailSender.createMimeMessage().apply {
+                setFrom(InternetAddress(mailSenderImpl.username))
+                setSubject("Invite to Saedi from ${author.displayName}")
+                setRecipients(Message.RecipientType.TO, personEmail)
+                setContent(emailText, MimeTypeUtils.TEXT_HTML_VALUE)
+            }
+
             mailSender.send(message)
         }.mapLeft {it.asError()}
     }

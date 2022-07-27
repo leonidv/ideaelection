@@ -11,8 +11,6 @@ security:
 spring:
   application:
     name: saedi
-  config:
-    import: "optional:.dev.yaml"
 
   datasource:
     url: jdbc:postgresql://localhost:5432/saedi
@@ -26,6 +24,16 @@ spring:
           google:
             client-id: 115577720302-jtm4mampbkbq62rerrb3thdcj5qq3egb.apps.googleusercontent.com
             client-secret: yLVkDuyUGMnM6J2iHtJ7t1a-
+
+  mail:
+    host: localhost
+    port: 5025
+    username: fakesmtp
+    password: 719e7e8cbe7c
+    properties:
+      "[mail.smtp.auth]": true
+      "[mail.smtp.ssl.enable]": false
+      "[mail.smtp.auth.mechanisms]": "PLAIN"
 
 management:
   endpoints:
@@ -44,6 +52,6 @@ jwt:
   private.key: classpath:jwt_private_key
   public.key: classpath:jwt_public_key.crt
   frontend.url: http://localhost:8080/users/me
-  
+
 server:
   forward-headers-strategy: framework

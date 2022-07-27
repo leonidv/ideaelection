@@ -1,10 +1,10 @@
 package idel.tests.apiobject
 
-import idel.tests.Idel
+import idel.tests.TestConfig
 import idel.tests.infrastructure.asUserExternalId
 import java.util.*
 
-class User(val name: String, var role : String = "", val domain : String = DEFAULT_DOMAIN, idelUrl: String = Idel.URL) {
+class User(val name: String, var role : String = "", val domain : String = DEFAULT_DOMAIN, idelUrl: String = TestConfig.backendUrl) {
     companion object {
         val instanceAdmin = User("userAdmin")
     }

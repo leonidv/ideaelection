@@ -2,13 +2,13 @@ package idel.tests.apiobject
 
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
-import idel.tests.Idel
+import idel.tests.TestConfig
 import idel.tests.infrastructure.*
 import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import mu.KotlinLogging
 import java.net.http.HttpResponse
 
-class JoinRequestsApi(user : User, idelUrl : String = Idel.URL) : AbstractObjectApi(user, idelUrl, "joinrequests") {
+class JoinRequestsApi(user : User, idelUrl : String = TestConfig.backendUrl) : AbstractObjectApi(user, idelUrl, "joinrequests") {
 
     private val log = KotlinLogging.logger {}
 

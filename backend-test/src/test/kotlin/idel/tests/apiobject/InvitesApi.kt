@@ -2,7 +2,7 @@ package idel.tests.apiobject
 
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
-import idel.tests.Idel
+import idel.tests.TestConfig
 import idel.tests.infrastructure.*
 import idel.tests.infrastructure.JsonNodeExtensions.queryString
 import java.net.http.HttpResponse
@@ -26,7 +26,7 @@ class EmailStatus {
     val SENT: String = "SENT"
 }
 
-class InvitesApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "invites") {
+class InvitesApi(user: User, idelUrl: String = TestConfig.backendUrl) : AbstractObjectApi(user, idelUrl, "invites") {
 
     companion object {
         val Status = InvitesStatuses()

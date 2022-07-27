@@ -4,12 +4,15 @@ import idel.tests.apiobject.*
 import idel.tests.infrastructure.checkIsOk
 import idel.tests.infrastructure.createGroup
 import idel.tests.infrastructure.registerUsers
+import idel.tests.infrastructure.shouldBeOk
 import io.kotest.core.spec.style.DescribeSpec
 
 class InvitePersonScenario : DescribeSpec({
+    val fakeSmtp = FakeSmtpApi()
 
     beforeSpec {
         EntityStorage().clearAll()
+        fakeSmtp.deleteAll()
     }
 
     describe("initialization") {
@@ -50,6 +53,17 @@ class InvitePersonScenario : DescribeSpec({
                     checkIsOk(response,
                         hasInviteForPerson(groupId, user.email)
                     )
+                }
+
+                describe("email was sent") {
+                    val response = fakeSmtp.list()
+                    it("response should be 200 ok") {
+                        response.shouldBeOk()
+                    }
+
+                    it("response should contains email to $user") {
+                        FakeSmtpCheckers.hasEmailFor(user.email).check(response.body()!!)
+                    }
                 }
 
                 registerUsers(user)

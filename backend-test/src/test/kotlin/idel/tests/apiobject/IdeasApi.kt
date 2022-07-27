@@ -1,11 +1,11 @@
 package idel.tests.apiobject
 
 import com.fasterxml.jackson.databind.JsonNode
-import idel.tests.Idel
+import idel.tests.TestConfig
 import idel.tests.infrastructure.*
 import java.net.http.HttpResponse
 
-class IdeasApi(user: User, idelUrl: String = Idel.URL) : AbstractObjectApi(user, idelUrl, "ideas") {
+class IdeasApi(user: User, idelUrl: String = TestConfig.backendUrl) : AbstractObjectApi(user, idelUrl, "ideas") {
 
     companion object {
         const val ORDER_CTIME_ASC = "ctime_asc"

@@ -3,7 +3,6 @@ package idel.domain
 import arrow.core.Either
 import arrow.core.continuations.either
 import arrow.core.flatMap
-import arrow.core.flatten
 import arrow.core.separateEither
 import mu.KotlinLogging
 import java.util.*
@@ -53,7 +52,8 @@ class GroupMembershipService(
     private val userRepository: UserRepository,
     private val joinRequestRepository: JoinRequestRepository,
     private val inviteRepository: InviteRepository,
-    private val groupMemberRepository: GroupMemberRepository
+    private val groupMemberRepository: GroupMemberRepository,
+    private val emailSender: EmailSender
 
 ) {
     private val log = KotlinLogging.logger {}
@@ -163,10 +163,19 @@ class GroupMembershipService(
         message: String,
         newUserEmails: Set<String>
     ): InviteToGroupResult {
-        val results = newUserEmails.map {email ->
+        val results: List<Either<InviteCreationError, Invite>> = newUserEmails.map {email ->
             fTransaction {
-                val invite = Invite.createForPerson(group.id, email, message, author.id)
-                inviteRepository.add(invite)
+                either.eager {
+                    var invite = Invite.createForPerson(group.id, email, message, author.id)
+                    emailSender.sendInvite(
+                        personEmail = email,
+                        author = author,
+                        group = group,
+                        inviteMessage = message
+                    ).bind()
+                    invite = invite.markEmailIsSent().bind()
+                    inviteRepository.add(invite).bind()
+                }
             }.mapLeft {domainError ->
                 InviteCreationError.forPerson(email, domainError.toString())
             }

@@ -154,6 +154,8 @@ class Invite(
         }
     }
 
+    fun markEmailIsSent() = clone(emailStatus = InviteEmailStatus.SENT)
+    
 
     override fun toString(): String {
         return "Invite(groupId='$groupId', userId='$userId', accepted=$status)"

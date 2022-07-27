@@ -1,11 +1,11 @@
 package idel.tests.apiobject
 
-import idel.tests.Idel
+import idel.tests.TestConfig
 import mu.KotlinLogging
 import java.net.HttpURLConnection
 
 
-class EntityStorage(idelUrl: String = Idel.URL) : AbstractObjectApi(User.instanceAdmin, idelUrl, "storage") {
+class EntityStorage(idelUrl: String = TestConfig.backendUrl) : AbstractObjectApi(User.instanceAdmin, idelUrl, "storage") {
 
     val log = KotlinLogging.logger {}
 
