@@ -3,13 +3,9 @@ package idel.domain
 import arrow.core.Either
 import arrow.core.continuations.either
 import arrow.core.flatten
-import idel.api.DataOrError
-import idel.domain.security.IdeaAccessLevel
-import idel.domain.security.SecurityService
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minLength
-import mu.KLogger
 import java.time.LocalDateTime
 import java.util.*
 
@@ -103,7 +99,7 @@ class Idea(
 ) : IIdeaEditableProperties {
 
     init {
-        require(summary.isNotBlank()) {"title can't be blank"}
+        require(summary.isNotBlank()) {"summary can't be blank"}
     }
 
 
@@ -476,6 +472,9 @@ class IdeaSecurity(
 ) {
 
 
+    /**
+     * Action is executed in transaction.
+     */
     fun <T> secure(
         ideaId: IdeaId,
         user: User,
@@ -494,6 +493,9 @@ class IdeaSecurity(
         }.flatten()
     }
 
+    /**
+     * Action is executed in the transaction.
+     */
     fun <T> withLevels(ideaId: IdeaId, user: User, action: IdeaActionWithLevels<T>): Either<DomainError, T> {
         return fTransaction {
             either.eager<DomainError, Either<DomainError, T>> {
@@ -502,6 +504,7 @@ class IdeaSecurity(
             }.flatten()
         }
     }
+
 
 
     fun calculateLevels(ideaId: IdeaId, user: User): Either<DomainError, Pair<Idea, Set<IdeaAccessLevel>>> {
@@ -514,7 +517,10 @@ class IdeaSecurity(
         }
     }
 
-    fun <T> asMember(ideaId: IdeaId, user: User, action: IdeaAction<T>): Either<DomainError, T> {
+    /**
+     * action is executed in the transaction.
+     */
+    fun <T> asGroupMember(ideaId: IdeaId, user: User, action: IdeaAction<T>): Either<DomainError, T> {
         return secure(ideaId, user, setOf(IdeaAccessLevel.GROUP_MEMBER), action)
     }
 

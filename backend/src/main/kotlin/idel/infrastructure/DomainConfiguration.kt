@@ -1,13 +1,12 @@
 package idel.infrastructure
 
 import idel.domain.*
-import idel.domain.security.SecurityService
+import idel.domain.SecurityService
 import idel.infrastructure.repositories.psql.*
 import org.jetbrains.exposed.sql.Database
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.mail.MailSender
 import org.springframework.mail.javamail.JavaMailSender
 import org.thymeleaf.TemplateEngine
 import javax.sql.DataSource
@@ -86,12 +85,17 @@ class DomainConfiguration(
 
     @Bean
     fun inviteSecurity(inviteRepository: InviteRepository, groupSecurity: GroupSecurity): InviteSecurity {
-        return InviteSecurity(inviteRepository,groupSecurity)
+        return InviteSecurity(inviteRepository, groupSecurity)
     }
 
     @Bean
     fun groupMemberRepository(): GroupMemberRepository {
         return GroupMemberPgRepository()
+    }
+
+    @Bean
+    fun commentRepository(): CommentRepository {
+        return CommentPgRepository()
     }
 
     @Bean
@@ -127,6 +131,7 @@ class DomainConfiguration(
         )
     }
 
+
     @Bean
     fun securityService(
         groupMemberRepository: GroupMemberRepository,
@@ -140,7 +145,7 @@ class DomainConfiguration(
         userRepository: UserRepository,
         thymeleafEngine: TemplateEngine,
         mailSender: JavaMailSender
-    ) : EmailSender {
+    ): EmailSender {
         return SmtpEmailSender(mailSender, thymeleafEngine)
     }
 }

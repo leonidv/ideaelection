@@ -1,9 +1,8 @@
-package idel.domain.security
+package idel.domain
 
 import arrow.core.Either
 import arrow.core.continuations.either
 import arrow.core.flatMap
-import idel.domain.*
 import mu.KotlinLogging
 
 

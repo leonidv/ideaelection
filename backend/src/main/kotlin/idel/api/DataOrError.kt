@@ -223,7 +223,6 @@ data class DataOrError<T>(val data: Optional<T>, val error: Optional<ErrorDescri
                     )
                     is EntityArchivedExp -> errorResponse(ErrorDescription.entityIsArchived(), HttpStatus.BAD_REQUEST)
                     is EntityAlreadyExistsExp -> conflict(ex.message!!)
-                    is OperationNotPermittedExp -> forbidden("operation is not permitted")
                     is ValidationException -> invalid(ex.errors)
                     is InvalidOperationExp -> invalidOperation(ex.message!!)
                     else -> internal(operationResult.value, log)
