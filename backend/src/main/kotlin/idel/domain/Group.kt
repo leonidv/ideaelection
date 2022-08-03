@@ -4,13 +4,9 @@ package idel.domain
 import arrow.core.Either
 import arrow.core.continuations.either
 import arrow.core.flatten
-import idel.api.DataOrError
-import idel.domain.security.GroupAccessLevel
-import idel.domain.security.SecurityService
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minLength
-import mu.KLogger
 import java.time.LocalDateTime
 import java.util.*
 

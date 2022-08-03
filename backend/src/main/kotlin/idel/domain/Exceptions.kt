@@ -5,10 +5,6 @@ import io.konform.validation.ValidationError
 
 open class NoStacktraceRuntimeException(msg: String) : java.lang.RuntimeException(msg, null, false, false)
 
-/**
- * User can permissions for operation
- */
-class OperationNotPermittedExp : NoStacktraceRuntimeException("")
 
 /**
  * Represent exception which are thrown on the validation fail.

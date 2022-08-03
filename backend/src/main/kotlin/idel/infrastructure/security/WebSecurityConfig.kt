@@ -7,7 +7,6 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import idel.api.ApiSecurity
 import idel.domain.*
-import idel.domain.security.SecurityService
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
