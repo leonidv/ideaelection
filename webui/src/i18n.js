@@ -168,6 +168,7 @@ const resources = {
       'ASSIGN TO ME': 'НАЗНАЧИТЬ МНЕ',
       'Assigned to you': 'Назначено вам',
       EDIT: 'РЕДАКТИРОВАТЬ',
+      'Edit': 'Редактировать',
       'An idea must have a name': 'У идеи должно быть название',
       'An idea must have a description': 'У идеи должно быть описание',
       'Idea added successfully': 'Идея успешно добавлена',
@@ -325,6 +326,9 @@ const resources = {
       'Terms of Service': 'Условия предоставления услуг',
       'and': 'и',
       'Welcome to': 'Добро пожаловать в',
+      'Comment deleted succesfully': 'Комментарий успешно удален',
+      'Comment cannot be removed': 'Комментарий не может быть удален',
+      'REPLY': 'Ответить'
     }
   }
 }
