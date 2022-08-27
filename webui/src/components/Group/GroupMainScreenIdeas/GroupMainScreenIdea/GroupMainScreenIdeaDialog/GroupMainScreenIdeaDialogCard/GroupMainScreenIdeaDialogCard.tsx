@@ -41,7 +41,7 @@ export const GroupMainScreenIdeaDialogCard: React.FC<GroupMainScreenIdeaDialogCa
     isAdmin,
     allIdeas,
     isEditAccess,
-    fetchMoreData
+    fetchMoreData,
   } = props
 
   const { t } = useTranslation()
@@ -116,7 +116,11 @@ export const GroupMainScreenIdeaDialogCard: React.FC<GroupMainScreenIdeaDialogCa
           isExtendedMode={true}
           allIdeas={allIdeas}
         />
-        <GroupMainScreenIdeaDialogCardComments />
+        <GroupMainScreenIdeaDialogCardComments 
+          ideaId={idea.id}
+          showAlert={showAlert}
+          isAdmin={isAdmin}
+        />
       </Card>
       {edit && (
         <CreateIdea

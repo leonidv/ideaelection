@@ -350,7 +350,8 @@ export const GroupMainScreenIdeas = props => {
         if ((await newFetchIdeas) !== 'undefined') {
           setAllIdeas({
             ideas: allIdeas.ideas.concat((await newFetchIdeas).ideas),
-            users: allIdeas.users.concat((await newFetchIdeas).users)
+            users: allIdeas.users.concat((await newFetchIdeas).users),
+            commentsCounts: Object.assign(allIdeas.commentsCounts, (await newFetchIdeas).commentsCounts)
           })
           setIdeas(
             newIdeas
@@ -369,7 +370,8 @@ export const GroupMainScreenIdeas = props => {
         if (!isMore && newIdeas) {
           setAllIdeas({
             ideas: newIdeas,
-            users: allIdeas.users
+            users: allIdeas.users,
+            commentsCounts: allIdeas.commentsCounts
           })
           setIdeas(newIdeas)
         }

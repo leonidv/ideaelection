@@ -2,8 +2,32 @@
   padding: 0;
   margin-top: 32px;
 
-  &__avatar,
-  .MuiAvatar-root {
-    margin-right: 16px;
+  &__list {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    height: 400px;
+  }
+
+  .groupMainScreenCardCommentsField:first-child {
+    margin-bottom: 32px;
+  }
+
+  &__progress {
+    margin: 0 auto;
+    height: fit-content;
+    width: fit-content;
+
+    .MuiCircularProgress-root {
+      width: 40px !important;
+      height: 40px !important;
+    }
+  }
+
+  .MuiInput-underline:after {
+    border-color: #2296f3;
+  }
+
+  .infinite-scroll-component  {
+    padding-bottom: 32px;
   }
 }

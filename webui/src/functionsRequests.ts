@@ -1,4 +1,4 @@
-const BACKEND_API_URL = process.env.BACKEND_API_URL;
+const BACKEND_API_URL = process.env.BACKEND_API_URL
 
 const fetchRequest: any = async (
   token,
@@ -303,7 +303,7 @@ export const putSettings = async (
   token,
   settings,
   planSettings,
-  tariff?:string
+  tariff?: string
 ) => {
   const url = `${BACKEND_API_URL}/users/settings`
   const body = JSON.stringify({
@@ -538,6 +538,72 @@ export const tryGetToken = async token => {
   const url = `${BACKEND_API_URL}/token`
   const request = await fetchRequest(token, url, 'GET', null)
 
+  if (await request) {
+    return await request
+  }
+}
+
+export const postNewComment = async (
+  token: string,
+  ideaId: string,
+  commentContent: any
+) => {
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}/comments`
+
+  const body = JSON.stringify(commentContent)
+  const request = await fetchRequest(
+    token,
+    url,
+    'POST',
+    body,
+    'application/json'
+  )
+  if (await request) {
+    return await request
+  }
+}
+
+export const fetchComments = async (
+  token: string,
+  ideaId: string,
+  skip = 0,
+  count = 10
+) => {
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}/comments?skip=${skip}&count=${count}`
+  const request = await fetchRequest(token, url, 'GET', null)
+  if (await request) {
+    return request
+  } else {
+    return 'undefined'
+  }
+}
+
+export const deleteComment = async (token, ideaId, commentId) => {
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}/comments/${commentId}`
+  const request = await fetchRequest(token, url, 'DELETE', null)
+  if (await request) {
+    return await request
+  } else {
+    return 'undefined'
+  }
+}
+
+export const editComment = async (
+  token: string,
+  ideaId: string,
+  commentId: string,
+  commentContent: any
+) => {
+  const url = `${BACKEND_API_URL}/ideas/${ideaId}/comments/${commentId}`
+
+  const body = JSON.stringify(commentContent)
+  const request = await fetchRequest(
+    token,
+    url,
+    'PUT',
+    body,
+    'application/json'
+  )
   if (await request) {
     return await request
   }
