@@ -1,6 +1,15 @@
 .groupMainScreenIdeaCardContent {
   &__button {
     margin-left: auto !important;
+
+    &--comment {
+      fill: gray;
+    }
+  }
+
+  &__comments {
+    margin-left: 4px;
+    margin-right: 16px;
   }
 
   &__link {

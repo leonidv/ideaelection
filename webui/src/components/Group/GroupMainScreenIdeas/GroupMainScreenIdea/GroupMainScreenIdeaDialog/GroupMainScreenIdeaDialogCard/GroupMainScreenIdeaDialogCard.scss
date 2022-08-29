@@ -40,3 +40,27 @@
 
   }
 }
+
+@media (max-width: 550px) {
+  .groupMainScreenIdeaDialogCard {
+    .MuiCardActions-root {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      .MuiIconButton-root[aria-label='options'] {
+        position: absolute;
+        right: 0;
+      }
+    }
+
+    .groupMainScreenIdeaCardContent__assigneeBtn {
+      margin-bottom: 16px;
+    }
+
+    .groupMainScreenIdeaCardContent__votes--voted {
+      margin-left: 0;
+    }
+  }
+}

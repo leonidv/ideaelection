@@ -1,32 +1,142 @@
+import { useEffect, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Avatar, TextField } from '@material-ui/core'
-import { meInfoState } from '../../../../../../../state'
+
+import { meInfoState, tokenState } from '../../../../../../../state'
+
+import InfiniteScroll from 'react-infinite-scroll-component'
+import { CircularProgress } from '@material-ui/core'
+import { GroupMainScreenCardCommentsField } from './GroupMainScreenCardCommentsField/GroupMainScreenCardCommentsField'
+import { GroupMainScreenCardCommentsListContent } from './GroupMainScreenCardCommentsListContent/GroupMainCardCommentsListContent'
+
+import { GroupMainScreenIdeaDialogCardCommentsProps } from './GroupMainScreenIdeaDialogCardCommentsInterfaces'
 import './GroupMainScreenIdeaDialogCardComments.scss'
 
 import { useTranslation } from 'react-i18next'
+import { fetchComments } from '../../../../../../../functionsRequests'
+import { findAuthorObj, removeDuplicates } from '../../../../../../../functions'
 
-export const GroupMainScreenIdeaDialogCardComments = () => {
+export const GroupMainScreenIdeaDialogCardComments: React.FC<GroupMainScreenIdeaDialogCardCommentsProps> = (
+  props: GroupMainScreenIdeaDialogCardCommentsProps
+) => {
+  const {
+    ideaId,
+    showAlert,
+    isAdmin
+  } = props
+
   const me = useRecoilValue(meInfoState)
+
+  const [comments, setComments] = useState({ comments: [], users: [] })
+  const [isFetching, setIsFetching] = useState(true)
+
+  const token = useRecoilValue(tokenState)
 
   const { t } = useTranslation()
 
-  const handleChangeComment = e => {
-    return e.target.value
+  useEffect(() => {
+    fetchMoreData(true, comments)
+  }, [ideaId])
+
+  const fetchMoreData = (isMore?: boolean, newComments?: any) => {
+    if (
+      (isFetching && comments.comments.length !== 0) ||
+      isMore ||
+      newComments
+    ) {
+      ;(async () => {
+        const moreLength =
+          isMore && newComments.comments.length !== 0
+            ? 10 - (newComments.comments.length % 10)
+            : 10
+
+        const curComments = isMore ? newComments : comments
+        const newFetchComments = await fetchComments(
+          token,
+          ideaId,
+          curComments.comments.length,
+          moreLength
+        )
+
+        if ((await newFetchComments) !== 'undefined') {
+          const uniqueComments = removeDuplicates(
+            newComments
+              ? newComments.comments.concat((await newFetchComments).comments)
+              : comments.comments.concat((await newFetchComments).comments)
+          )
+
+          const uniqueUsers = removeDuplicates(
+            newComments
+              ? newComments.users.concat((await newFetchComments).users)
+              : comments.users.concat((await newFetchComments).users)
+          )
+
+          const newCommentsObj = {
+            comments: uniqueComments,
+            users: uniqueUsers
+          }
+          setComments(newCommentsObj)
+
+          if (
+            newCommentsObj.comments.length % 10 !== 0 ||
+            newFetchComments.comments.length == 0
+          ) {
+            setIsFetching(false)
+          }
+        }
+
+        if (!isMore && newComments) {
+          setComments(newComments)
+        }
+      })()
+    } else {
+      setIsFetching(false)
+    }
   }
 
   return (
     <div className='groupMainScreenIdeaDialogCardComments'>
-      <div className='groupMainScreenCardDialogComments__first row'>
-        <Avatar
-          className='groupMainScreenCardDialogComments__avatar'
-          alt='avatar'
-          src={me.avatar}
-        />
-        <TextField
-          placeholder={t('Add a comment...')}
-          onChange={handleChangeComment}
-        />
-      </div>
+      <GroupMainScreenCardCommentsField
+        ideaId={ideaId}
+        token={token}
+        showAlert={showAlert}
+        fetchMoreData={fetchMoreData}
+        comments={comments}
+        t={t}
+      />
+      {Array.isArray(comments.comments) && comments.comments.length > 0 && (
+        <div
+          id='groupMainScreenCommentsList'
+          className='groupMainScreenIdeaDialogCardComments__list'
+        >
+          <InfiniteScroll
+            dataLength={comments.comments.length}
+            next={fetchMoreData}
+            hasMore={comments.comments.length == 0 ? false : isFetching}
+            loader={
+              <div className='groupMainScreenIdeaDialogCardComments__progress'>
+                <CircularProgress />
+              </div>
+            }
+            scrollableTarget='groupMainScreenCommentsList'
+          >
+            {comments.comments.map(comment => (
+              <GroupMainScreenCardCommentsListContent
+                key={comment.id}
+                ideaId={ideaId}
+                token={token}
+                comment={comment}
+                author={findAuthorObj(comment.author, comments.users, me)}
+                setComments={setComments}
+                comments={comments}
+                fetchMoreData={fetchMoreData}
+                showAlert={showAlert}
+                t={t}
+                isOptions={isAdmin || comment.author == me.sub}
+              />
+            ))}
+          </InfiniteScroll>
+        </div>
+      )}
     </div>
   )
 }

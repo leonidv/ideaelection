@@ -1,0 +1,12 @@
+.groupMainScreenCardCommentsField {
+    &__avatar,
+    .MuiAvatar-root {
+      margin-right: 16px;
+      height: 50px;
+      width: 50px;
+    }
+
+    &__reply {
+        margin-top: 32px;
+    }
+  }

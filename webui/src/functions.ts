@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import isValidDomain from 'is-valid-domain'
 
+const _ = require('lodash')
+
 export const convertDate = (dateString: string) => {
   const date = new Date(dateString)
   const yyyy = date.getFullYear().toString()
@@ -16,6 +18,30 @@ export const convertDate = (dateString: string) => {
     (mmChars[1] ? mm : '0' + mmChars[0]) +
     '.' +
     yyyy
+  )
+}
+
+export const convertDateWithTime = (dateString: string) => {
+  const date = new Date(dateString)
+  const yyyy = date.getFullYear().toString()
+  const mm = (date.getMonth() + 1).toString()
+  const dd = date.getDate().toString()
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  const mmChars = mm.split('')
+  const ddChars = dd.split('')
+
+  return (
+    (ddChars[1] ? dd : '0' + ddChars[0]) +
+    '.' +
+    (mmChars[1] ? mm : '0' + mmChars[0]) +
+    '.' +
+    yyyy +
+    ' ' +
+    hours +
+    ':' +
+    minutes
   )
 }
 
@@ -73,7 +99,9 @@ export const findAuthorForIdea = (idea, allIdeas, me, param) => {
     const author =
       names &&
       names.filter(author => {
-        return param == 'idea' ? author.id == idea.author : author.id == idea.assignee
+        return param == 'idea'
+          ? author.id == idea.author
+          : author.id == idea.assignee
       })[0]
 
     if (author && author.displayName) {
@@ -109,6 +137,31 @@ export const findAuthorById = (authorId, authorsNames) => {
   return author && author.displayName ? author.displayName : ''
 }
 
+export const findAuthorObj = (authorId, authorsNames, me) => {
+  const author =
+    authorsNames &&
+    authorsNames.length &&
+    authorsNames.filter(author => {
+      return author.id == authorId
+    })[0]
+
+  if (!author) {
+    return {
+      avatar: me.avatar,
+      displayName: me.displayName,
+      domain: '',
+      email: '',
+      externalId: '',
+      id: '',
+      content: '',
+      ctime: '',
+      author: ''
+    }
+  }
+
+  return author
+}
+
 export const useWindowSize = () => {
   const [windowSize, setWindowSize] = useState({
     width: undefined,
@@ -124,7 +177,7 @@ export const useWindowSize = () => {
     window.addEventListener('resize', handleResize)
     handleResize()
     return () => window.removeEventListener('resize', handleResize)
-  }, []) 
+  }, [])
   return windowSize
 }
 
@@ -230,6 +283,14 @@ export const isJson = str => {
   }
   var jsonStart = str.match(JSON_START)
   return jsonStart && JSON_ENDS[jsonStart[0]].test(str)
+}
+
+export const removeDuplicates = data => {
+  if (data.length) {
+    return _.uniqBy(data, 'id')
+  } else {
+    return data
+  }
 }
 
 export const createListOptions = (isAdmin, me, idea) => {

@@ -82,7 +82,8 @@ export const GroupMainScreenIdea: React.FC<GroupMainScreenIdeaProps> = (
   useEffect(() => {
     setAllIdeas({
       users: allIdeas.users,
-      ideas: ideas.map(local => (local.id == idea.id ? idea : local))
+      ideas: ideas.map(local => (local.id == idea.id ? idea : local)),
+      commentsCounts: allIdeas.commentsCounts
     })
     if (group && group.creator.id && me && me.sub) {
       if (group.creator.id == me.sub) {
@@ -143,7 +144,8 @@ export const GroupMainScreenIdea: React.FC<GroupMainScreenIdeaProps> = (
               )
               setAllIdeas({
                 users: allIdeas.users,
-                ideas: ideas
+                ideas: ideas,
+                commentsCounts: allIdeas.commentsCounts
               })
               showAlert(true, 'success', t('Assignee removed successfully'))
             } else {

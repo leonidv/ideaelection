@@ -38,6 +38,7 @@ export const GroupMainScreenIdeaCardContent: React.FC<GroupMainScreenCardContent
   } = props
 
   const [localAssignee, setLocalAssignee] = useState(assignee)
+  const [commentsCounts, setCommentsCounts] = useState(+(allIdeas.commentsCounts[idea.id] || 0))
 
   const [editorState, setEditorState] = useState(
     isJson(idea.description)
@@ -74,6 +75,11 @@ export const GroupMainScreenIdeaCardContent: React.FC<GroupMainScreenCardContent
           )
     )
   }, [idea])
+
+  // useEffect(() => {
+  //   setCommentsCounts(+(allIdeas.commentsCounts[idea.id] || 0))
+  // console.log(allIdeas.commentsCounts[idea.id], idea.id)
+  // })
 
   return (
     <div className='groupMainScreenIdeaCardContent'>
@@ -125,21 +131,23 @@ export const GroupMainScreenIdeaCardContent: React.FC<GroupMainScreenCardContent
           )}
         {!isExtendedMode && (
           <>
-            <IconButton
+            {/* <IconButton
               className='groupMainScreenIdeaCardContent__button'
               aria-label='comments'
-            >
-              <CommentIcon />
-            </IconButton>
+            > */}
+              <CommentIcon className='groupMainScreenIdeaCardContent__button groupMainScreenIdeaCardContent__button--comment'/>
+            {/* </IconButton> */}
 
-            <span className='groupMainScreenIdeaCardContent__comments'>0</span>
+            <span className='groupMainScreenIdeaCardContent__comments'>
+              {commentsCounts}
+            </span>
           </>
         )}
         {!isExtendedMode && (
           <>
             <IconButton
               className={
-                votes ? 'groupMainScreenIdeaCardContent__vote--active' : ''
+                isMeVoted ? 'groupMainScreenIdeaCardContent__vote--active' : ''
               }
               onClick={() => {
                 if (!idea.archived && !idea.implemented) handleClickVote()
