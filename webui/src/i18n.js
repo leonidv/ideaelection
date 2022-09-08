@@ -328,7 +328,8 @@ const resources = {
       'Welcome to': 'Добро пожаловать в',
       'Comment deleted succesfully': 'Комментарий успешно удален',
       'Comment cannot be removed': 'Комментарий не может быть удален',
-      'REPLY': 'Ответить'
+      'REPLY': 'Ответить',
+      'Read more': 'Показать еще',
     }
   }
 }

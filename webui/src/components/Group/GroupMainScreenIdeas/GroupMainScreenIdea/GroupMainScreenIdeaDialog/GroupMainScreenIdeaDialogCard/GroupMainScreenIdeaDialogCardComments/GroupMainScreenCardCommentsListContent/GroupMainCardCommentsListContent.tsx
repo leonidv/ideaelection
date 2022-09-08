@@ -50,7 +50,7 @@ export const GroupMainScreenCardCommentsListContent: React.FC<GroupMainScreenCar
 
   const options = ['Delete', 'Edit']
 
-  const anchorRef = useRef(null)
+  const anchorRef = useRef(comment.id)
 
   useEffect(() => {
     if (comment && comment.replyTo) {
@@ -63,6 +63,7 @@ export const GroupMainScreenCardCommentsListContent: React.FC<GroupMainScreenCar
   }, [comment])
 
   const handleClickReply = () => {
+    setIsEdit(false)
     setIsReply(!isReply)
   }
 
@@ -94,6 +95,7 @@ export const GroupMainScreenCardCommentsListContent: React.FC<GroupMainScreenCar
         })
         break
       case t('Edit'):
+        setIsReply(false)
         setIsEdit(!isEdit)
         break
     }
@@ -137,6 +139,7 @@ export const GroupMainScreenCardCommentsListContent: React.FC<GroupMainScreenCar
                 id={`${comment.id}`}
                 handleOption={handleOption}
                 anchorRef={anchorRef}
+                keepMounted={true}
               />
             )}
           </div>

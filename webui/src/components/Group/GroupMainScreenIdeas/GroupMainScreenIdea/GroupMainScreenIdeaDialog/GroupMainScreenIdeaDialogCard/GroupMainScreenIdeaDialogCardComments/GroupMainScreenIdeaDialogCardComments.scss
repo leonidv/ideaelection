@@ -2,10 +2,14 @@
   padding: 0;
   margin-top: 32px;
 
-  &__list {
-    overflow-y: auto !important;
-    overflow-x: hidden;
-    height: 400px;
+  // &__list {
+  //   overflow-y: auto !important;
+  //   overflow-x: hidden;
+  //   height: 400px;
+  // }
+
+  &__more .MuiButton-label {
+    color: #2296f3 !important;
   }
 
   .groupMainScreenCardCommentsField:first-child {

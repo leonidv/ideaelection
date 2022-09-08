@@ -3,8 +3,8 @@ import { useRecoilValue } from 'recoil'
 
 import { meInfoState, tokenState } from '../../../../../../../state'
 
-import InfiniteScroll from 'react-infinite-scroll-component'
-import { CircularProgress } from '@material-ui/core'
+// import InfiniteScroll from 'react-infinite-scroll-component'
+import { Button, CircularProgress } from '@material-ui/core'
 import { GroupMainScreenCardCommentsField } from './GroupMainScreenCardCommentsField/GroupMainScreenCardCommentsField'
 import { GroupMainScreenCardCommentsListContent } from './GroupMainScreenCardCommentsListContent/GroupMainCardCommentsListContent'
 
@@ -18,11 +18,7 @@ import { findAuthorObj, removeDuplicates } from '../../../../../../../functions'
 export const GroupMainScreenIdeaDialogCardComments: React.FC<GroupMainScreenIdeaDialogCardCommentsProps> = (
   props: GroupMainScreenIdeaDialogCardCommentsProps
 ) => {
-  const {
-    ideaId,
-    showAlert,
-    isAdmin
-  } = props
+  const { ideaId, showAlert, isAdmin, authorIdea } = props
 
   const me = useRecoilValue(meInfoState)
 
@@ -50,12 +46,15 @@ export const GroupMainScreenIdeaDialogCardComments: React.FC<GroupMainScreenIdea
             : 10
 
         const curComments = isMore ? newComments : comments
-        const newFetchComments = await fetchComments(
-          token,
-          ideaId,
-          curComments.comments.length,
-          moreLength
-        )
+        const newFetchComments =
+          isMore !== undefined && comments.comments.length !== 0
+            ? { comments: [], users: [] }
+            : await fetchComments(
+                token,
+                ideaId,
+                curComments.comments.length,
+                moreLength
+              )
 
         if ((await newFetchComments) !== 'undefined') {
           const uniqueComments = removeDuplicates(
@@ -76,9 +75,11 @@ export const GroupMainScreenIdeaDialogCardComments: React.FC<GroupMainScreenIdea
           }
           setComments(newCommentsObj)
 
+          //(newCommentsObj.comments.length % 10 !== 0 ||
           if (
-            newCommentsObj.comments.length % 10 !== 0 ||
-            newFetchComments.comments.length == 0
+            (newFetchComments.comments.length == 0 ||
+              newFetchComments.comments.length % 10 !== 0) &&
+            isMore == undefined
           ) {
             setIsFetching(false)
           }
@@ -108,7 +109,7 @@ export const GroupMainScreenIdeaDialogCardComments: React.FC<GroupMainScreenIdea
           id='groupMainScreenCommentsList'
           className='groupMainScreenIdeaDialogCardComments__list'
         >
-          <InfiniteScroll
+          {/* <InfiniteScroll
             dataLength={comments.comments.length}
             next={fetchMoreData}
             hasMore={comments.comments.length == 0 ? false : isFetching}
@@ -118,23 +119,34 @@ export const GroupMainScreenIdeaDialogCardComments: React.FC<GroupMainScreenIdea
               </div>
             }
             scrollableTarget='groupMainScreenCommentsList'
-          >
-            {comments.comments.map(comment => (
-              <GroupMainScreenCardCommentsListContent
-                key={comment.id}
-                ideaId={ideaId}
-                token={token}
-                comment={comment}
-                author={findAuthorObj(comment.author, comments.users, me)}
-                setComments={setComments}
-                comments={comments}
-                fetchMoreData={fetchMoreData}
-                showAlert={showAlert}
-                t={t}
-                isOptions={isAdmin || comment.author == me.sub}
-              />
-            ))}
-          </InfiniteScroll>
+          > */}
+          {comments.comments.map(comment => (
+            <GroupMainScreenCardCommentsListContent
+              key={comment.id}
+              ideaId={ideaId}
+              token={token}
+              comment={comment}
+              author={findAuthorObj(comment.author, comments.users, me)}
+              setComments={setComments}
+              comments={comments}
+              fetchMoreData={fetchMoreData}
+              showAlert={showAlert}
+              t={t}
+              isOptions={isAdmin || comment.author == me.sub}
+            />
+          ))}
+          {isFetching && (
+            <div className='groupMainScreenIdeaDialogCardComments__progress'>
+              <Button
+                onClick={() => fetchMoreData()}
+                color='primary'
+                className='groupMainScreenIdeaDialogCardComments__more'
+              >
+                {t('Read more')}
+              </Button>
+            </div>
+          )}
+          {/* </InfiniteScroll> */}
         </div>
       )}
     </div>

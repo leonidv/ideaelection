@@ -120,6 +120,7 @@ export const GroupMainScreenIdeaDialogCard: React.FC<GroupMainScreenIdeaDialogCa
           ideaId={idea.id}
           showAlert={showAlert}
           isAdmin={isAdmin}
+          authorIdea={idea.author}
         />
       </Card>
       {edit && (

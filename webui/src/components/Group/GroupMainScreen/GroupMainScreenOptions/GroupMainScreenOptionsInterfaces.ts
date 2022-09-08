@@ -6,4 +6,5 @@ export interface GroupMainScreenOptionsProps {
     handleOption: (e: any, idea: Idea) => void 
     idea?: Idea
     anchorRef: React.MutableRefObject<any>
+    keepMounted?: boolean
 }
