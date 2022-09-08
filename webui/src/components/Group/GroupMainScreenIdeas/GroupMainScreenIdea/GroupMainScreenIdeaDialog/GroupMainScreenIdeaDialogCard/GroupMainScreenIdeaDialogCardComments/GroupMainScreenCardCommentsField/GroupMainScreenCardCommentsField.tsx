@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
+
 import { Avatar, Button, TextField } from '@material-ui/core'
 
 import { ideasState, meInfoState } from '../../../../../../../../state'
@@ -98,6 +99,7 @@ export const GroupMainScreenCardCommentsField: React.FC<GroupMainScreenCardComme
               setIsEdit(false)
             }
             const editComments = Object.assign({}, comments)
+
             const indexReply = editComments.comments.findIndex(
               el => el.id === comment.id
             )
@@ -188,6 +190,7 @@ export const GroupMainScreenCardCommentsField: React.FC<GroupMainScreenCardComme
         alt='avatar'
         src={me.avatar}
       />
+
       <div className='groupMainScreenCardCommentsField'>
         <TextField
           name='content'

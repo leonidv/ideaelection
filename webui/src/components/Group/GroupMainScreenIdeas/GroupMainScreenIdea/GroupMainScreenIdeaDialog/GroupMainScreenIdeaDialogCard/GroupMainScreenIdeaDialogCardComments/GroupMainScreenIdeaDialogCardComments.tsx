@@ -46,6 +46,7 @@ export const GroupMainScreenIdeaDialogCardComments: React.FC<GroupMainScreenIdea
             : 10
 
         const curComments = isMore ? newComments : comments
+
         const newFetchComments =
           isMore !== undefined && comments.comments.length !== 0
             ? { comments: [], users: [] }
