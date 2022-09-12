@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next'
 export const GroupMainScreenOptions: React.FC<GroupMainScreenOptionsProps> = (
   props: GroupMainScreenOptionsProps
 ) => {
-  const { options, id, handleOption, idea, anchorRef } = props
+  const { options, id, handleOption, idea, anchorRef, keepMounted } = props
   if (options.length > 0) {
     const [openId, setOpenId]: any = useState(false)
 
@@ -67,7 +67,7 @@ export const GroupMainScreenOptions: React.FC<GroupMainScreenOptionsProps> = (
           anchorEl={anchorRef.current}
           role={undefined}
           transition
-          disablePortal
+          keepMounted={keepMounted || false}
         >
           {({ TransitionProps, placement }) => (
             <Grow
